@@ -117,6 +117,45 @@ export const CATEGORIES = [
   { name: "Editorial", slug: "editorial" },
 ];
 
+export interface HeroSlide {
+  id: number;
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+}
+
+export const HERO_SLIDES: HeroSlide[] = [
+  {
+    id: 1,
+    image: "/assets/hero-banner.png",
+    title: "Silence is Luxury",
+    subtitle: "Spring / Summer 2026",
+    description: "Discover the power of restraint with our new collection of breathable organics."
+  },
+  {
+    id: 2,
+    image: "/assets/silk-tunic.png",
+    title: "Midnight Silk",
+    subtitle: "The Evening Edit",
+    description: "Handcrafted pure silk tunics designed for elegance in motion."
+  },
+  {
+    id: 3,
+    image: "/assets/wool-coat.png",
+    title: "Architectural Wool",
+    subtitle: "Winter Structure",
+    description: "Italian blends featuring minimal cuts and uncompromising warmth."
+  },
+  {
+    id: 4,
+    image: "/assets/bronze-skirt.png",
+    title: "Liquid Bronze",
+    subtitle: "Statement Pieces",
+    description: "Metallic sheen pleats that capture every glimmer of light."
+  }
+];
+
 // Simulation of API Latency
 export async function delay(ms: number = 800) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -130,4 +169,25 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
 export async function getAllProducts(): Promise<Product[]> {
   await delay(600);
   return PRODUCTS;
+}
+
+export async function getHeroSlides(): Promise<HeroSlide[]> {
+  await delay(400); // Simulate faster fetch for hero
+  return HERO_SLIDES;
+}
+
+export async function getCategoryTree(): Promise<CategoryNode[]> {
+  await delay(300);
+  return CATEGORY_TREE;
+}
+
+export async function searchProducts(query: string): Promise<Product[]> {
+  await delay(500); // Simulate network latency
+  if (!query) return [];
+  const lowerQuery = query.toLowerCase();
+  return PRODUCTS.filter(p => 
+    p.name.toLowerCase().includes(lowerQuery) || 
+    p.category.toLowerCase().includes(lowerQuery) ||
+    p.description.toLowerCase().includes(lowerQuery)
+  );
 }

@@ -5,50 +5,27 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+import { HeroSlide } from "@/lib/data";
 
-const SLIDES = [
-  {
-    id: 1,
-    image: "/assets/hero-banner.png",
-    title: "Silence is Luxury",
-    subtitle: "Spring / Summer 2026",
-    description: "Discover the power of restraint with our new collection of breathable organics."
-  },
-  {
-    id: 2,
-    image: "/assets/silk-tunic.png",
-    title: "Midnight Silk",
-    subtitle: "The Evening Edit",
-    description: "Handcrafted pure silk tunics designed for elegance in motion."
-  },
-  {
-    id: 3,
-    image: "/assets/wool-coat.png",
-    title: "Architectural Wool",
-    subtitle: "Winter Structure",
-    description: "Italian blends featuring minimal cuts and uncompromising warmth."
-  },
-  {
-    id: 4,
-    image: "/assets/bronze-skirt.png",
-    title: "Liquid Bronze",
-    subtitle: "Statement Pieces",
-    description: "Metallic sheen pleats that capture every glimmer of light."
-  }
-];
+interface HeroProps {
+  slides: HeroSlide[];
+}
 
-export function Hero() {
+export function Hero({ slides }: HeroProps) {
   const [current, setCurrent] = useState(0);
+
+  // If no slides are provided (sanity check), return null or loading
+  if (!slides || slides.length === 0) return null;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % SLIDES.length);
+      setCurrent((prev) => (prev + 1) % slides.length);
     }, 6000); // 6 seconds per slide
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % SLIDES.length);
-  const prevSlide = () => setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+  const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-main">
@@ -69,8 +46,8 @@ export function Hero() {
              transition={{ duration: 8, ease: "linear" }}
            >
               <Image 
-                src={SLIDES[current].image}
-                alt={SLIDES[current].title}
+                src={slides[current].image}
+                alt={slides[current].title}
                 fill
                 className="object-cover"
                 priority
@@ -94,13 +71,13 @@ export function Hero() {
                 className="flex flex-col gap-8"
               >
                  <span className="uppercase tracking-[0.3em] text-white/90 text-sm font-medium border-l-2 border-accent-gold pl-4 drop-shadow-md">
-                   {SLIDES[current].subtitle}
+                   {slides[current].subtitle}
                  </span>
                  <h1 className="font-serif text-6xl md:text-9xl text-white leading-[0.85] drop-shadow-lg">
-                   {SLIDES[current].title}
+                   {slides[current].title}
                  </h1>
                  <p className="text-white/90 text-lg md:text-2xl max-w-xl leading-relaxed font-light drop-shadow-md">
-                   {SLIDES[current].description}
+                   {slides[current].description}
                  </p>
                  <div className="flex flex-col md:flex-row gap-6 pt-6">
                     <Button 
@@ -133,7 +110,7 @@ export function Hero() {
 
       {/* Progress Indicators */}
       <div className="absolute bottom-24 left-6 md:left-24 z-30 flex gap-3">
-        {SLIDES.map((_, idx) => (
+        {slides.map((_, idx) => (
           <button 
             key={idx}
             onClick={() => setCurrent(idx)}

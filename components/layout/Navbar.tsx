@@ -11,9 +11,12 @@ import { NavMenu } from "./NavMenu";
 import { CATEGORY_TREE } from "@/lib/data";
 import clsx from "clsx";
 
+import { SearchOverlay } from "./SearchOverlay";
+
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -53,7 +56,10 @@ export function Navbar() {
           <div className="flex items-center gap-6 justify-end">
             <div className="hidden md:flex items-center gap-4">
                {/* Search Icon */}
-               <button className="text-primary hover:text-accent-gold transition-colors">
+               <button 
+                  className="text-primary hover:text-accent-gold transition-colors"
+                  onClick={() => setIsSearchOpen(true)}
+               >
                   <Search className="w-5 h-5" />
                </button>
 
@@ -139,6 +145,9 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }
