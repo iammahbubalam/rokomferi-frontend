@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Typography */
+  --font-display: var(--font-bodoni), serif;
+  --font-body: var(--font-montserrat), sans-serif;
+
+  /* Colors - Mapping to 'Opulence Minimal' Corrected Palette */
+  --color-main: #f9f8f6; /* Alabaster Paper */
+  --color-main-secondary: #ebe9e4; /* Warm Greige */
+  --color-card: #ffffff; /* Pure White */
+
+  --color-primary: #2c2c2c; /* Soft Black */
+  --color-secondary: #595959; /* Darkened Stone Grey for readability */
+
+  --color-accent-gold: #9c846a; /* Darkened Muted Bronze for borders/text */
+  --color-accent-light: #bfa588; /* Original Muted Bronze for backgrounds */
+  --color-status-error: #9e4747; /* Vintage Red */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Global Reset & Base Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-main);
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-weight: 400; /* Regular weight override */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Utilities */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
+
+/* Custom Scrollbar for desktop (Premium feel) */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-main-secondary);
+    border-radius: 0px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent-gold);
+  }
 }
