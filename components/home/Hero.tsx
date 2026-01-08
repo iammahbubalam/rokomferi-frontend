@@ -51,7 +51,7 @@ export function Hero() {
   const prevSlide = () => setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-main">
+    <section className="relative h-[100dvh] w-full overflow-hidden bg-main">
       <AnimatePresence mode="popLayout">
         <motion.div
            key={current}
@@ -82,7 +82,7 @@ export function Hero() {
       </AnimatePresence>
 
       {/* Content Layer */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-end pb-24 md:pb-32 px-6 md:px-24">
+      <div className="absolute inset-0 z-20 flex flex-col justify-end pb-40 md:pb-48 px-6 md:px-24">
          <div className="max-w-[800px]">
             <AnimatePresence mode="wait">
               <motion.div
@@ -104,14 +104,14 @@ export function Hero() {
                  </p>
                  <div className="flex flex-col md:flex-row gap-6 pt-6">
                     <Button 
-                        variant="primary" 
-                        className="bg-white text-black hover:bg-accent-gold hover:text-white border-none px-10 py-6 text-sm tracking-[0.2em] font-bold"
+                        variant="white" 
+                        className="px-10 py-6 text-sm tracking-[0.2em] font-bold"
                     >
                       SHOP COLLECTION
                     </Button>
                     <Button 
-                        variant="secondary" 
-                        className="border-white text-white hover:bg-white hover:text-black px-10 py-6 text-sm tracking-[0.2em]"
+                        variant="outline-white" 
+                        className="px-10 py-6 text-sm tracking-[0.2em]"
                     >
                       VIEW LOOKBOOK
                     </Button>
@@ -122,7 +122,7 @@ export function Hero() {
       </div>
 
       {/* Controls */}
-      <div className="absolute bottom-12 right-6 md:right-24 z-30 flex gap-4">
+      <div className="absolute bottom-24 right-6 md:right-24 z-30 flex gap-4">
          <button onClick={prevSlide} className="p-4 rounded-full border border-white/30 text-white hover:bg-white hover:text-black transition-all">
            <ArrowLeft className="w-6 h-6" />
          </button>
@@ -132,7 +132,7 @@ export function Hero() {
       </div>
 
       {/* Progress Indicators */}
-      <div className="absolute bottom-12 left-6 md:left-24 z-30 flex gap-3">
+      <div className="absolute bottom-24 left-6 md:left-24 z-30 flex gap-3">
         {SLIDES.map((_, idx) => (
           <button 
             key={idx}
@@ -140,6 +140,19 @@ export function Hero() {
             className={`h-[2px] transition-all duration-500 ${current === idx ? "w-12 bg-accent-gold" : "w-6 bg-white/40 hover:bg-white"}`}
           />
         ))}
+      </div>
+
+      {/* Integrated Marquee - Absolute Bottom */}
+      <div className="absolute bottom-0 left-0 w-full z-40 bg-black/20 backdrop-blur-sm border-t border-white/10 py-4 overflow-hidden flex whitespace-nowrap">
+        <motion.div 
+          className="flex gap-16 text-[10px] md:text-xs uppercase tracking-[0.3em] font-medium text-white/80"
+          animate={{ x: "-50%" }}
+          transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        >
+          {Array(10).fill("Quiet Luxury • Timeless Form • Organic Texture • Sustainable Design •").map((text, i) => (
+            <span key={i}>{text}</span>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
