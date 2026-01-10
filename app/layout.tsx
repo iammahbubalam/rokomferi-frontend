@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
-import { Bodoni_Moda, Montserrat } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { IntroProvider } from "@/context/IntroContext";
+import { IntroOverlay } from "@/components/layout/IntroOverlay";
 
-const bodoni = Bodoni_Moda({
-  variable: "--font-bodoni",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
   display: "swap",
-  // Italic is included in variable fonts by default, but we can adhere to specific weights if needed
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
+  weight: ["200", "300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,16 +26,8 @@ export const metadata: Metadata = {
 };
 
 import { getCategoryTree, getFooterSections, getSiteConfig } from "@/lib/data";
-
-// ... (imports remain)
-
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
-
-// ... (imports remain)
-
-import { IntroProvider } from "@/context/IntroContext";
-import { IntroOverlay } from "@/components/layout/IntroOverlay";
 
 export default async function RootLayout({
   children,
@@ -49,7 +44,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${bodoni.variable} ${montserrat.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
+        className={`${cormorant.variable} ${manrope.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
         <IntroProvider>
           <IntroOverlay />

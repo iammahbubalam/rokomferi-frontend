@@ -1,6 +1,8 @@
 import { getAllProducts, getCategoryTree } from "@/lib/data";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Container } from "@/components/ui/Container";
+import { CollectionHero } from "@/components/shop/CollectionHero";
+import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
@@ -56,29 +58,34 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   });
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-bg-primary text-primary">
-      <Container>
-        {/* Header */}
-        <div className="py-12 md:py-20 border-b border-primary/10 mb-12">
-           <span className="text-sm uppercase tracking-[0.2em] text-secondary">Shop Category</span>
-           <h1 className="font-serif text-4xl md:text-6xl text-primary mt-4 capitalize">{categoryName}</h1>
-           <p className="mt-4 text-secondary/80 max-w-md font-light">
-             Explore our curated selection of {categoryName}, defined by tradition and craftsmanship.
-           </p>
-        </div>
+    <div className="min-h-screen bg-bg-primary text-primary">
+       
+       <CollectionHero 
+         title={categoryName}
+         description={`Explore our curated selection of ${categoryName}, defined by tradition and craftsmanship.`}
+         image="/assets/eid-hero.png" // Fallback or dynamic based on category if available
+       />
 
-        {/* Grid */}
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-            {products.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center text-secondary font-light">
-            <p>We are currently restocking this collection. Please check back soon.</p>
-          </div>
-        )}
+      <Container className="py-20">
+        <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
+           {/* Sidebar */}
+           <FilterSidebar />
+           
+           {/* Grid */}
+           <div className="flex-1">
+             {products.length > 0 ? (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-16">
+                 {products.map((product, i) => (
+                   <ProductCard key={product.id} product={product} index={i} />
+                 ))}
+               </div>
+             ) : (
+               <div className="py-20 text-center text-secondary font-light">
+                 <p>We are currently restocking this collection. Please check back soon.</p>
+               </div>
+             )}
+           </div>
+        </div>
       </Container>
     </div>
   );

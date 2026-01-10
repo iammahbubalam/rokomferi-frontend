@@ -12,9 +12,10 @@ interface ProductCardProps {
   product: Product;
   index?: number;
   variant?: "default" | "inverted";
+  aspectRatio?: string;
 }
 
-export function ProductCard({ product, index = 0, variant = "default" }: ProductCardProps) {
+export function ProductCard({ product, index = 0, variant = "default", aspectRatio = "aspect-[3/4.5]" }: ProductCardProps) {
   const { addToCart } = useCart();
   
   // Pricing Strategy
@@ -24,12 +25,11 @@ export function ProductCard({ product, index = 0, variant = "default" }: Product
   // Status Logic
   const isNew = product.tags?.includes('new') || product.tags?.includes('eid');
   const isSoldOut = product.inventory.status === 'out_of_stock';
-  const lowStock = product.inventory.stockLevel < 5 && !isSoldOut;
-
+  
   return (
-    <div className="group relative flex flex-col gap-4">
-      {/* Image Container with Hover Effects */}
-      <Link href={`/product/${product.slug}`} className="block relative overflow-hidden aspect-[3/4] bg-bg-secondary w-full">
+    <div className="group relative flex flex-col gap-4 mb-8 break-inside-avoid">
+      {/* Image Container */}
+      <Link href={`/product/${product.slug}`} className={`block relative overflow-hidden ${aspectRatio} w-full bg-[#f0f0f0]`}>
         <motion.div
            whileHover={{ scale: 1.05 }}
            transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} // smooth luxurious ease

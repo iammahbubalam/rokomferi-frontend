@@ -12,6 +12,7 @@ interface CartContextType {
   isOpen: boolean;
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   toggleCart: () => void;
   total: number;
 }
@@ -56,6 +57,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.filter((item) => item.id !== productId));
   };
 
+  const updateQuantity = (productId: string, quantity: number) => {
+    if (quantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
+    setItems((prev) =>
+      prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
+    );
+  };
+
   const toggleCart = () => setIsOpen((prev) => !prev);
 
   const total = items.reduce((sum, item) => {
@@ -64,7 +75,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, 0);
 
   return (
-    <CartContext.Provider value={{ items, isOpen, addToCart, removeFromCart, toggleCart, total }}>
+    <CartContext.Provider value={{ items, isOpen, addToCart, removeFromCart, updateQuantity, toggleCart, total }}>
       {children}
     </CartContext.Provider>
   );

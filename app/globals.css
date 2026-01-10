@@ -2,8 +2,8 @@
 
 @theme {
   /* Typography */
-  --font-display: var(--font-bodoni), serif;
-  --font-body: var(--font-montserrat), sans-serif;
+  --font-display: var(--font-cormorant), serif;
+  --font-body: var(--font-manrope), sans-serif;
 
   /* Colors - Mapping to 'Opulence Minimal' Corrected Palette */
   --color-main: #f9f8f6; /* Alabaster Paper */
