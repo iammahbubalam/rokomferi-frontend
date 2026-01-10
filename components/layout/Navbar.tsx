@@ -9,9 +9,9 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NavMenu } from "./NavMenu";
 import { CategoryNode, SiteConfig } from "@/lib/data";
-import clsx from "clsx";
-
 import { SearchOverlay } from "./SearchOverlay";
+import { useCart } from "@/context/CartContext";
+import clsx from "clsx";
 
 interface NavbarProps {
   categories: CategoryNode[];
@@ -22,6 +22,7 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { items, toggleCart } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -39,8 +40,6 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
       >
         <Container className="flex items-center justify-between gap-8">
           
-          {/* 1. Logo Section */}
-          {/* 1. Logo Section */}
           {/* 1. Logo Section */}
           <Link href="/" className="flex-shrink-0 relative z-50">
              <div className="relative h-10 w-32 md:h-12 md:w-40">
@@ -79,11 +78,16 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
             </div>
 
             {/* Cart */}
-            <button className="text-primary hover:text-accent-gold transition-colors relative">
+            <button 
+              onClick={toggleCart} 
+              className="text-primary hover:text-accent-gold transition-colors relative"
+            >
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 w-4 h-4 bg-accent-gold text-white text-[10px] flex items-center justify-center rounded-full font-medium">
-                0
-              </span>
+              {items.length > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-accent-gold text-white text-[10px] flex items-center justify-center rounded-full font-medium">
+                  {items.length}
+                </span>
+              )}
             </button>
 
             {/* Mobile Menu Trigger */}

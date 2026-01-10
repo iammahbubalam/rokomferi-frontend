@@ -15,7 +15,7 @@ export function NavMenu({ categories }: { categories: CategoryNode[] }) {
         <div key={category.id} className="relative">
           {/* Top Level Item */}
           <Link
-            href={`/category/${category.slug}`}
+            href={category.path || `/category/${category.slug}`}
             className="text-sm uppercase tracking-[0.1em] text-primary hover:text-accent-gold transition-colors py-4 inline-block font-medium"
             onMouseEnter={() => setActiveId(category.id)}
           >
@@ -35,7 +35,7 @@ export function NavMenu({ categories }: { categories: CategoryNode[] }) {
                  {category.children.map((child) => (
                    <div key={child.id} className="flex flex-col gap-4">
                       <Link 
-                        href={`/category/${child.slug}`}
+                        href={child.path || `/category/${child.slug}`}
                         className="font-serif text-lg text-primary hover:underline decoration-accent-gold underline-offset-4"
                       >
                         {child.name}
@@ -47,7 +47,7 @@ export function NavMenu({ categories }: { categories: CategoryNode[] }) {
                           {child.children.map((sub) => (
                             <Link 
                               key={sub.id} 
-                              href={`/category/${sub.slug}`}
+                              href={sub.path || `/category/${sub.slug}`}
                               className="text-xs text-secondary hover:text-primary transition-colors uppercase tracking-wider"
                             >
                               {sub.name}
@@ -64,14 +64,6 @@ export function NavMenu({ categories }: { categories: CategoryNode[] }) {
           </AnimatePresence>
         </div>
       ))}
-      
-      {/* Static "Shop All" Link requested as "Original Product Page" */}
-      <Link 
-        href="/shop" 
-        className="text-sm uppercase tracking-[0.1em] text-primary hover:text-accent-gold transition-colors font-medium"
-      >
-        Shop All
-      </Link>
     </nav>
   );
 }

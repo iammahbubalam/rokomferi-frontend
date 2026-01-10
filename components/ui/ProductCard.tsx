@@ -12,7 +12,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
     <Link href={`/product/${product.slug}`} className="group block cursor-pointer">
       {/* Image Container with Aspect Ratio */}
       <div className="relative aspect-[3/5] overflow-hidden bg-bg-secondary w-full">
-        {product.isNew && (
+        {product.tags?.includes('new') && (
           <span className="absolute top-4 left-4 z-10 text-[10px] uppercase tracking-widest bg-white text-black px-3 py-1 font-medium">
             New Arrival
           </span>
@@ -25,8 +25,8 @@ export function ProductCard({ product, variant = "default" }: { product: Product
           transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <Image
-            src={product.images[0]}
-            alt={product.name}
+            src={product.media[0].url}
+            alt={product.media[0].alt || product.name}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -52,12 +52,25 @@ export function ProductCard({ product, variant = "default" }: { product: Product
            )}>
              {product.name}
            </h3>
-           <span className={clsx(
-             "text-sm font-medium",
-             variant === "inverted" ? "text-white/90" : "text-primary"
-           )}>
-             ৳{product.price.toLocaleString()}
-           </span>
+           <div className="flex flex-col items-end">
+             {product.pricing.salePrice ? (
+               <>
+                  <span className={clsx("text-sm line-through opacity-60", variant === "inverted" ? "text-white" : "text-secondary")}>
+                    ৳{product.pricing.basePrice.toLocaleString()}
+                  </span>
+                  <span className={clsx("text-sm font-medium text-status-error", variant === "inverted" ? "text-red-300" : "")}>
+                    ৳{product.pricing.salePrice.toLocaleString()}
+                  </span>
+               </>
+             ) : (
+                <span className={clsx(
+                  "text-sm font-medium",
+                  variant === "inverted" ? "text-white/90" : "text-primary"
+                )}>
+                  ৳{product.pricing.basePrice.toLocaleString()}
+                </span>
+             )}
+           </div>
         </div>
         <span className={clsx(
           "text-xs uppercase tracking-wider",

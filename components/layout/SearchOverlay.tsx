@@ -102,9 +102,9 @@ export function SearchOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: (
                              onClick={onClose}
                              className="group flex gap-6 items-center p-4 rounded-xl hover:bg-primary/5 transition-colors"
                            >
-                              <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-main-secondary">
+                                 <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-main-secondary">
                                  <Image 
-                                    src={product.images[0]} 
+                                    src={product.media[0].url} 
                                     alt={product.name} 
                                     fill 
                                     className="object-cover group-hover:scale-110 transition-transform duration-700"
@@ -113,7 +113,7 @@ export function SearchOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: (
                               <div>
                                  <h4 className="font-serif text-xl group-hover:text-accent-gold transition-colors">{product.name}</h4>
                                  <span className="text-secondary text-sm mt-1 block">{product.category}</span>
-                                 <span className="text-primary font-medium mt-2 block">${product.price}</span>
+                                 <span className="text-primary font-medium mt-2 block">৳{product.pricing.basePrice.toLocaleString()}</span>
                               </div>
                            </Link>
                         </motion.div>
