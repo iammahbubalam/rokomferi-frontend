@@ -5,12 +5,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Product } from "@/lib/data";
 import { Plus } from "lucide-react";
+import clsx from "clsx";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, variant = "default" }: { product: Product; variant?: "default" | "inverted" }) {
   return (
     <Link href={`/product/${product.slug}`} className="group block cursor-pointer">
       {/* Image Container with Aspect Ratio */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-bg-secondary w-full">
+      <div className="relative aspect-[3/5] overflow-hidden bg-bg-secondary w-full">
         {product.isNew && (
           <span className="absolute top-4 left-4 z-10 text-[10px] uppercase tracking-widest bg-white text-black px-3 py-1 font-medium">
             New Arrival
@@ -45,14 +46,23 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Product Info */}
       <div className="mt-6 flex flex-col gap-2">
         <div className="flex justify-between items-start">
-           <h3 className="font-serif text-lg text-primary leading-tight max-w-[80%]">
+           <h3 className={clsx(
+             "font-serif text-lg leading-tight max-w-[80%] transition-colors",
+             variant === "inverted" ? "text-white group-hover:text-white/80" : "text-primary group-hover:text-primary/80"
+           )}>
              {product.name}
            </h3>
-           <span className="text-sm font-medium text-primary">
-             ${product.price}
+           <span className={clsx(
+             "text-sm font-medium",
+             variant === "inverted" ? "text-white/90" : "text-primary"
+           )}>
+             ৳{product.price.toLocaleString()}
            </span>
         </div>
-        <span className="text-xs text-secondary uppercase tracking-wider">{product.category}</span>
+        <span className={clsx(
+          "text-xs uppercase tracking-wider",
+          variant === "inverted" ? "text-white/50" : "text-secondary"
+        )}>{product.category}</span>
       </div>
     </Link>
   );

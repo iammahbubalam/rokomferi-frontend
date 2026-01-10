@@ -55,8 +55,8 @@ export function FeaturedCollection({ products }: { products: Product[] }) {
                       viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
                       transition={{ duration: 0.8, delay: idx * 0.1, ease: "easeOut" }}
                     >
-                       {/* Passing 'dark' context to ProductCard if needed, or just styling card bg */}
-                       <ProductCard product={product} /> 
+                       {/* Passing 'inverted' context to ProductCard for dark background */}
+                       <ProductCard product={product} variant="inverted" /> 
                     </motion.div>
                   ))}
                   

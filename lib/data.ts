@@ -31,22 +31,22 @@ export const CATEGORY_TREE: CategoryNode[] = [
     children: [
       {
         id: "c1-1",
-        name: "Clothing",
-        slug: "women-clothing",
+        name: "Ethnic Wear",
+        slug: "ethnic-wear",
         children: [
-           { id: "c1-1-1", name: "Dresses", slug: "dresses" },
-           { id: "c1-1-2", name: "Tops & Tunics", slug: "tops-tunics" },
-           { id: "c1-1-3", name: "Outerwear", slug: "outerwear" },
-           { id: "c1-1-4", name: "Sarees (Katan)", slug: "sarees-katan" },
+           { id: "c1-1-1", name: "Sarees (Katan)", slug: "sarees-katan" },
+           { id: "c1-1-2", name: "Sarees (Jamdani)", slug: "sarees-jamdani" },
+           { id: "c1-1-3", name: "Salwar Kameez", slug: "salwar-kameez" },
+           { id: "c1-1-4", name: "Kurtis", slug: "kurtis" },
         ]
       },
       {
         id: "c1-2",
-        name: "Accessories",
-        slug: "women-accessories",
+        name: "Fabrics",
+        slug: "fabrics",
         children: [
-           { id: "c1-2-1", name: "Bags", slug: "bags" },
-           { id: "c1-2-2", name: "Jewelry", slug: "jewelry" },
+           { id: "c1-2-1", name: "Unstitched", slug: "unstitched" },
+           { id: "c1-2-2", name: "Silk", slug: "silk-fabric" },
         ]
       }
     ]
@@ -58,7 +58,7 @@ export const CATEGORY_TREE: CategoryNode[] = [
     children: [
       { id: "c2-1", name: "Eid 2026", slug: "eid-2026" },
       { id: "c2-2", name: "Wedding Guest", slug: "wedding-guest" },
-      { id: "c2-3", name: "Office Wear", slug: "office-wear" }
+      { id: "c2-3", name: "Heritage", slug: "heritage" }
     ]
   }
 ];
@@ -66,45 +66,45 @@ export const CATEGORY_TREE: CategoryNode[] = [
 export const PRODUCTS: Product[] = [
   {
     id: "p1",
-    name: "Obsidian Silk Tunic",
-    slug: "obsidian-silk-tunic",
-    price: 350,
-    category: "Tops",
-    description: "A handcrafted pure silk tunic featuring a relaxed silhouette and deep midnight resonance. Designed for breathable elegance.",
-    images: ["/assets/silk-tunic.png"],
+    name: "Royal Blue Katan Silk",
+    slug: "royal-blue-katan",
+    price: 12500,
+    category: "Sarees",
+    description: "Handwoven Katan silk saree with intricate gold zari par. A timeless piece for the wedding season.",
+    images: ["/assets/saree-blue-katan.png"],
     inStock: true,
     isNew: true,
   },
   {
     id: "p2",
-    name: "Alabaster Wool Coat",
-    slug: "alabaster-wool-coat",
-    price: 890,
-    category: "Outerwear",
-    description: "Italian wool blend coat in a soft alabaster shade. Architectural cut with minimal detailing.",
-    images: ["/assets/wool-coat.png"],
-    inStock: true,
-    isNew: false,
-  },
-  {
-    id: "p3",
-    name: "Muted Bronze Pleated Skirt",
-    slug: "muted-bronze-pleated-skirt",
-    price: 420,
-    category: "Bottoms",
-    description: "High-waisted pleated skirt in our signature metallic-sheen fabric. Moves like liquid gold.",
-    images: ["/assets/bronze-skirt.png"],
+    name: "Peach Organza Luxe Suit",
+    slug: "peach-organza-suit",
+    price: 8500,
+    category: "Salwar Kameez",
+    description: "Premium 3-piece organza suit with heavy floral embroidery and a sheer, flowy dupatta.",
+    images: ["/assets/threepiece-peach.png"],
     inStock: true,
     isNew: true,
   },
   {
+    id: "p3",
+    name: "Emerald Silk Kurti",
+    slug: "emerald-silk-kurti",
+    price: 4200,
+    category: "Kurtis",
+    description: "Pure silk kurti featuring a zardosi embroidered neckline. Styled for modern elegance.",
+    images: ["/assets/kurti-emerald.png"],
+    inStock: true,
+    isNew: false,
+  },
+  {
     id: "p4",
-    name: "Sage Mist Cashmere Wrap",
-    slug: "sage-mist-cashmere-wrap",
-    price: 280,
-    category: "Accessories",
-    description: "Ethically sourced cashmere in a calming sage green. Perfect for transitional weather.",
-    images: ["https://placehold.co/600x800/8C9688/FFFFFF/png?text=Sage+Wrap"],
+    name: "Muslin Jamdani Saree",
+    slug: "muslin-jamdani",
+    price: 18000,
+    category: "Sarees",
+    description: "Authentic Dhakai Muslin Jamdani. Feather-light weave with traditional geometric motifs.",
+    images: ["/assets/eid-texture.png"], // Reusing texture as placeholder
     inStock: true,
     isNew: false,
   },
@@ -125,40 +125,88 @@ export interface HeroSlide {
   description: string;
 }
 
+
+// Helper for simulation
+export async function delay(ms: number = 800) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 1,
-    image: "/assets/hero-banner.png",
-    title: "Silence is Luxury",
-    subtitle: "Spring / Summer 2026",
-    description: "Discover the power of restraint with our new collection of breathable organics."
+    image: "/assets/eid-hero.png",
+    title: "Moonlit Silence",
+    subtitle: "The Eid 2026 Edit",
+    description: "In the stillness of the crescent moon, find the luxury of connection. A collection designed for the quiet moments of celebration."
   },
   {
     id: 2,
-    image: "/assets/silk-tunic.png",
-    title: "Midnight Silk",
-    subtitle: "The Evening Edit",
-    description: "Handcrafted pure silk tunics designed for elegance in motion."
+    image: "/assets/eid-hero-group.png",
+    title: "Legacy of Loom",
+    subtitle: "The Eid Heritage Edit",
+    description: "Celebrate the hands that weave history. Authentic Katan, Muslin, and Silk for the modern custodian of tradition."
   },
   {
     id: 3,
-    image: "/assets/wool-coat.png",
-    title: "Architectural Wool",
-    subtitle: "Winter Structure",
-    description: "Italian blends featuring minimal cuts and uncompromising warmth."
-  },
-  {
-    id: 4,
-    image: "/assets/bronze-skirt.png",
-    title: "Liquid Bronze",
-    subtitle: "Statement Pieces",
-    description: "Metallic sheen pleats that capture every glimmer of light."
+    image: "/assets/saree-blue-katan.png",
+    title: "Royal Weaves",
+    subtitle: "Katan Collection",
+    description: "The sheen of pure silk, the weight of gold zari. Sarees that carry the grandeur of generations."
   }
 ];
 
-// Simulation of API Latency
-export async function delay(ms: number = 800) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// ... (keep PRODUCTS export but maybe update descriptions later if needed, generic is fine for now)
+
+export const PHILOSOPHY_CONTENT: PhilosophyContent = {
+  tagline: "The Artisan's Prayer",
+  headline: {
+    line1: "Celebration is found in",
+    line2: "the details we share."
+  },
+  paragraphs: [
+    "Eid is more than a holiday; it is a return to what matters. In a chaotic world, we often lose the thread of connection—to our traditions, to our loved ones, and to ourselves.",
+    "Rokomferi weaves that thread back together. Our Eid edit is not just clothing; it is a vessel for these sacred moments. Soft against the skin, rich in history, and quiet in its luxury, allowing you to be the centerpiece of your own story."
+  ],
+  ctaText: "Explore the Eid Edit",
+  image: "/assets/eid-philosophy.png",
+  imageAlt: "Artisan hands weaving gold thread"
+};
+
+export interface EditorialContent {
+  tagline: string;
+  title: string;
+  description: string;
+  image: string;
+}
+
+export const EDITORIAL_CONTENT: EditorialContent = {
+  tagline: "The Gathering",
+  title: "Stitching Memories",
+  description: "A tribute to the warmth of community. Our Heritage Collection is designed for the golden hours of reunion.",
+  image: "/assets/eid-editorial.png"
+};
+
+// API Simulations
+export async function getSiteConfig(): Promise<SiteConfig> {
+  await delay(200);
+  return SITE_CONFIG;
+}
+
+// ... existing getters ...
+
+export async function getEditorialContent(): Promise<EditorialContent> {
+  await delay(300);
+  return EDITORIAL_CONTENT;
+}
+
+export async function getFooterSections(): Promise<FooterSection[]> {
+  await delay(200);
+  return FOOTER_SECTIONS;
+}
+
+export async function getPhilosophyContent(): Promise<PhilosophyContent> {
+  await delay(300);
+  return PHILOSOPHY_CONTENT;
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
@@ -193,24 +241,24 @@ export interface FeaturedCategory {
 export const FEATURED_CATEGORIES: FeaturedCategory[] = [
   {
     id: "fc1",
-    name: "Ready to Wear",
-    slug: "ready-to-wear",
-    image: "/assets/silk-tunic.png", // Ideally different image
-    description: "Effortless silhouettes for the modern day.",
+    name: "Katan Sarees",
+    slug: "sarees-katan",
+    image: "/assets/saree-blue-katan.png",
+    description: "The queen of silks. Woven for grandeur.",
     size: "large"
   },
   {
     id: "fc2",
-    name: "Accessories",
-    slug: "accessories",
-    image: "/assets/bronze-skirt.png", // Reuse for now
+    name: "Salwar Kameez",
+    slug: "salwar-kameez",
+    image: "/assets/threepiece-peach.png",
     size: "small"
   },
   {
     id: "fc3",
-    name: "Outerwear",
-    slug: "outerwear",
-    image: "/assets/wool-coat.png", // Reuse for now
+    name: "Designer Kurtis",
+    slug: "kurtis",
+    image: "/assets/kurti-emerald.png",
     size: "small"
   }
 ];
@@ -309,35 +357,4 @@ export interface PhilosophyContent {
   ctaText: string;
   image: string;
   imageAlt: string;
-}
-
-export const PHILOSOPHY_CONTENT: PhilosophyContent = {
-  tagline: "The Atelier",
-  headline: {
-    line1: "We believe in the",
-    line2: "soul of the fabric."
-  },
-  paragraphs: [
-    "In a world of noise, Rokomferi offers silence. Our garments are designed to be lived in, not just looked at. We prioritize the tactile experience—how the silk drapes, how the wool warms, how the linen breathes.",
-    "Each piece is a dialogue between the artisan's hand and the wearer's body. Sustainable, ethical, and intentionally timeless."
-  ],
-  ctaText: "Discover Our Story",
-  image: "/assets/silk-tunic.png",
-  imageAlt: "Philosophy of Restraint"
-};
-
-// API Simulations
-export async function getSiteConfig(): Promise<SiteConfig> {
-  await delay(200);
-  return SITE_CONFIG;
-}
-
-export async function getFooterSections(): Promise<FooterSection[]> {
-  await delay(200);
-  return FOOTER_SECTIONS;
-}
-
-export async function getPhilosophyContent(): Promise<PhilosophyContent> {
-  await delay(300);
-  return PHILOSOPHY_CONTENT;
 }
