@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { HeroSlide } from "@/lib/data";
-import { BrandLogo } from "@/components/ui/BrandLogo";
+
+import { useIntro } from "@/context/IntroContext";
 
 interface HeroProps {
   slides: HeroSlide[];
@@ -14,25 +15,9 @@ interface HeroProps {
 
 export function Hero({ slides }: HeroProps) {
   const [current, setCurrent] = useState(0);
-  const [isIntroComplete, setIsIntroComplete] = useState(false);
+  const { isIntroComplete } = useIntro();
 
-  // Intro Animation Timer & Persistence
-  useEffect(() => {
-    // Check session storage to see if user has already seen the intro
-    const hasSeenIntro = sessionStorage.getItem("rokomferi_intro_seen");
-    
-    if (hasSeenIntro) {
-      setIsIntroComplete(true);
-      return;
-    }
-
-    // Total intro duration ~ 2.5s
-    const timer = setTimeout(() => {
-      setIsIntroComplete(true);
-      sessionStorage.setItem("rokomferi_intro_seen", "true");
-    }, 2800);
-    return () => clearTimeout(timer);
-  }, []);
+  // Slide Rotation (Only start after intro)
 
   // Slide Rotation (Only start after intro)
   useEffect(() => {
@@ -51,41 +36,7 @@ export function Hero({ slides }: HeroProps) {
   if (!slides || slides.length === 0) return null;
 
   return (
-    <section className="relative h-[100dvh] w-full overflow-hidden bg-main">
-      
-      {/* INTRO OVERLAY */}
-      <AnimatePresence>
-        {!isIntroComplete && (
-          <motion.div
-            className="fixed inset-0 z-[9999] bg-[#1a1a1a] flex items-center justify-center overflow-hidden"
-            initial={{ y: 0 }}
-            exit={{ y: "-100%" }}
-            transition={{ duration: 1, ease: [0.76, 0, 0.24, 1], delay: 0.5 }}
-          >
-             {/* Brand Vector Reveal */}
-             <div className="relative z-10 p-8">
-               <BrandLogo 
-                 className="w-[90vw] md:w-[80vw] max-w-[1200px] h-auto text-white" 
-                 animated={true}
-                 duration={2}
-               />
-             </div>
-             
-             {/* Subtle Subtext */}
-             <motion.div 
-               className="absolute bottom-12 text-accent-gold text-xs uppercase tracking-[0.3em]"
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               transition={{ delay: 1, duration: 0.8 }}
-             >
-               Loading Experience
-             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-
+    <section className="relative h-[100dvh] w-full overflow-hidden bg-main">   
       <AnimatePresence mode="popLayout">
         <motion.div
            key={current}

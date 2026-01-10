@@ -11,6 +11,7 @@ interface BrandLogoProps {
   duration?: number;  // Duration
   repeatOnScroll?: boolean; // Whether to replay animation on viewport entry
   repeatInterval?: number; // Time in ms to repeat animation (e.g. 5000)
+  onComplete?: () => void; // Callback when animation finishes
 }
 
 export function BrandLogo({ 
@@ -20,7 +21,8 @@ export function BrandLogo({
   delay = 0,
   duration = 2.5,
   repeatOnScroll = false,
-  repeatInterval
+  repeatInterval,
+  onComplete
 }: BrandLogoProps) {
   const [trigger, setTrigger] = useState(0);
 
@@ -134,6 +136,9 @@ export function BrandLogo({
     >
       {paths.map((d, i) => {
          const { initial, visible, transition } = getVariants(i);
+         // Check if this is the last path to trigger onComplete
+         const isLast = i === paths.length - 1;
+         
          return (
            <motion.path 
              key={i}
@@ -143,6 +148,9 @@ export function BrandLogo({
              whileInView={animated ? visible : undefined}
              animate={animated ? undefined : visible}
              transition={transition as any}
+             onAnimationComplete={() => {
+               if (isLast && onComplete) onComplete();
+             }}
            />
          );
       })}

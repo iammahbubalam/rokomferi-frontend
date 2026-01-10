@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { NavMenu } from "./NavMenu";
 import { CategoryNode, SiteConfig } from "@/lib/data";
 import { SearchOverlay } from "./SearchOverlay";
+import { useIntro } from "@/context/IntroContext";
 import { useCart } from "@/context/CartContext";
 import clsx from "clsx";
 
@@ -23,6 +24,7 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { items, toggleCart } = useCart();
+  const { isIntroComplete, isLoading } = useIntro();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -69,10 +71,10 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
                   <Search className="w-5 h-5" />
                </button>
 
-               {/* New Arrivals CTA requesting attention */}
-               <Link href="/new-arrivals">
+               {/* Shop CTA */}
+               <Link href="/shop">
                  <Button className="px-6 py-3 text-xs h-auto">
-                    New Arrivals
+                    Shop
                  </Button>
                </Link>
             </div>

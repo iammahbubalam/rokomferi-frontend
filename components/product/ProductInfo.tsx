@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AddToCartButton } from "./AddToCartButton";
 import { VariantSelector } from "./VariantSelector";
 import { ProductDetailsAccordion } from "./ProductDetailsAccordion";
-import { Ruler, Info } from "lucide-react";
+import { Ruler, Info, ShieldCheck, Truck, Lock } from "lucide-react";
 import clsx from "clsx";
 
 export function ProductInfo({ product }: { product: Product }) {
@@ -78,6 +78,22 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="flex justify-center gap-8 text-xs uppercase tracking-widest text-secondary underline-offset-4 decoration-primary/30">
              <button className="hover:underline flex items-center gap-2"><Ruler className="w-3 h-3"/> Size Guide</button>
              <button className="hover:underline flex items-center gap-2"><Info className="w-3 h-3"/> Delivery & Returns</button>
+          </div>
+       </div>
+
+       {/* Trust & Service Badges */}
+       <div className="grid grid-cols-3 gap-4 border-y border-primary/5 py-6">
+          <div className="flex flex-col items-center text-center gap-2">
+             <ShieldCheck className="w-5 h-5 text-accent-gold" />
+             <span className="text-[10px] uppercase tracking-widest text-secondary">Authentic<br/>Handloom</span>
+          </div>
+          <div className="flex flex-col items-center text-center gap-2">
+             <Truck className="w-5 h-5 text-accent-gold" />
+             <span className="text-[10px] uppercase tracking-widest text-secondary">Express<br/>Shipping</span>
+          </div>
+          <div className="flex flex-col items-center text-center gap-2">
+             <Lock className="w-5 h-5 text-accent-gold" />
+             <span className="text-[10px] uppercase tracking-widest text-secondary">Secure<br/>Checkout</span>
           </div>
        </div>
 

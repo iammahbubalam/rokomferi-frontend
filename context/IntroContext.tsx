@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface IntroContextType {
   isIntroComplete: boolean;
+  isLoading: boolean;
   completeIntro: () => void;
 }
 
@@ -15,7 +16,7 @@ export function IntroProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check session storage on mount
-    const hasSeen = sessionStorage.getItem("rokomferi_intro_seen");
+    const hasSeen = sessionStorage.getItem("rokomferi_intro_seen_v2");
     if (hasSeen) {
       setIsIntroComplete(true);
     }
@@ -24,14 +25,11 @@ export function IntroProvider({ children }: { children: React.ReactNode }) {
 
   const completeIntro = () => {
     setIsIntroComplete(true);
-    sessionStorage.setItem("rokomferi_intro_seen", "true");
+    sessionStorage.setItem("rokomferi_intro_seen_v2", "true");
   };
 
-  // Prevent flash: Don't render children until we know the state? 
-  // No, render children always. Hero will check the state.
-  
   return (
-    <IntroContext.Provider value={{ isIntroComplete, completeIntro }}>
+    <IntroContext.Provider value={{ isIntroComplete, completeIntro, isLoading: !hasCheckedStorage }}>
       {children}
     </IntroContext.Provider>
   );

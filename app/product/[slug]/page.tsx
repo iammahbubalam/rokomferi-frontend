@@ -6,6 +6,7 @@ import { getProductBySlug } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, ShoppingBag, Ruler, Info } from "lucide-react";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { ProductGallery } from "@/components/product/ProductGallery";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -17,27 +18,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="min-h-screen bg-bg-primary text-primary pt-20">
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-5rem)]">
+      {/* Top Navigation / Breadcrumb */}
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-8 pb-4">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors text-sm uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Collection
+        </Link>
+      </div>
+
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-10rem)]">
         
-        {/* Left: VisualHero (Sticky) */}
-        <div className="w-full lg:w-1/2 h-[50vh] lg:h-auto relative lg:sticky lg:top-20">
-           <Image
-             src={product.media[0].url}
-             alt={product.name}
-             fill
-             className="object-cover"
-             priority
-           />
-           <Link 
-             href="/" 
-             className="absolute top-6 left-6 z-10 flex items-center gap-2 text-white/90 hover:text-white transition-colors bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm"
-           >
-             <ArrowLeft className="w-4 h-4" /> Back to Collection
-           </Link>
+        {/* Left: Product Gallery (Sticky on Desktop) */}
+        <div className="w-full lg:w-[55%] relative lg:sticky lg:top-24 h-fit">
+           <div className="p-4 lg:p-8">
+             <ProductGallery media={product.media} />
+           </div>
         </div>
 
-        {/* Right: Story & Details (Scrollable) */}
-        <div className="w-full lg:w-1/2 p-6 md:p-12 lg:p-20 flex flex-col gap-12 bg-bg-primary">
+        {/* Right: Story & Details (Scrollable but Sticky relative to container) */}
+        <div className="w-full lg:w-[45%] p-6 md:p-12 lg:p-16 flex flex-col gap-12 bg-bg-primary">
            
            {/* Header */}
            <div className="space-y-4 border-b border-primary/10 pb-8">

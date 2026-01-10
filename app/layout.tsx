@@ -32,6 +32,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 // ... (imports remain)
 
 import { IntroProvider } from "@/context/IntroContext";
+import { IntroOverlay } from "@/components/layout/IntroOverlay";
 
 export default async function RootLayout({
   children,
@@ -51,6 +52,7 @@ export default async function RootLayout({
         className={`${bodoni.variable} ${montserrat.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
         <IntroProvider>
+          <IntroOverlay />
           <CartProvider>
             <Navbar categories={categories} siteConfig={siteConfig} />
             <main className="flex-grow pt-[88px] md:pt-[104px]"> 
