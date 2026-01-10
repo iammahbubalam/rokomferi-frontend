@@ -8,7 +8,7 @@ export function Footer() {
   return (
     <footer className="bg-[#f9f8f6] pt-20 pb-0 text-primary border-t border-primary/5 overflow-hidden relative">
       <Container>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-20">
           {/* Brand Column */}
           <div className="md:col-span-1 flex flex-col items-start gap-6">
             <div className="flex items-center gap-3">
@@ -50,23 +50,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h4 className="font-serif text-sm uppercase tracking-widest mb-6 text-primary">Newsletter</h4>
-            <p className="text-xs text-secondary/70 mb-4 font-light">
-              Subscribe to receive updates, access to exclusive deals, and more.
-            </p>
-            <form className="flex border-b border-primary/20 pb-2">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="bg-transparent w-full text-sm outline-none placeholder:text-secondary/40 font-light"
-              />
-              <button type="button" className="text-xs uppercase tracking-widest hover:text-accent-gold transition-colors">
-                Join
-              </button>
-            </form>
-          </div>
+
         </div>
         
         {/* Giant Footer Branding - Animated Vector */}
@@ -77,6 +61,7 @@ export function Footer() {
              variant="draw"
              duration={2.5} 
              repeatOnScroll={true} 
+             repeatInterval={7000} 
            />
         </div>
 

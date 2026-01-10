@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface BrandLogoProps {
@@ -9,6 +10,7 @@ interface BrandLogoProps {
   delay?: number;     // Delay before starting animation
   duration?: number;  // Duration
   repeatOnScroll?: boolean; // Whether to replay animation on viewport entry
+  repeatInterval?: number; // Time in ms to repeat animation (e.g. 5000)
 }
 
 export function BrandLogo({ 
@@ -17,8 +19,21 @@ export function BrandLogo({
   variant = "draw",
   delay = 0,
   duration = 2.5,
-  repeatOnScroll = false
+  repeatOnScroll = false,
+  repeatInterval
 }: BrandLogoProps) {
+  const [trigger, setTrigger] = useState(0);
+
+  // Periodic Replay Logic
+  useEffect(() => {
+    if (!repeatInterval || !animated) return;
+
+    const interval = setInterval(() => {
+      setTrigger((t) => t + 1);
+    }, repeatInterval);
+
+    return () => clearInterval(interval);
+  }, [repeatInterval, animated]);
 
   // The simplified paths for "ROKOMFERI"
   const paths = [
@@ -105,6 +120,7 @@ export function BrandLogo({
 
   return (
     <motion.svg 
+      key={trigger} // This forces the component to remount and replay animation 
       width="623" 
       height="70" 
       viewBox="0 0 623 70" 

@@ -2,7 +2,7 @@ import { Hero } from "@/components/home/Hero";
 import { FeaturedCollection } from "@/components/home/FeaturedCollection";
 import { Philosophy } from "@/components/home/Philosophy";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
-import { Newsletter } from "@/components/home/Newsletter";
+
 import { getAllProducts, getFeaturedCategories, getHeroSlides } from "@/lib/data";
 
 // This is now a Server Component!
@@ -24,7 +24,7 @@ export default async function Home() {
       <FeaturedCollection products={products} />
       <CategoryGrid categories={categories} />
       <Philosophy />
-      <Newsletter />
+
     </div>
   );
 }
