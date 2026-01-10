@@ -94,9 +94,11 @@ export function CartDrawer() {
                   <span>৳{total.toLocaleString()}</span>
                 </div>
                 <p className="text-xs text-secondary text-center">Shipping and taxes calculated at checkout.</p>
-                <Button className="w-full py-4 text-sm font-medium tracking-widest uppercase">
-                  Checkout
-                </Button>
+                <Link href="/checkout" onClick={toggleCart} className="w-full">
+                  <Button className="w-full py-4 text-sm font-medium tracking-widest uppercase">
+                    Checkout
+                  </Button>
+                </Link>
               </div>
             )}
           </motion.div>

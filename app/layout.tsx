@@ -31,6 +31,8 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 
 // ... (imports remain)
 
+import { IntroProvider } from "@/context/IntroContext";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -48,15 +50,17 @@ export default async function RootLayout({
       <body
         className={`${bodoni.variable} ${montserrat.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <CartProvider>
-          <Navbar categories={categories} siteConfig={siteConfig} />
-          <main className="flex-grow pt-[88px] md:pt-[104px]"> 
-            {/* pt to offset fixed header height approx */}
-            {children}
-          </main>
-          <Footer siteConfig={siteConfig} footerSections={footerSections} />
-          <CartDrawer />
-        </CartProvider>
+        <IntroProvider>
+          <CartProvider>
+            <Navbar categories={categories} siteConfig={siteConfig} />
+            <main className="flex-grow pt-[88px] md:pt-[104px]"> 
+              {/* pt to offset fixed header height approx */}
+              {children}
+            </main>
+            <Footer siteConfig={siteConfig} footerSections={footerSections} />
+            <CartDrawer />
+          </CartProvider>
+        </IntroProvider>
       </body>
     </html>
   );

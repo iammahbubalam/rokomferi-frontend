@@ -1,80 +1,115 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import Link from "next/link";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Container, Section } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Product } from "@/lib/data";
 import { ArrowRight } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
+import clsx from "clsx";
 
 export function FeaturedCollection({ products }: { products: Product[] }) {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Create a "Split Layout" feel:
-  // Left side: Sticky Title & Description (Desktop)
-  // Right side: Horizontal Scroll of Products
+  // Custom Scroll Progress Logic
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      const totalScroll = el.scrollWidth - el.clientWidth;
+      const currentScroll = el.scrollLeft;
+      setScrollProgress(currentScroll / totalScroll);
+    };
+
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <Section className="bg-[#1a1a1a] text-white py-24 md:py-32 overflow-hidden relative"> 
-       {/* Background Decoration */}
-       <div className="absolute top-0 left-0 w-full h-[1px] bg-white/10" />
-
+    <Section className="bg-[#121212] text-white py-32 overflow-hidden relative"> 
+       {/* Subtle Grain or Texture could go here */}
+       
        <Container>
-         <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
+         <div className="flex flex-col gap-16">
             
-            {/* Left Column: Sticky Header */}
-            <div className="lg:w-1/3 lg:sticky lg:top-32 lg:h-fit flex flex-col gap-8 z-10">
-               <div>
-                  <span className="text-xs uppercase tracking-[0.3em] text-[#d4af37] mb-4 block">The Edit</span>
-                  <h2 className="font-serif text-5xl md:text-7xl text-white leading-[0.9]">
-                    Curated <br/> Essentials
+            {/* Editorial Header - Full Width Split */}
+            <div className="flex flex-col lg:flex-row justify-between items-end gap-8 border-b border-white/10 pb-8">
+               <div className="max-w-2xl">
+                  <span className="text-xs uppercase tracking-[0.3em] text-[#d4af37] mb-6 block font-medium">
+                     The Collection
+                  </span>
+                  <h2 className="font-serif text-5xl md:text-8xl text-white leading-[0.9]">
+                    Curated <span className="italic text-white/50">Essentials</span>
                   </h2>
                </div>
-               <p className="text-white/70 text-lg leading-relaxed max-w-sm font-light">
-                 Each piece is chosen for its timeless character and uncompromising quality. 
-                 Designed to transcend seasons.
-               </p>
-               <Button variant="outline-white" className="w-fit group">
-                  View All Collection <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-               </Button>
+
+               <div className="flex flex-col items-start lg:items-end gap-6">
+                  <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-xs font-light text-left lg:text-right">
+                    Timeless pieces chosen for their character. <br className="hidden lg:block"/>
+                    Designed to transcend seasons.
+                  </p>
+                  
+                  <Link href="/shop" className="group flex items-center gap-2 text-sm uppercase tracking-widest pb-1 border-b border-white/30 hover:border-white transition-colors">
+                    View All Products
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+               </div>
             </div>
 
-            {/* Right Column: Scrollable Content */}
-            <div className="lg:w-2/3 w-full">
+            {/* Scrollable Gallery */}
+            <div className="relative">
                <div 
-                  className="flex overflow-x-auto pb-12 gap-8 snap-x snap-mandatory scrollbar-hide -mr-4 md:-mr-8 pr-4 md:pr-8"
+                  ref={scrollRef}
+                  className="flex overflow-x-auto gap-8 pb-12 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                >
+                  {/* Intro/Spacer for layout offset */}
+                  <div className="w-0 md:w-16 flex-shrink-0" />
+
                   {products.map((product, idx) => (
                     <motion.div 
                       key={product.id} 
-                      className="min-w-[85vw] md:min-w-[22rem] snap-center flex-shrink-0"
-                      initial={{ opacity: 0, x: 100 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+                      className="min-w-[85vw] md:min-w-[24rem] snap-center flex-shrink-0"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-10%" }}
                       transition={{ duration: 0.8, delay: idx * 0.1, ease: "easeOut" }}
                     >
-                       {/* Passing 'inverted' context to ProductCard for dark background */}
                        <ProductCard product={product} variant="inverted" /> 
                     </motion.div>
                   ))}
                   
-                  {/* End Card Link */}
-                   <motion.div 
-                      className="min-w-[20rem] snap-center flex-shrink-0 flex items-center justify-center border border-white/20 aspect-[3/4] hover:bg-white hover:text-black transition-colors cursor-pointer group"
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
+                  {/* End Card Link (Minimalist) */}
+                  <Link href="/shop" className="contents">
+                    <motion.div 
+                        className="min-w-[20rem] snap-center flex-shrink-0 flex items-center justify-center border-l border-white/10 aspect-[3/4] hover:bg-white/5 transition-colors cursor-pointer group"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
                        <div className="flex flex-col items-center gap-4">
-                          <span className="font-serif text-2xl italic">Explore More</span>
-                          <div className="w-12 h-[1px] bg-current group-hover:w-24 transition-all" />
+                          <span className="font-serif text-3xl italic text-white/50 group-hover:text-white transition-colors">Explore</span>
                        </div>
-                   </motion.div>
+                    </motion.div>
+                  </Link>
+                  
+                  <div className="w-4 md:w-16 flex-shrink-0" />
+               </div>
+
+               {/* Custom Progress Bar Control */}
+               <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-white/10 mt-8">
+                  <motion.div 
+                    className="h-[2px] bg-[#d4af37] relative -top-[0.5px]"
+                    style={{ width: `${Math.max(scrollProgress * 100, 10)}%` }} // Minimum width for visibility
+                    layoutId="scrollProgress"
+                  />
                </div>
             </div>
-
          </div>
        </Container>
     </Section>

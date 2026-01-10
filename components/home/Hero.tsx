@@ -16,11 +16,20 @@ export function Hero({ slides }: HeroProps) {
   const [current, setCurrent] = useState(0);
   const [isIntroComplete, setIsIntroComplete] = useState(false);
 
-  // Intro Animation Timer
+  // Intro Animation Timer & Persistence
   useEffect(() => {
+    // Check session storage to see if user has already seen the intro
+    const hasSeenIntro = sessionStorage.getItem("rokomferi_intro_seen");
+    
+    if (hasSeenIntro) {
+      setIsIntroComplete(true);
+      return;
+    }
+
     // Total intro duration ~ 2.5s
     const timer = setTimeout(() => {
       setIsIntroComplete(true);
+      sessionStorage.setItem("rokomferi_intro_seen", "true");
     }, 2800);
     return () => clearTimeout(timer);
   }, []);

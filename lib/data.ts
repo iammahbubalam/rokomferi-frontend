@@ -265,6 +265,53 @@ export const PRODUCTS: Product[] = [
     },
     tags: ["luxury", "heritage", "muslin", "white"]
   },
+  {
+    id: "p5",
+    name: "Midnight Velocity Saree",
+    slug: "midnight-velocity",
+    sku: "MV-SAR-005",
+    category: "Sarees",
+    description: "A bold experiment in silk. Dark navy with silver dust.",
+    status: "published",
+    pricing: {
+      basePrice: 22000,
+      salePrice: 18500, // ON SALE
+      currency: "BDT"
+    },
+    inventory: {
+      stockLevel: 3,
+      lowStockThreshold: 5,
+      trackQuantity: true,
+      status: "in_stock" // LOW STOCK
+    },
+    media: [
+      { id: "m5", type: "image", url: "/assets/saree-blue-katan.png", alt: "Midnight Saree", isThumbnail: true }
+    ],
+    tags: ["sale", "party"]
+  },
+  {
+    id: "p6",
+    name: "Golden Era Jamdani",
+    slug: "golden-era-jamdani",
+    sku: "GE-JAM-006",
+    category: "Sarees",
+    description: "The gold standard of Dhakai weaving.",
+    status: "published",
+    pricing: {
+      basePrice: 45000,
+      currency: "BDT"
+    },
+    inventory: {
+      stockLevel: 0,
+      lowStockThreshold: 1,
+      trackQuantity: true,
+      status: "out_of_stock" // SOLD OUT
+    },
+    media: [
+      { id: "m6", type: "image", url: "/assets/eid-texture.png", alt: "Golden Jamdani", isThumbnail: true }
+    ],
+    tags: ["heritage", "gold"]
+  },
 ];
 
 export const CATEGORIES = [

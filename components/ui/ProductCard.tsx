@@ -2,81 +2,127 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Product } from "@/lib/data";
-import { Plus } from "lucide-react";
 import clsx from "clsx";
+import { motion } from "framer-motion";
+import { ShoppingBag, Eye } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
-export function ProductCard({ product, variant = "default" }: { product: Product; variant?: "default" | "inverted" }) {
+interface ProductCardProps {
+  product: Product;
+  index?: number;
+  variant?: "default" | "inverted";
+}
+
+export function ProductCard({ product, index = 0, variant = "default" }: ProductCardProps) {
+  const { addToCart } = useCart();
+  
+  // Pricing Strategy
+  const price = product.pricing.salePrice || product.pricing.basePrice;
+  const originalPrice = product.pricing.salePrice ? product.pricing.basePrice : null;
+  
+  // Status Logic
+  const isNew = product.tags?.includes('new') || product.tags?.includes('eid');
+  const isSoldOut = product.inventory.status === 'out_of_stock';
+  const lowStock = product.inventory.stockLevel < 5 && !isSoldOut;
+
   return (
-    <Link href={`/product/${product.slug}`} className="group block cursor-pointer">
-      {/* Image Container with Aspect Ratio */}
-      <div className="relative aspect-[3/5] overflow-hidden bg-bg-secondary w-full">
-        {product.tags?.includes('new') && (
-          <span className="absolute top-4 left-4 z-10 text-[10px] uppercase tracking-widest bg-white text-black px-3 py-1 font-medium">
-            New Arrival
-          </span>
-        )}
-        
-        {/* Image Animation */}
+    <div className="group relative flex flex-col gap-4">
+      {/* Image Container with Hover Effects */}
+      <Link href={`/product/${product.slug}`} className="block relative overflow-hidden aspect-[3/4] bg-bg-secondary w-full">
         <motion.div
-          className="w-full h-full"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+           whileHover={{ scale: 1.05 }}
+           transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} // smooth luxurious ease
+           className="w-full h-full relative"
         >
           <Image
             src={product.media[0].url}
-            alt={product.media[0].alt || product.name}
+            alt={product.name}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          
+          {/* Overlay Gradient (subtle darkening on bottom for text readability if needed, or visual depth) */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
         </motion.div>
 
-        {/* Quick Add Overlay */}
-        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
-           <button className="w-full bg-white text-black text-xs uppercase tracking-widest py-4 hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" /> Quick Add
-           </button>
+        {/* Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+           {isNew && (
+             <span className="bg-white/90 backdrop-blur text-black text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
+               New Arrival
+             </span>
+           )}
+           {product.pricing.salePrice && (
+             <span className="bg-accent-gold/90 text-white text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
+               Sale
+             </span>
+           )}
+           {isSoldOut && (
+             <span className="bg-black/80 text-white text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
+               Sold Out
+             </span>
+           )}
         </div>
-      </div>
+
+        {/* Quick Actions (Slide up on hover) */}
+        {!isSoldOut && (
+           <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20 flex gap-2">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  addToCart(product);
+                }}
+                className="flex-1 bg-white text-primary h-10 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 shadow-lg"
+              >
+                <ShoppingBag className="w-3 h-3" /> Quick Add
+              </button>
+           </div>
+        )}
+      </Link>
 
       {/* Product Info */}
-      <div className="mt-6 flex flex-col gap-2">
-        <div className="flex justify-between items-start">
-           <h3 className={clsx(
-             "font-serif text-lg leading-tight max-w-[80%] transition-colors",
-             variant === "inverted" ? "text-white group-hover:text-white/80" : "text-primary group-hover:text-primary/80"
-           )}>
-             {product.name}
-           </h3>
-           <div className="flex flex-col items-end">
-             {product.pricing.salePrice ? (
-               <>
-                  <span className={clsx("text-sm line-through opacity-60", variant === "inverted" ? "text-white" : "text-secondary")}>
-                    ৳{product.pricing.basePrice.toLocaleString()}
-                  </span>
-                  <span className={clsx("text-sm font-medium text-status-error", variant === "inverted" ? "text-red-300" : "")}>
-                    ৳{product.pricing.salePrice.toLocaleString()}
-                  </span>
-               </>
-             ) : (
-                <span className={clsx(
-                  "text-sm font-medium",
-                  variant === "inverted" ? "text-white/90" : "text-primary"
-                )}>
-                  ৳{product.pricing.basePrice.toLocaleString()}
-                </span>
-             )}
-           </div>
+      <div className="flex flex-col gap-1 items-start">
+        {/* Category / Subtitle */}
+        <span className="text-[10px] uppercase tracking-[0.2em] text-secondary/60">
+          {product.category}
+        </span>
+
+        {/* Title */}
+        <Link href={`/product/${product.slug}`} className="group-hover:opacity-70 transition-opacity">
+          <h3 className={clsx(
+            "font-serif text-lg leading-tight text-primary",
+            variant === "inverted" ? "text-white" : "text-primary"
+          )}>
+            {product.name}
+          </h3>
+        </Link>
+        
+        {/* Price Row */}
+        <div className="flex items-center gap-3 mt-1 text-sm font-medium tracking-wide">
+           <span className={variant === "inverted" ? "text-white" : "text-primary"}>
+             ৳{price.toLocaleString()}
+           </span>
+           {originalPrice && (
+             <span className="text-secondary/50 line-through text-xs decoration-secondary/30">
+               ৳{originalPrice.toLocaleString()}
+             </span>
+           )}
         </div>
-        <span className={clsx(
-          "text-xs uppercase tracking-wider",
-          variant === "inverted" ? "text-white/50" : "text-secondary"
-        )}>{product.category}</span>
+
+        {/* Variant Indicators (Static for now, but implies depth) */}
+        {product.variants && (
+           <div className="h-4 flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+              {product.variants.slice(0, 3).map(v => (
+                 <span key={v.id} className="text-[10px] text-secondary border border-primary/20 px-1 rounded-sm uppercase">
+                    {v.name}
+                 </span>
+              ))}
+              {product.variants.length > 3 && <span className="text-[10px] text-secondary">+</span>}
+           </div>
+        )}
       </div>
-    </Link>
+    </div>
   );
 }
