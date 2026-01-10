@@ -5,8 +5,13 @@ import Image from "next/image";
 import { Container, Section } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { PhilosophyContent } from "@/lib/data";
 
-export function Philosophy() {
+interface PhilosophyProps {
+  content: PhilosophyContent;
+}
+
+export function Philosophy({ content }: PhilosophyProps) {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -21,12 +26,12 @@ export function Philosophy() {
        <Container>
          <div className="relative flex flex-col md:flex-row items-center">
             
-            {/* Parallax Image Container */}
+           {/* Parallax Image Container */}
             <div className="w-full md:w-3/5 relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
                <motion.div style={{ y }} className="absolute inset-0 w-full h-[120%] -top-[10%]">
                   <Image 
-                    src="/assets/silk-tunic.png" // Ideally a different image for variety, but reusing for consistency for now
-                    alt="Philosophy of Restraint"
+                    src={content.image}
+                    alt={content.imageAlt}
                     fill
                     className="object-cover"
                   />
@@ -45,25 +50,19 @@ export function Philosophy() {
                  className="bg-white/80 backdrop-blur-md p-8 md:p-16 border border-white/40 shadow-2xl shadow-primary/5"
                >
                   <span className="text-xs uppercase tracking-[0.3em] text-accent-gold mb-6 block border-b border-accent-gold/20 pb-4 w-fit">
-                    The Atelier
+                    {content.tagline}
                   </span>
                   <h3 className="font-serif text-4xl md:text-5xl text-primary leading-[1.1] mb-8">
-                    We believe in the <br/>
-                    <span className="italic text-secondary">soul of the fabric.</span>
+                    {content.headline.line1} <br/>
+                    <span className="italic text-secondary">{content.headline.line2}</span>
                   </h3>
                   <div className="space-y-6 text-secondary font-light leading-relaxed">
-                    <p>
-                      In a world of noise, Rokomferi offers silence. Our garments are designed to be lived in, 
-                      not just looked at. We prioritize the tactile experience—how the silk drapes, 
-                      how the wool warms, how the linen breathes.
-                    </p>
-                    <p>
-                      Each piece is a dialogue between the artisan's hand and the wearer's body. 
-                      Sustainable, ethical, and intentionally timeless.
-                    </p>
+                    {content.paragraphs.map((para, index) => (
+                      <p key={index}>{para}</p>
+                    ))}
                   </div>
                   <div className="mt-10">
-                    <Button variant="primary">Discover Our Story</Button>
+                    <Button variant="primary">{content.ctaText}</Button>
                   </div>
                </motion.div>
             </div>

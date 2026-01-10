@@ -8,12 +8,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NavMenu } from "./NavMenu";
-import { CATEGORY_TREE } from "@/lib/data";
+import { CategoryNode, SiteConfig } from "@/lib/data";
 import clsx from "clsx";
 
 import { SearchOverlay } from "./SearchOverlay";
 
-export function Navbar() {
+interface NavbarProps {
+  categories: CategoryNode[];
+  siteConfig: SiteConfig;
+}
+
+export function Navbar({ categories, siteConfig }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -41,7 +46,7 @@ export function Navbar() {
              <div className="relative h-10 w-32 md:h-12 md:w-40">
                <Image 
                  src="/assets/logo_rokomferi.png" 
-                 alt="Rokomferi" 
+                 alt={siteConfig.name} 
                  fill
                  className="object-contain object-left"
                  priority
@@ -51,7 +56,7 @@ export function Navbar() {
 
           {/* 2. Desktop Navigation (Center - Mega Menu) */}
           <div className="hidden lg:block">
-            <NavMenu categories={CATEGORY_TREE} />
+            <NavMenu categories={categories} />
           </div>
 
           {/* 3. Actions (Right) */}
@@ -114,7 +119,7 @@ export function Navbar() {
               <Link href="/new-arrivals" className="text-2xl font-serif text-accent-gold" onClick={() => setIsMobileOpen(false)}>
                 New Arrivals
               </Link>
-              {CATEGORY_TREE.map((cat) => (
+              {categories.map((cat) => (
                  <div key={cat.id} className="flex flex-col gap-3">
                     <Link
                       href={`/category/${cat.slug}`}

@@ -3,7 +3,7 @@ import { FeaturedCollection } from "@/components/home/FeaturedCollection";
 import { Philosophy } from "@/components/home/Philosophy";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 
-import { getAllProducts, getFeaturedCategories, getHeroSlides } from "@/lib/data";
+import { getAllProducts, getFeaturedCategories, getHeroSlides, getPhilosophyContent } from "@/lib/data";
 
 // This is now a Server Component!
 export default async function Home() {
@@ -13,9 +13,15 @@ export default async function Home() {
   const heroData = getHeroSlides();
   const productsData = getAllProducts();
   const categoriesData = getFeaturedCategories();
+  const philosophyData = getPhilosophyContent();
 
   // Wait for all data
-  const [slides, products, categories] = await Promise.all([heroData, productsData, categoriesData]);
+  const [slides, products, categories, philosophyContent] = await Promise.all([
+    heroData, 
+    productsData, 
+    categoriesData,
+    philosophyData
+  ]);
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
@@ -23,7 +29,7 @@ export default async function Home() {
       <Hero slides={slides} />
       <FeaturedCollection products={products} />
       <CategoryGrid categories={categories} />
-      <Philosophy />
+      <Philosophy content={philosophyContent} />
 
     </div>
   );

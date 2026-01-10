@@ -22,22 +22,33 @@ export const metadata: Metadata = {
   description: "A premium minimalist e-commerce experience.",
 };
 
-export default function RootLayout({
+import { getCategoryTree, getFooterSections, getSiteConfig } from "@/lib/data";
+
+// ... (imports remain)
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch global data on server
+  const [siteConfig, categories, footerSections] = await Promise.all([
+    getSiteConfig(),
+    getCategoryTree(),
+    getFooterSections()
+  ]);
+
   return (
     <html lang="en">
       <body
         className={`${bodoni.variable} ${montserrat.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <Navbar />
+        <Navbar categories={categories} siteConfig={siteConfig} />
         <main className="flex-grow pt-[88px] md:pt-[104px]"> 
           {/* pt to offset fixed header height approx */}
           {children}
         </main>
-        <Footer />
+        <Footer siteConfig={siteConfig} footerSections={footerSections} />
       </body>
     </html>
   );

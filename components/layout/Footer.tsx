@@ -1,9 +1,15 @@
 import { Container } from "@/components/ui/Container";
 import Image from "next/image";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { FooterSection, SiteConfig } from "@/lib/data";
+import Link from "next/link";
 
-export function Footer() {
-  const brandName = "ROKOMFERI".split("");
+interface FooterProps {
+  siteConfig: SiteConfig;
+  footerSections: FooterSection[];
+}
+
+export function Footer({ siteConfig, footerSections }: FooterProps) {
 
   return (
     <footer className="bg-[#f9f8f6] pt-20 pb-0 text-primary border-t border-primary/5 overflow-hidden relative">
@@ -14,43 +20,35 @@ export function Footer() {
             <div className="flex items-center gap-3">
                  <div className="relative h-8 w-8">
                     <Image 
-                        src="/assets/logo_rokomferi.png" 
-                        alt="Rokomferi" 
+                        src={siteConfig.logo}
+                        alt={siteConfig.name} 
                         fill
                         className="object-contain"
                     />
                  </div>
-                 <span className="font-serif text-2xl font-bold uppercase tracking-widest text-primary">Rokomferi</span>
+                 <span className="font-serif text-2xl font-bold uppercase tracking-widest text-primary">{siteConfig.name}</span>
             </div>
             <p className="text-sm leading-relaxed text-secondary/80 max-w-xs font-light">
-              Defining quiet luxury through texture, form, and timeless restraint. 
-              Designed for the modern sophisticate.
+              {siteConfig.description}
             </p>
           </div>
 
-          {/* Links Column */}
-          <div>
-            <h4 className="font-serif text-sm uppercase tracking-widest mb-6 text-primary">Shop</h4>
-            <ul className="space-y-4 text-sm text-secondary/70 font-light">
-              <li><a href="#" className="hover:text-primary transition-colors">New Arrivals</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Ready to Wear</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Accessories</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Editorial</a></li>
-            </ul>
-          </div>
-
-          {/* Links Column */}
-          <div>
-            <h4 className="font-serif text-sm uppercase tracking-widest mb-6 text-primary">Support</h4>
-            <ul className="space-y-4 text-sm text-secondary/70 font-light">
-              <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Shipping & Returns</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Size Guide</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
-            </ul>
-          </div>
-
-
+          {/* Dynamic Links Columns */}
+          {/* Limit to 2 columns for layout balance if needed, or map all */}
+          {footerSections.slice(0, 2).map((section) => (
+            <div key={section.title}>
+              <h4 className="font-serif text-sm uppercase tracking-widest mb-6 text-primary">{section.title}</h4>
+              <ul className="space-y-4 text-sm text-secondary/70 font-light">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="hover:text-primary transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         
         {/* Giant Footer Branding - Animated Vector */}
@@ -67,10 +65,14 @@ export function Footer() {
 
 
         <div className="py-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-widest text-secondary/50 gap-4">
-          <p>© 2026 Rokomferi. All rights reserved.</p>
+          <p>{siteConfig.copyright}</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-primary">Privacy Policy</a>
-            <a href="#" className="hover:text-primary">Terms of Service</a>
+             {/* Use the 3rd section (Legal) if it exists, or simulated links */}
+             {footerSections[2]?.links.map(link => (
+                <Link key={link.label} href={link.href} className="hover:text-primary">
+                  {link.label}
+                </Link>
+             ))}
           </div>
         </div>
       </Container>

@@ -230,3 +230,114 @@ export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
   await delay(400);
   return FEATURED_CATEGORIES;
 }
+
+export interface SiteConfig {
+  name: string;
+  description: string;
+  logo: string;
+  copyright: string;
+  contact: {
+    email: string;
+    phone: string;
+    address: string;
+  };
+  socials: { platform: string; url: string }[];
+}
+
+export const SITE_CONFIG: SiteConfig = {
+  name: "Rokomferi",
+  description: "Defining quiet luxury through texture, form, and timeless restraint. Designed for the modern sophisticate.",
+  logo: "/assets/logo_rokomferi.png",
+  copyright: "© 2026 Rokomferi. All rights reserved.",
+  contact: {
+    email: "concierge@rokomferi.com",
+    phone: "+1 (555) 000-0000",
+    address: "123 Fashion Ave, New York, NY 10001"
+  },
+  socials: [
+    { platform: "Instagram", url: "#" },
+    { platform: "Pinterest", url: "#" },
+    { platform: "Twitter", url: "#" }
+  ]
+};
+
+export interface FooterLink {
+  label: string;
+  href: string;
+}
+
+export interface FooterSection {
+  title: string;
+  links: FooterLink[];
+}
+
+export const FOOTER_SECTIONS: FooterSection[] = [
+  {
+    title: "Shop",
+    links: [
+      { label: "New Arrivals", href: "/new-arrivals" },
+      { label: "Ready to Wear", href: "/category/ready-to-wear" },
+      { label: "Accessories", href: "/category/women-accessories" },
+      { label: "Editorial", href: "/editorial" }
+    ]
+  },
+  {
+    title: "Support",
+    links: [
+      { label: "Contact Us", href: "/contact" },
+      { label: "Shipping & Returns", href: "/shipping" },
+      { label: "Size Guide", href: "/size-guide" },
+      { label: "FAQ", href: "/faq" }
+    ]
+  },
+  {
+    title: "Legal", // Added to generic section or separate
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" }
+    ]
+  }
+];
+
+export interface PhilosophyContent {
+  tagline: string; // The Atelier
+  headline: {
+    line1: string;
+    line2: string; // Italic part
+  };
+  paragraphs: string[];
+  ctaText: string;
+  image: string;
+  imageAlt: string;
+}
+
+export const PHILOSOPHY_CONTENT: PhilosophyContent = {
+  tagline: "The Atelier",
+  headline: {
+    line1: "We believe in the",
+    line2: "soul of the fabric."
+  },
+  paragraphs: [
+    "In a world of noise, Rokomferi offers silence. Our garments are designed to be lived in, not just looked at. We prioritize the tactile experience—how the silk drapes, how the wool warms, how the linen breathes.",
+    "Each piece is a dialogue between the artisan's hand and the wearer's body. Sustainable, ethical, and intentionally timeless."
+  ],
+  ctaText: "Discover Our Story",
+  image: "/assets/silk-tunic.png",
+  imageAlt: "Philosophy of Restraint"
+};
+
+// API Simulations
+export async function getSiteConfig(): Promise<SiteConfig> {
+  await delay(200);
+  return SITE_CONFIG;
+}
+
+export async function getFooterSections(): Promise<FooterSection[]> {
+  await delay(200);
+  return FOOTER_SECTIONS;
+}
+
+export async function getPhilosophyContent(): Promise<PhilosophyContent> {
+  await delay(300);
+  return PHILOSOPHY_CONTENT;
+}
