@@ -35,8 +35,10 @@ export function Navbar() {
         <Container className="flex items-center justify-between gap-8">
           
           {/* 1. Logo Section */}
+          {/* 1. Logo Section */}
+          {/* 1. Logo Section */}
           <Link href="/" className="flex-shrink-0 relative z-50">
-            <div className="relative h-10 w-32 md:h-12 md:w-40">
+             <div className="relative h-10 w-32 md:h-12 md:w-40">
                <Image 
                  src="/assets/logo_rokomferi.png" 
                  alt="Rokomferi" 
@@ -44,7 +46,7 @@ export function Navbar() {
                  className="object-contain object-left"
                  priority
                />
-            </div>
+             </div>
           </Link>
 
           {/* 2. Desktop Navigation (Center - Mega Menu) */}

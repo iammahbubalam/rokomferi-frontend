@@ -13,22 +13,71 @@ interface HeroProps {
 
 export function Hero({ slides }: HeroProps) {
   const [current, setCurrent] = useState(0);
+  const [isIntroComplete, setIsIntroComplete] = useState(false);
 
-  // If no slides are provided (sanity check), return null or loading
-  if (!slides || slides.length === 0) return null;
-
+  // Intro Animation Timer
   useEffect(() => {
+    // Total intro duration ~ 2.5s
+    const timer = setTimeout(() => {
+      setIsIntroComplete(true);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Slide Rotation (Only start after intro)
+  useEffect(() => {
+    if (!isIntroComplete) return;
+    
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 6000); // 6 seconds per slide
+    }, 6000); 
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, isIntroComplete]);
 
   const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
+  // If no slides are provided (sanity check), return null or loading
+  if (!slides || slides.length === 0) return null;
+
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-main">
+      
+      {/* INTRO OVERLAY */}
+      <AnimatePresence>
+        {!isIntroComplete && (
+          <motion.div
+            className="absolute inset-0 z-[100] bg-[#1a1a1a] flex items-center justify-center overflow-hidden"
+            initial={{ y: 0 }}
+            exit={{ y: "-100%" }}
+            transition={{ duration: 1, ease: [0.76, 0, 0.24, 1], delay: 0.2 }}
+          >
+             {/* Brand Name Reveal */}
+             <div className="overflow-hidden">
+               <motion.h1 
+                 className="font-serif text-5xl md:text-8xl text-white tracking-[0.2em] md:tracking-[0.4em] uppercase"
+                 initial={{ y: "100%" }}
+                 animate={{ y: 0 }}
+                 transition={{ duration: 1.2, ease: [0.33, 1, 0.68, 1], delay: 0.5 }}
+               >
+                 Rokomferi
+               </motion.h1>
+             </div>
+             
+             {/* Subtle Subtext */}
+             <motion.div 
+               className="absolute bottom-12 text-accent-gold text-xs uppercase tracking-[0.3em]"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 1.5, duration: 0.8 }}
+             >
+               Loading Experience
+             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
       <AnimatePresence mode="popLayout">
         <motion.div
            key={current}
@@ -58,42 +107,46 @@ export function Hero({ slides }: HeroProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Content Layer */}
+      {/* Content Layer - Only show after intro starts exiting or is done? 
+          Actually, we can let it sit there but maybe animate in slightly delayed so it doesn't clash with intro curtain lift.
+      */}
       <div className="absolute inset-0 z-20 flex flex-col justify-end pb-40 md:pb-48 px-6 md:px-24">
          <div className="max-w-[800px]">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="flex flex-col gap-8"
-              >
-                 <span className="uppercase tracking-[0.3em] text-white/90 text-sm font-medium border-l-2 border-accent-gold pl-4 drop-shadow-md">
-                   {slides[current].subtitle}
-                 </span>
-                 <h1 className="font-serif text-6xl md:text-9xl text-white leading-[0.85] drop-shadow-lg">
-                   {slides[current].title}
-                 </h1>
-                 <p className="text-white/90 text-lg md:text-2xl max-w-xl leading-relaxed font-light drop-shadow-md">
-                   {slides[current].description}
-                 </p>
-                 <div className="flex flex-col md:flex-row gap-6 pt-6">
-                    <Button 
-                        variant="white" 
-                        className="px-10 py-6 text-sm tracking-[0.2em] font-bold"
-                    >
-                      SHOP COLLECTION
-                    </Button>
-                    <Button 
-                        variant="outline-white" 
-                        className="px-10 py-6 text-sm tracking-[0.2em]"
-                    >
-                      VIEW LOOKBOOK
-                    </Button>
-                 </div>
-              </motion.div>
+              {isIntroComplete && (
+                <motion.div
+                  key={current}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }} // Delayed slightly to wait for curtain
+                  className="flex flex-col gap-8"
+                >
+                  <span className="uppercase tracking-[0.3em] text-white/90 text-sm font-medium border-l-2 border-accent-gold pl-4 drop-shadow-md">
+                    {slides[current].subtitle}
+                  </span>
+                  <h1 className="font-serif text-6xl md:text-9xl text-white leading-[0.85] drop-shadow-lg">
+                    {slides[current].title}
+                  </h1>
+                  <p className="text-white/90 text-lg md:text-2xl max-w-xl leading-relaxed font-light drop-shadow-md">
+                    {slides[current].description}
+                  </p>
+                  <div className="flex flex-col md:flex-row gap-6 pt-6">
+                      <Button 
+                          variant="white" 
+                          className="px-10 py-6 text-sm tracking-[0.2em] font-bold"
+                      >
+                        SHOP COLLECTION
+                      </Button>
+                      <Button 
+                          variant="outline-white" 
+                          className="px-10 py-6 text-sm tracking-[0.2em]"
+                      >
+                        VIEW LOOKBOOK
+                      </Button>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
          </div>
       </div>
@@ -126,7 +179,7 @@ export function Hero({ slides }: HeroProps) {
           animate={{ x: "-50%" }}
           transition={{ duration: 30, ease: "linear", repeat: Infinity }}
         >
-          {Array(10).fill("Quiet Luxury • Timeless Form • Organic Texture • Sustainable Design •").map((text, i) => (
+          {Array(10).fill("ROKOMFERI • Quiet Luxury • ROKOMFERI • Timeless Form •").map((text, i) => (
             <span key={i}>{text}</span>
           ))}
         </motion.div>
