@@ -1,3 +1,4 @@
+import React, { forwardRef } from "react";
 import clsx from "clsx";
 
 interface ContainerProps {
@@ -6,13 +7,14 @@ interface ContainerProps {
   as?: React.ElementType;
 }
 
-export function Container({ 
+export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ 
   children, 
   className,
   as: Component = "div" 
-}: ContainerProps) {
+}, ref) => {
   return (
     <Component 
+      ref={ref}
       className={clsx(
         "mx-auto w-full max-w-[1440px]",
         "px-4 md:px-6 lg:px-8", // Responsive horizontal padding
@@ -22,19 +24,24 @@ export function Container({
       {children}
     </Component>
   );
-}
+});
 
-export function Section({
-  children,
-  className,
-  id
-}: {
+Container.displayName = "Container";
+
+interface SectionProps {
   children: React.ReactNode;
   className?: string;
   id?: string;
-}) {
+}
+
+export const Section = forwardRef<HTMLElement, SectionProps>(({
+  children,
+  className,
+  id
+}, ref) => {
   return (
     <section 
+      ref={ref}
       id={id}
       className={clsx(
         "w-full",
@@ -45,4 +52,6 @@ export function Section({
       {children}
     </section>
   );
-}
+});
+
+Section.displayName = "Section";

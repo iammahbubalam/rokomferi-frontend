@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Product } from "@/lib/data";
+import { Plus } from "lucide-react";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -11,17 +12,17 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Image Container with Aspect Ratio */}
       <div className="relative aspect-[3/4] overflow-hidden bg-bg-secondary w-full">
         {product.isNew && (
-          <span className="absolute top-4 left-4 z-10 text-[10px] uppercase tracking-widest bg-white/90 backdrop-blur-sm px-2 py-1 text-primary">
+          <span className="absolute top-4 left-4 z-10 text-[10px] uppercase tracking-widest bg-white text-black px-3 py-1 font-medium">
             New Arrival
           </span>
         )}
         
+        {/* Image Animation */}
         <motion.div
           className="w-full h-full"
           whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {/* Using Next.js Image for optimization, creating a "glitchy" premium lazy load effect if needed, but keeping standard for now */}
           <Image
             src={product.images[0]}
             alt={product.name}
@@ -30,16 +31,28 @@ export function ProductCard({ product }: { product: Product }) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </motion.div>
+
+        {/* Quick Add Overlay */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+           <button className="w-full bg-white text-black text-xs uppercase tracking-widest py-4 hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" /> Quick Add
+           </button>
+        </div>
       </div>
 
       {/* Product Info */}
-      <div className="mt-6 flex flex-col gap-1">
-        <h3 className="font-serif text-lg text-primary group-hover:underline decoration-1 underline-offset-4 decoration-accent-gold transition-all">
-          {product.name}
-        </h3>
-        <p className="text-sm text-secondary tracking-wide">
-          ${product.price.toLocaleString()}
-        </p>
+      <div className="mt-6 flex flex-col gap-2">
+        <div className="flex justify-between items-start">
+           <h3 className="font-serif text-lg text-primary leading-tight max-w-[80%]">
+             {product.name}
+           </h3>
+           <span className="text-sm font-medium text-primary">
+             ${product.price}
+           </span>
+        </div>
+        <span className="text-xs text-secondary uppercase tracking-wider">{product.category}</span>
       </div>
     </Link>
   );

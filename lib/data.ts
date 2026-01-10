@@ -181,6 +181,40 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   return CATEGORY_TREE;
 }
 
+export interface FeaturedCategory {
+  id: string;
+  name: string;
+  slug: string;
+  image: string;
+  description?: string;
+  size: "large" | "small"; // For masonry layout control
+}
+
+export const FEATURED_CATEGORIES: FeaturedCategory[] = [
+  {
+    id: "fc1",
+    name: "Ready to Wear",
+    slug: "ready-to-wear",
+    image: "/assets/silk-tunic.png", // Ideally different image
+    description: "Effortless silhouettes for the modern day.",
+    size: "large"
+  },
+  {
+    id: "fc2",
+    name: "Accessories",
+    slug: "accessories",
+    image: "/assets/bronze-skirt.png", // Reuse for now
+    size: "small"
+  },
+  {
+    id: "fc3",
+    name: "Outerwear",
+    slug: "outerwear",
+    image: "/assets/wool-coat.png", // Reuse for now
+    size: "small"
+  }
+];
+
 export async function searchProducts(query: string): Promise<Product[]> {
   await delay(500); // Simulate network latency
   if (!query) return [];
@@ -190,4 +224,9 @@ export async function searchProducts(query: string): Promise<Product[]> {
     p.category.toLowerCase().includes(lowerQuery) ||
     p.description.toLowerCase().includes(lowerQuery)
   );
+}
+
+export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
+  await delay(400);
+  return FEATURED_CATEGORIES;
 }

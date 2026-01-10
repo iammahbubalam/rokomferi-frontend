@@ -5,10 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, ArrowRight, Loader2 } from "lucide-react";
 import { Product, searchProducts } from "@/lib/data";
 import Link from "next/link";
-import Image from "next/image";
-import { useDebounce } from "@/lib/hooks/use-debounce"; // We might need to create this hook if it doesn't exist, or just inline debounce logic for now. 
-// I'll inline a simple debounce logic to avoid creating extra files unless necessary, but industry standard prefers hooks.
-// Let's implement use-debounce logic inside for simplicity in this file for now, or use a timer.
+import Image from "next/image"; 
 
 export function SearchOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
