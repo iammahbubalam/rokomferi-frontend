@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { HeroSlide } from "@/lib/data";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 interface HeroProps {
   slides: HeroSlide[];
@@ -47,21 +48,18 @@ export function Hero({ slides }: HeroProps) {
       <AnimatePresence>
         {!isIntroComplete && (
           <motion.div
-            className="absolute inset-0 z-[100] bg-[#1a1a1a] flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-[9999] bg-[#1a1a1a] flex items-center justify-center overflow-hidden"
             initial={{ y: 0 }}
             exit={{ y: "-100%" }}
-            transition={{ duration: 1, ease: [0.76, 0, 0.24, 1], delay: 0.2 }}
+            transition={{ duration: 1, ease: [0.76, 0, 0.24, 1], delay: 0.5 }}
           >
-             {/* Brand Name Reveal */}
-             <div className="overflow-hidden">
-               <motion.h1 
-                 className="font-serif text-5xl md:text-8xl text-white tracking-[0.2em] md:tracking-[0.4em] uppercase"
-                 initial={{ y: "100%" }}
-                 animate={{ y: 0 }}
-                 transition={{ duration: 1.2, ease: [0.33, 1, 0.68, 1], delay: 0.5 }}
-               >
-                 Rokomferi
-               </motion.h1>
+             {/* Brand Vector Reveal */}
+             <div className="relative z-10 p-8">
+               <BrandLogo 
+                 className="w-[90vw] md:w-[80vw] max-w-[1200px] h-auto text-white" 
+                 animated={true}
+                 duration={2}
+               />
              </div>
              
              {/* Subtle Subtext */}
@@ -69,7 +67,8 @@ export function Hero({ slides }: HeroProps) {
                className="absolute bottom-12 text-accent-gold text-xs uppercase tracking-[0.3em]"
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               transition={{ delay: 1.5, duration: 0.8 }}
+               exit={{ opacity: 0 }}
+               transition={{ delay: 1, duration: 0.8 }}
              >
                Loading Experience
              </motion.div>
@@ -114,38 +113,63 @@ export function Hero({ slides }: HeroProps) {
          <div className="max-w-[800px]">
             <AnimatePresence mode="wait">
               {isIntroComplete && (
-                <motion.div
-                  key={current}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }} // Delayed slightly to wait for curtain
-                  className="flex flex-col gap-8"
-                >
-                  <span className="uppercase tracking-[0.3em] text-white/90 text-sm font-medium border-l-2 border-accent-gold pl-4 drop-shadow-md">
-                    {slides[current].subtitle}
-                  </span>
-                  <h1 className="font-serif text-6xl md:text-9xl text-white leading-[0.85] drop-shadow-lg">
-                    {slides[current].title}
-                  </h1>
-                  <p className="text-white/90 text-lg md:text-2xl max-w-xl leading-relaxed font-light drop-shadow-md">
-                    {slides[current].description}
-                  </p>
-                  <div className="flex flex-col md:flex-row gap-6 pt-6">
-                      <Button 
-                          variant="white" 
-                          className="px-10 py-6 text-sm tracking-[0.2em] font-bold"
-                      >
-                        SHOP COLLECTION
-                      </Button>
-                      <Button 
-                          variant="outline-white" 
-                          className="px-10 py-6 text-sm tracking-[0.2em]"
-                      >
-                        VIEW LOOKBOOK
-                      </Button>
+                <div key={current} className="flex flex-col gap-10">
+                  
+                  {/* Subtitle - Fade In */}
+                  <motion.div
+                     initial={{ opacity: 0, x: -20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     exit={{ opacity: 0 }}
+                     transition={{ duration: 0.8, delay: 0.2 }}
+                     className="flex items-center gap-4"
+                  >
+                     <div className="h-[1px] w-12 bg-accent-gold" />
+                     <span className="uppercase tracking-[0.4em] text-white/80 text-xs font-medium">
+                       {slides[current].subtitle}
+                     </span>
+                  </motion.div>
+
+                  {/* Title - Masked Reveal */}
+                  <div className="overflow-hidden">
+                    <motion.h1 
+                      className="font-serif text-6xl md:text-9xl text-white leading-[0.9]"
+                      initial={{ y: "100%" }}
+                      animate={{ y: 0 }}
+                      exit={{ y: "-100%" }}
+                      transition={{ duration: 1, ease: [0.25, 1, 0.5, 1], delay: 0.3 }}
+                    >
+                      {slides[current].title}
+                    </motion.h1>
                   </div>
-                </motion.div>
+
+                  {/* Description - Fade Up */}
+                  <motion.p 
+                    className="text-white/80 text-lg md:text-xl max-w-lg leading-relaxed font-light ml-2"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                  >
+                    {slides[current].description}
+                  </motion.p>
+                  
+                  {/* Buttons - Minimalist */}
+                  <div className="flex flex-col md:flex-row gap-8 pt-4 ml-2">
+                      <motion.div
+                         initial={{ opacity: 0, y: 20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0 }}
+                         transition={{ duration: 0.8, delay: 0.6 }}
+                      >
+                        <Button 
+                            variant="white" 
+                            className="px-12 py-6 text-xs tracking-[0.25em] font-bold uppercase border-none hover:scale-105 transition-transform"
+                        >
+                          Discover
+                        </Button>
+                      </motion.div>
+                  </div>
+                </div>
               )}
             </AnimatePresence>
          </div>
