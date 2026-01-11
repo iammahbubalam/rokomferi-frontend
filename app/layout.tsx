@@ -29,6 +29,8 @@ import { getCategoryTree, getFooterSections, getSiteConfig } from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
+import { AuthProvider } from "@/components/auth/AuthProvider";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -46,18 +48,20 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${manrope.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <IntroProvider>
-          <IntroOverlay />
-          <CartProvider>
-            <Navbar categories={categories} siteConfig={siteConfig} />
-            <main className="flex-grow pt-[88px] md:pt-[104px]"> 
-              {/* pt to offset fixed header height approx */}
-              {children}
-            </main>
-            <Footer siteConfig={siteConfig} footerSections={footerSections} />
-            <CartDrawer />
-          </CartProvider>
-        </IntroProvider>
+        <AuthProvider>
+          <IntroProvider>
+            <IntroOverlay />
+            <CartProvider>
+              <Navbar categories={categories} siteConfig={siteConfig} />
+              <main className="flex-grow pt-[88px] md:pt-[104px]"> 
+                {/* pt to offset fixed header height approx */}
+                {children}
+              </main>
+              <Footer siteConfig={siteConfig} footerSections={footerSections} />
+              <CartDrawer />
+            </CartProvider>
+          </IntroProvider>
+        </AuthProvider>
       </body>
     </html>
   );
