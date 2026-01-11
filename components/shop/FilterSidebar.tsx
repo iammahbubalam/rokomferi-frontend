@@ -1,47 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { motion } from "framer-motion";
+import { FilterMetadata } from "@/lib/data";
 
-const categories = [
-  { name: "View All", slug: "/shop" },
-  { name: "Saree", slug: "/category/saree" },
-  { name: "Three Piece", slug: "/category/three-piece" },
-  { name: "Kurti", slug: "/category/kurti" },
-  { name: "Panjabi", slug: "/category/panjabi" },
-  { name: "Accessories", slug: "/category/accessories" },
-];
+interface FilterSidebarProps {
+  metadata: FilterMetadata;
+}
 
-export function FilterSidebar() {
+export function FilterSidebar({ metadata }: FilterSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
-    <nav className="w-full md:w-64 flex-shrink-0 md:sticky md:top-32 self-start space-y-8">
+    <nav className="w-full md:w-64 flex-shrink-0 md:sticky md:top-32 self-start space-y-12">
+      {/* Dynamic Categories */}
       <div>
         <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
-          Categories
+          Categories ({metadata.categories.length})
         </h3>
         <ul className="space-y-4">
-          {categories.map((cat) => {
-            const isActive = pathname === cat.slug;
+          <li key="all">
+             <Link 
+               href="/shop" 
+               className={clsx(
+                 "block text-sm transition-colors duration-300 relative group",
+                 pathname === "/shop" ? "text-primary font-medium" : "text-secondary hover:text-primary"
+               )}
+             >
+               <span className="relative z-10">View All</span>
+               {pathname === "/shop" && (
+                 <motion.div layoutId="sidebar-active" className="absolute -left-3 top-1.5 w-1.5 h-1.5 bg-accent-gold rounded-full" />
+               )}
+             </Link>
+          </li>
+          {metadata.categories.map((cat) => {
+            const isActive = pathname.includes(cat.slug); // Simple check for now
             return (
               <li key={cat.slug}>
                 <Link 
-                  href={cat.slug} 
+                  href={`/shop?category=${cat.slug}`} 
                   className={clsx(
-                    "block text-sm transition-colors duration-300 relative group",
+                    "flex justify-between items-center text-sm transition-colors duration-300 relative group",
                     isActive ? "text-primary font-medium" : "text-secondary hover:text-primary"
                   )}
                 >
                   <span className="relative z-10">{cat.name}</span>
-                  {isActive && (
-                    <motion.div 
-                      layoutId="sidebar-active"
-                      className="absolute -left-3 top-1.5 w-1.5 h-1.5 bg-accent-gold rounded-full" 
-                    />
-                  )}
+                  <span className="text-[10px] opacity-50">{cat.count}</span>
                 </Link>
               </li>
             );
@@ -49,12 +56,31 @@ export function FilterSidebar() {
         </ul>
       </div>
 
-      {/* Additional Filters could go here */}
+      {/* Dynamic Colors Filter */}
       <div>
         <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
-          Refine
+          Color
         </h3>
-        <p className="text-xs text-secondary/60 italic">Filters coming soon</p>
+        <div className="flex flex-wrap gap-2">
+            {metadata.colors.map(color => (
+                <button 
+                  key={color} 
+                  className="px-3 py-1 text-xs border border-primary/10 hover:border-primary/40 rounded-sm transition-all"
+                >
+                    {color}
+                </button>
+            ))}
+        </div>
+      </div>
+
+      {/* Dynamic Price Range */}
+      <div>
+        <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
+          Price Range
+        </h3>
+        <div className="text-xs text-secondary/70">
+           From ৳{metadata.priceRange.min.toLocaleString()} to ৳{metadata.priceRange.max.toLocaleString()}
+        </div>
       </div>
     </nav>
   );

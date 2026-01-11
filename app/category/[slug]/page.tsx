@@ -1,4 +1,4 @@
-import { getAllProducts, getCategoryTree } from "@/lib/data";
+import { getAllProducts, getCategoryTree, getFilterMetadata } from "@/lib/data";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Container } from "@/components/ui/Container";
 import { CollectionHero } from "@/components/shop/CollectionHero";
@@ -37,6 +37,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const allProducts = await getAllProducts();
   const tree = await getCategoryTree();
   const categoryName = findCategoryName(slug, tree) || "Collection";
+  const filterMetadata = await getFilterMetadata(slug);
   
   // Filter logic: Match exact category OR tags (for loose matching like 'new-arrivals')
   const products = allProducts.filter(p => {
@@ -69,7 +70,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <Container className="py-20">
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
            {/* Sidebar */}
-           <FilterSidebar />
+           <FilterSidebar metadata={filterMetadata} />
            
            {/* Grid */}
            <div className="flex-1">

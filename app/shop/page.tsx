@@ -1,4 +1,4 @@
-import { getAllProducts } from "@/lib/data";
+import { getAllProducts, getFilterMetadata } from "@/lib/data";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Container } from "@/components/ui/Container";
 import { CollectionHero } from "@/components/shop/CollectionHero";
@@ -11,6 +11,7 @@ export const metadata = {
 
 export default async function ShopPage() {
   const products = await getAllProducts();
+  const filters = await getFilterMetadata(); // Fetch dynamic filters
 
   return (
     <div className="min-h-screen bg-bg-primary text-primary">
@@ -25,7 +26,7 @@ export default async function ShopPage() {
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
            
            {/* 2. Sidebar Navigation */}
-           <FilterSidebar />
+           <FilterSidebar metadata={filters} />
 
            {/* 3. Product Grid */}
            <div className="flex-1">

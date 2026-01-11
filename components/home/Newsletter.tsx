@@ -4,14 +4,31 @@ import { useState } from "react";
 
 import { Container, Section } from "@/components/ui/Container";
 
+import { subscribeToNewsletter } from "@/lib/data";
+
 export function Newsletter() {
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Subscribe:", email);
-    setEmail("");
-    alert("Thank you for joining our inner circle.");
+    setStatus("loading");
+    
+    try {
+      const result = await subscribeToNewsletter(email);
+      if (result.success) {
+        setStatus("success");
+        setMessage(result.message);
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(result.message);
+      }
+    } catch (err) {
+      setStatus("error");
+      setMessage("Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -49,22 +66,34 @@ export function Newsletter() {
                    Be the first to know about new arrivals, private sales, and stories from the atelier.
                 </p>
                 
-                <form onSubmit={handleSubmit} className="w-full relative mt-8 group">
-                    <input 
-                      type="email" 
-                      placeholder="Your email address" 
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-transparent border-b border-primary/20 py-4 text-left text-lg outline-none placeholder:text-primary/30 focus:border-primary transition-colors text-primary pl-2"
-                    />
-                    <button 
-                      type="submit"
-                      className="absolute right-0 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-primary opacity-50 hover:opacity-100 hover:text-accent-gold transition-all"
-                    >
-                      Subscribe
-                    </button>
-                </form>
+                {status === "success" ? (
+                    <div className="p-6 bg-green-50 border border-green-200 text-green-800 text-sm font-serif italic text-center rounded-sm mt-8">
+                       {message}
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="w-full relative mt-8 group">
+                        <input 
+                          type="email" 
+                          placeholder="Your email address" 
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          disabled={status === "loading"}
+                          className="w-full bg-transparent border-b border-primary/20 py-4 text-left text-lg outline-none placeholder:text-primary/30 focus:border-primary transition-colors text-primary pl-2 disabled:opacity-50"
+                        />
+                        <button 
+                          type="submit"
+                          disabled={status === "loading"}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 text-xs uppercase tracking-widest text-primary opacity-50 hover:opacity-100 hover:text-accent-gold transition-all disabled:opacity-30"
+                        >
+                          {status === "loading" ? "Subscribing..." : "Subscribe"}
+                        </button>
+                    </form>
+                )}
+
+                {status === "error" && (
+                    <p className="text-red-500 text-xs mt-2 text-center absolute -bottom-6 w-full">{message}</p>
+                )}
 
                 <p className="text-[10px] uppercase tracking-widest text-secondary/40 mt-12 opacity-60">
                    No spam. Just beauty.
