@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NavMenu } from "./NavMenu";
+import { UserMenu } from "./UserMenu";
 import { CategoryNode, SiteConfig } from "@/lib/data";
 import { SearchOverlay } from "./SearchOverlay";
 import { useIntro } from "@/context/IntroContext";
@@ -80,12 +81,7 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
             </div>
 
             {/* Account */}
-            <Link 
-              href="/login"
-              className="flex items-center justify-center text-primary hover:text-accent-gold transition-colors"
-            >
-              <User className="w-5 h-5" />
-            </Link>
+            <UserMenu />
 
             {/* Cart */}
             <button 

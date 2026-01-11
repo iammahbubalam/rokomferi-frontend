@@ -3,16 +3,27 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import clsx from "clsx";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const { items, total } = useCart();
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [isSuccess, setIsSuccess] = useState(false);
   
+  // Auth Guard
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login?redirect=/checkout");
+    }
+  }, [user, isLoading, router]);
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: "",
@@ -23,17 +34,29 @@ export default function CheckoutPage() {
     division: "",
     district: "",
     thana: "",
-    address: "", // Street address / House / Road
-    landmark: "", // Common location name
+    address: "", 
+    landmark: "",
     zip: "",
   });
+
+  // Pre-fill Form with User Data
+  useEffect(() => {
+    if (user) {
+        setFormData(prev => ({
+            ...prev,
+            firstName: user.firstName || prev.firstName,
+            lastName: user.lastName || prev.lastName,
+            email: user.email || prev.email,
+        }));
+    }
+  }, [user]);
 
   const [isFormValid, setIsFormValid] = useState(false);
 
   // Validate Form
   useEffect(() => {
     const { firstName, phone, address, division, district, thana, deliveryLocation } = formData;
-    const isValid = firstName.trim() !== "" && 
+    const isValid = firstName?.trim() !== "" && 
                     phone.trim() !== "" && 
                     address.trim() !== "" && 
                     division.trim() !== "" &&

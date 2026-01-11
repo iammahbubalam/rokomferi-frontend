@@ -30,6 +30,7 @@ import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AuthContextProvider } from "@/context/AuthContext";
 
 export default async function RootLayout({
   children,
@@ -49,18 +50,20 @@ export default async function RootLayout({
         className={`${cormorant.variable} ${manrope.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
         <AuthProvider>
-          <IntroProvider>
-            <IntroOverlay />
-            <CartProvider>
-              <Navbar categories={categories} siteConfig={siteConfig} />
-              <main className="flex-grow pt-[88px] md:pt-[104px]"> 
-                {/* pt to offset fixed header height approx */}
-                {children}
-              </main>
-              <Footer siteConfig={siteConfig} footerSections={footerSections} />
-              <CartDrawer />
-            </CartProvider>
-          </IntroProvider>
+          <AuthContextProvider>
+            <IntroProvider>
+              <IntroOverlay />
+              <CartProvider>
+                <Navbar categories={categories} siteConfig={siteConfig} />
+                <main className="flex-grow pt-[88px] md:pt-[104px]"> 
+                  {/* pt to offset fixed header height approx */}
+                  {children}
+                </main>
+                <Footer siteConfig={siteConfig} footerSections={footerSections} />
+                <CartDrawer />
+              </CartProvider>
+            </IntroProvider>
+          </AuthContextProvider>
         </AuthProvider>
       </body>
     </html>
