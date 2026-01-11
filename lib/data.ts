@@ -60,6 +60,7 @@ export interface Product {
   dimensions?: ProductDimensions;
   tags?: string[];
   status: "draft" | "published" | "archived";
+  isFeatured?: boolean; // New Flag
 
   // Legacy/Helper getters (computed)
   // We will likely refactor these out or keep them as helpers, but for now strict data
@@ -167,7 +168,8 @@ export const PRODUCTS: Product[] = [
     weaversNote: "A revivement of the lost art. This 80-count muslin saree features the 'Corolla' motif. It is so fine it can pass through a ring.",
     fabricStory: "The legend of Muslin. Spun from the Phuti karpas cotton, it is the finest cotton fabric in existence.",
     specifications: { material: "Cotton Muslin (80 count)", weave: "Handloom Jamdani", origin: "Narayanganj, Bangladesh", care: ["Professional dry clean only"] },
-    tags: ["luxury", "heritage", "muslin", "white", "premium"]
+    tags: ["luxury", "heritage", "muslin", "white", "premium"],
+    isFeatured: true
   },
   {
     id: "p5",
@@ -206,7 +208,8 @@ export const PRODUCTS: Product[] = [
     pricing: { basePrice: 35000, currency: "BDT" },
     inventory: { stockLevel: 5, lowStockThreshold: 2, trackQuantity: true, status: "in_stock" },
     media: [{ id: "m7", type: "image", url: "/assets/saree-crimson-bridal.png", alt: "Crimson Bridal Katan", isThumbnail: true }],
-    tags: ["wedding", "bridal", "red", "heavy"]
+    tags: ["wedding", "bridal", "red", "heavy"],
+    isFeatured: true
   },
 
   // --- THREE PIECE & SALWAR KAMEEZ ---
@@ -225,6 +228,7 @@ export const PRODUCTS: Product[] = [
     fabricStory: "Sheer, crisp, and lightweight. Our Organza is sourced ensuring a high thread count.",
     specifications: { material: "Semi-Organza & Raw Silk", weave: "Machine Embroidered", origin: "Tangail, Bangladesh", care: ["Dry clean recommended"] },
     tags: ["eid", "party", "peach", "organza"],
+    isFeatured: true,
     variants: [
         { id: "v2-s", name: "S", sku: "OZ-PCH-002-S", stock: 4, options: { size: "S" } },
         { id: "v2-m", name: "M", sku: "OZ-PCH-002-M", stock: 6, options: { size: "M" } },
@@ -273,7 +277,8 @@ export const PRODUCTS: Product[] = [
     weaversNote: "A fusion of traditional silhouette and contemporary minimalism.",
     fabricStory: "Rajshahi Silk, renowned for its soft hand-feel and matte luster.",
     specifications: { material: "100% Rajshahi Silk", weave: "Plain Weave", origin: "Rajshahi, Bangladesh", care: ["Hand wash cold"] },
-    tags: ["casual", "eid", "green", "silk"]
+    tags: ["casual", "eid", "green", "silk"],
+    isFeatured: true
   },
   {
     id: "p10",
@@ -315,6 +320,7 @@ export const PRODUCTS: Product[] = [
     inventory: { stockLevel: 30, lowStockThreshold: 5, trackQuantity: true, status: "in_stock" },
     media: [{ id: "m12", type: "image", url: "/assets/panjabi-platinum-white.png", alt: "White Panjabi", isThumbnail: true }],
     tags: ["eid", "men", "formal", "white"],
+    isFeatured: true,
     variants: [
         { id: "v12-m", name: "M", sku: "PJ-WHT-012-M", stock: 10, options: { size: "M" } },
         { id: "v12-l", name: "L", sku: "PJ-WHT-012-L", stock: 15, options: { size: "L" } },
@@ -360,7 +366,8 @@ export const PRODUCTS: Product[] = [
     pricing: { basePrice: 2500, currency: "BDT" },
     inventory: { stockLevel: 8, lowStockThreshold: 2, trackQuantity: true, status: "in_stock" },
     media: [{ id: "m15", type: "image", url: "/assets/accessory-pearl-choker.png", alt: "Pearl Choker", isThumbnail: true }],
-    tags: ["jewelry", "wedding", "gold"]
+    tags: ["jewelry", "wedding", "gold"],
+    isFeatured: true
   },
   {
     id: "p16",
@@ -574,6 +581,11 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
 export async function getAllProducts(): Promise<Product[]> {
   await delay(600);
   return PRODUCTS;
+}
+
+export async function getFeaturedProducts(): Promise<Product[]> {
+  await delay(500);
+  return PRODUCTS.filter(p => p.isFeatured);
 }
 
 export async function getHeroSlides(): Promise<HeroSlide[]> {

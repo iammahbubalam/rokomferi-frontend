@@ -3,7 +3,7 @@ import { FeaturedCollection } from "@/components/home/FeaturedCollection";
 import { Philosophy } from "@/components/home/Philosophy";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 
-import { getAllProducts, getFeaturedCategories, getHeroSlides, getPhilosophyContent, getEditorialContent } from "@/lib/data";
+import { getAllProducts, getFeaturedProducts, getFeaturedCategories, getHeroSlides, getPhilosophyContent, getEditorialContent } from "@/lib/data";
 import { EditorialSpotlight } from "@/components/home/EditorialSpotlight";
 
 // This is now a Server Component!
@@ -12,7 +12,7 @@ export default async function Home() {
 
   // Parallel Data Fetching
   const heroData = getHeroSlides();
-  const productsData = getAllProducts();
+  const productsData = getFeaturedProducts();
   const categoriesData = getFeaturedCategories();
   const philosophyData = getPhilosophyContent();
   const editorialData = getEditorialContent();
