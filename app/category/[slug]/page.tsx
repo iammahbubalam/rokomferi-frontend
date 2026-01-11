@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getAllProducts, getCategoryTree, getFilterMetadata } from "@/lib/data";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Container } from "@/components/ui/Container";
@@ -70,7 +71,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <Container className="py-20">
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
            {/* Sidebar */}
-           <FilterSidebar metadata={filterMetadata} />
+           <Suspense fallback={<div className="w-full md:w-64 h-96 animate-pulse bg-gray-100/50 rounded-lg"/>}>
+             <FilterSidebar metadata={filterMetadata} />
+           </Suspense>
            
            {/* Grid */}
            <div className="flex-1">

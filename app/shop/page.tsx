@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getAllProducts, getFilterMetadata } from "@/lib/data";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Container } from "@/components/ui/Container";
@@ -26,7 +27,9 @@ export default async function ShopPage() {
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
            
            {/* 2. Sidebar Navigation */}
-           <FilterSidebar metadata={filters} />
+           <Suspense fallback={<div className="w-full md:w-64 h-screen animate-pulse bg-gray-100/50 rounded-lg"/>}>
+             <FilterSidebar metadata={filters} />
+           </Suspense>
 
            {/* 3. Product Grid */}
            <div className="flex-1">
