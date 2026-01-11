@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
@@ -79,6 +79,14 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
                </Link>
             </div>
 
+            {/* Account */}
+            <Link 
+              href="/login"
+              className="flex items-center justify-center text-primary hover:text-accent-gold transition-colors"
+            >
+              <User className="w-5 h-5" />
+            </Link>
+
             {/* Cart */}
             <button 
               onClick={toggleCart} 
@@ -154,6 +162,17 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
               <Link href="/shop" className="text-xl font-serif text-primary mt-4" onClick={() => setIsMobileOpen(false)}>
                 Shop All
               </Link>
+              
+              <div className="pt-8 border-t border-primary/10 mt-4">
+                 <Link 
+                   href="/login" 
+                   className="flex items-center gap-2 text-sm uppercase tracking-widest text-secondary hover:text-primary transition-colors"
+                   onClick={() => setIsMobileOpen(false)}
+                 >
+                    <User className="w-4 h-4" />
+                    Sign In / Join
+                 </Link>
+              </div>
             </nav>
           </motion.div>
         )}
