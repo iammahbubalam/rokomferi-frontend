@@ -1,6 +1,5 @@
 "use client";
 import { useGoogleLogin } from "@react-oauth/google";
-"use client";
 
 import { motion } from "framer-motion";
 
