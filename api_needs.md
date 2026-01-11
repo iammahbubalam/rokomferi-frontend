@@ -100,6 +100,7 @@ The primary endpoint for PLP (Product Listing Page).
     *   `min_price`, `max_price`: Range filtering.
     *   `sort`: `newest` | `price_asc` | `price_desc` | `best_selling`
     *   `tags`: Comma-separated (e.g., `eid,party`).
+    *   `is_featured`: `true` | `false`
     *   `page`, `limit`: Pagination.
 *   **Response (200 OK)**:
     ```json
@@ -135,6 +136,7 @@ Fetch full details for a single product.
       "description": "Full HTML description...",
       "pricing": { "basePrice": 12000, "salePrice": null },
       "inventory": { "stockLevel": 5, "status": "in_stock" },
+      "isFeatured": true,
       "media": [
         { "type": "image", "url": "..." },
         { "type": "video", "url": "..." }
@@ -142,6 +144,14 @@ Fetch full details for a single product.
       "attributes": {
         "Fabric": "Silk",
         "Weave": "Jacquard"
+      },
+      "weaversNote": "A revivement of the lost art...",
+      "fabricStory": "Spun from the Phuti karpas cotton...",
+      "specifications": {
+         "material": "100% Mulberry Silk",
+         "weave": "Handloom",
+         "origin": "Dhaka",
+         "care": ["Dry clean only"]
       },
       "variants": [
         { "id": "v_1", "name": "Red", "stock": 2 }
