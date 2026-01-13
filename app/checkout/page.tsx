@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
-import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +15,8 @@ export default function CheckoutPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Auth Guard
   useEffect(() => {
@@ -71,6 +72,48 @@ export default function CheckoutPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleCheckout = async () => {
+      setIsSubmitting(true);
+      setErrorMsg(null);
+      try {
+          const token = localStorage.getItem("token");
+          // Construct Payload
+          const payload = {
+              paymentMethod: "cod", // Default for now
+              address: {
+                  ...formData,
+                  // Add explicit shipping cost if needed by backend, 
+                  // but backend calculates total from Items usually.
+                  // Backend order_usecase.go uses `req.Address` as JSONB.
+              }
+          };
+
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/checkout`, {
+              method: "POST",
+              headers: { 
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}` 
+              },
+              body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+              const errData = await res.json();
+              throw new Error(errData.message || "Checkout failed");
+          }
+
+          setIsSuccess(true);
+          // Ideally clear cart here, but backend clears it. 
+          // Client state might need refresh (CartContext syncs automatically on next fetch or we force it).
+          // Reloading page or redirecting handles it.
+      } catch (error: any) {
+          console.error(error);
+          setErrorMsg(error.message || "Failed to place order. Please try again.");
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
   // Dynamic Shipping Cost
   const shippingCost = formData.deliveryLocation === "outside_dhaka" ? 150 : 80;
   const finalTotal = total + shippingCost;
@@ -80,7 +123,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen pt-40 pb-20 bg-bg-primary text-center flex flex-col items-center">
          <Container>
             <h1 className="font-serif text-3xl md:text-4xl mb-6 text-primary">Your bag is empty</h1>
-            <p className="text-secondary mb-8 max-w-md mx-auto">Looks like you haven't added any items to your bag yet. Explore our latest collections to find something unique.</p>
+            <p className="text-secondary mb-8 max-w-md mx-auto">Looks like you haven't added any items to your bag yet.</p>
             <Link href="/shop">
               <Button>Start Shopping</Button>
             </Link>
@@ -120,6 +163,12 @@ export default function CheckoutPage() {
       <Container className="max-w-[1920px] px-6 md:px-12 lg:px-24">
         <h1 className="font-serif text-4xl md:text-5xl mb-12 text-center lg:text-left">Checkout</h1>
         
+        {errorMsg && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-8">
+                {errorMsg}
+            </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
            
            {/* LEFT: Shipping Form */}
@@ -316,14 +365,14 @@ export default function CheckoutPage() {
                     {items.map(item => (
                        <div key={item.id} className="flex gap-4">
                           <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
-                             <Image src={item.media[0].url} alt={item.name} fill className="object-cover" />
+                             <Image src={item.media?.[0]?.url || "/assets/placeholder.png"} alt={item.name} fill className="object-cover" />
                              <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
                                 {item.quantity}
                              </span>
                           </div>
                           <div className="flex-grow">
                              <h4 className="font-serif text-sm">{item.name}</h4>
-                             <p className="font-medium text-sm mt-1">৳{((item.pricing.salePrice || item.pricing.basePrice) * item.quantity).toLocaleString()}</p>
+                             <p className="font-medium text-sm mt-1">৳{((item.pricing?.salePrice || item.pricing?.basePrice || 0) * item.quantity).toLocaleString()}</p>
                           </div>
                        </div>
                     ))}
@@ -346,11 +395,11 @@ export default function CheckoutPage() {
                  </div>
 
                  <Button 
-                   onClick={() => setIsSuccess(true)} 
-                   disabled={!isFormValid}
+                   onClick={handleCheckout} 
+                   disabled={!isFormValid || isSubmitting}
                    className="w-full"
                  >
-                    {isFormValid ? "Place Order" : "Fill Details to Order"}
+                    {isSubmitting ? "Processing..." : (isFormValid ? "Place Order" : "Fill Details to Order")}
                  </Button>
 
                  <p className="text-center text-[10px] text-secondary/60 mt-4 uppercase tracking-widest">

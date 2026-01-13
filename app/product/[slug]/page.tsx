@@ -2,19 +2,23 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getProductBySlug } from "@/lib/data";
+import { getProductBySlug, getProductReviews } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, ShoppingBag, Ruler, Info } from "lucide-react";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import ReviewList from "@/components/reviews/ReviewList";
+import ReviewForm from "@/components/reviews/ReviewForm";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-
+  
   if (!product) {
     notFound();
   }
+
+  const reviews = await getProductReviews(product.id);
 
   return (
     <div className="min-h-screen bg-bg-primary text-primary pt-20">
@@ -123,6 +127,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
            )}
 
         </div>
+      </div>
+      
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-20 border-t border-gray-100">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="font-serif text-3xl mb-12 text-center">Customer Reviews</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                <div>
+                    <h3 className="text-secondary uppercase text-xs tracking-widest mb-6 border-b border-gray-100 pb-2">Recent Feedback</h3>
+                    <ReviewList reviews={reviews} />
+                </div>
+                <div>
+                   <div className="sticky top-24">
+                      <ReviewForm productId={product.id} onSuccess={() => {}} />
+                   </div>
+                </div>
+            </div>
+          </div>
       </div>
     </div>
   );

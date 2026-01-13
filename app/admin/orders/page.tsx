@@ -6,18 +6,20 @@ import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export default function AdminOrdersPage() {
-    const { token } = useAuth();
+    const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState("");
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
         if (token) fetchOrders();
-    }, [token, statusFilter]);
+    }, [statusFilter]);
 
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
+            const token = localStorage.getItem("token");
             const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/orders`);
             if (statusFilter) url.searchParams.append("status", statusFilter);
             
@@ -37,6 +39,7 @@ export default function AdminOrdersPage() {
         if (!confirm(`Update order status to ${newStatus}?`)) return;
 
         try {
+            const token = localStorage.getItem("token");
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/orders/${orderId}/status`, {
                 method: "PATCH",
                 headers: {
@@ -107,8 +110,8 @@ export default function AdminOrdersPage() {
                                 <tr key={order.id} className="hover:bg-gray-50/50">
                                     <td className="px-6 py-4 font-mono text-xs text-secondary">#{order.id.slice(0, 8)}</td>
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-gray-900">{order.user.firstName} {order.user.lastName}</div>
-                                        <div className="text-xs text-secondary">{order.user.email}</div>
+                                        <div className="font-medium text-gray-900">{order.user?.firstName || "Guest"} {order.user?.lastName || ""}</div>
+                                        <div className="text-xs text-secondary">{order.user?.email || "No Email"}</div>
                                     </td>
                                     <td className="px-6 py-4 font-medium">BDT {order.totalAmount}</td>
                                     <td className="px-6 py-4 text-xs text-secondary">

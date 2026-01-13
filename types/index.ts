@@ -22,6 +22,19 @@ export interface Product {
     isActive: boolean;
 }
 
+export interface Review {
+    id: string;
+    userId: string;
+    user: {
+        firstName: string;
+        lastName: string;
+        avatar?: string;
+    };
+    rating: number;
+    comment: string;
+    createdAt: string;
+}
+
 export interface Order {
     id: string;
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';

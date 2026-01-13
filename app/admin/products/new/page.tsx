@@ -7,10 +7,11 @@ import { ChevronLeft, Loader2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Category } from "@/types";
+import { Button } from "@/components/ui/Button";
 
 export default function NewProductPage() {
     const router = useRouter();
-    const { token } = useAuth(); // Need token for protected Upload API
+    const { user } = useAuth(); // Removed invalid token property
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -44,6 +45,7 @@ export default function NewProductPage() {
         uploadData.append("file", file);
 
         try {
+            const token = localStorage.getItem("token");
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/upload`, {
                 method: "POST",
                 headers: {
@@ -88,6 +90,7 @@ export default function NewProductPage() {
                 categoryId: formData.categoryId || null // Handle empty
             };
 
+            const token = localStorage.getItem("token");
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/products`, {
                 method: "POST",
                 headers: {
@@ -263,14 +266,14 @@ export default function NewProductPage() {
                         </div>
                     </div>
 
-                    <button 
+                    <Button 
                         type="submit" 
                         disabled={isSubmitting}
-                        className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-md font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2"
                     >
                         {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                         Save Product
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
