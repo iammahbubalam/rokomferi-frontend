@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { getApiUrl } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -10,6 +11,7 @@ interface User {
   lastName?: string;
   avatar?: string;
   role: string;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -38,7 +40,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      const res = await fetch(getApiUrl("/auth/me"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -46,7 +48,11 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
 
       if (res.ok) {
         const userData = await res.json();
-        setUser(userData);
+        // Backend returns role, set isAdmin based on role
+        setUser({
+          ...userData,
+          isAdmin: userData.role === 'admin'
+        });
       } else {
         // Token invalid/expired
         localStorage.removeItem("token");
@@ -68,7 +74,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
         // Optional: Call backend logout
         const token = localStorage.getItem("token");
         if (token) {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+            await fetch(getApiUrl("/auth/logout"), {
                 method: "POST",
                  headers: { Authorization: `Bearer ${token}` },
             });

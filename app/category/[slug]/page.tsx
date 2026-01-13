@@ -40,23 +40,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const categoryName = findCategoryName(slug, tree) || "Collection";
   const filterMetadata = await getFilterMetadata(slug);
   
-  // Filter logic: Match exact category OR tags (for loose matching like 'new-arrivals')
+  // Filter logic: Match category slug or name
   const products = allProducts.filter(p => {
-    // 1. Direct Category Match (e.g. Sarees)
-    if (p.category.toLowerCase().includes(slug.replace('-', ' '))) return true;
-    
-    // 2. Tag match (e.g. 'new-arrivals' might match 'new' tag?)
-    // Actually, let's map 'new-arrivals' to 'new' or 'eid' tag for demo
-    if (slug === 'new-arrivals' && p.tags?.some(t => ['eid', 'new'].includes(t))) return true;
-    
-    // 3. Subcategory match (naive check for now)
-    // If slug is 'sarees-katan', we check if product category covers it or tags
-    if (slug === 'sarees-katan' && p.name.toLowerCase().includes('katan')) return true;
-    if (slug === 'sarees-jamdani' && p.name.toLowerCase().includes('jamdani')) return true;
-    if (slug === 'kurtis' && p.category === 'Kurtis') return true;
-    if (slug === 'salwar-kameez' && p.category === 'Salwar Kameez') return true;
-
-    return false;
+    return p.categories?.some(c => 
+      c.slug === slug || 
+      c.name.toLowerCase() === slug.replace(/-/g, ' ') ||
+      c.name.toLowerCase().includes(slug.replace(/-/g, ' '))
+    );
   });
 
   return (

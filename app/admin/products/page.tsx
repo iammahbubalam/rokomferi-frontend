@@ -6,6 +6,8 @@ import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { Product } from "@/types";
 import Image from "next/image";
 
+import { getApiUrl } from "@/lib/utils";
+
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -16,7 +18,7 @@ export default function AdminProductsPage() {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?limit=100`);
+            const res = await fetch(getApiUrl("/products?limit=100"));
             const data = await res.json();
             setProducts(data.data || []);
         } catch (error) {

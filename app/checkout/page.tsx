@@ -2,6 +2,7 @@
 
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { getApiUrl } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -88,7 +89,7 @@ export default function CheckoutPage() {
               }
           };
 
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/checkout`, {
+          const res = await fetch(getApiUrl("/checkout"), {
               method: "POST",
               headers: { 
                   "Content-Type": "application/json",
@@ -365,14 +366,14 @@ export default function CheckoutPage() {
                     {items.map(item => (
                        <div key={item.id} className="flex gap-4">
                           <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
-                             <Image src={item.media?.[0]?.url || "/assets/placeholder.png"} alt={item.name} fill className="object-cover" />
+                             <Image src={item.images?.[0] || "/assets/placeholder.png"} alt={item.name} fill className="object-cover" />
                              <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
                                 {item.quantity}
                              </span>
                           </div>
                           <div className="flex-grow">
                              <h4 className="font-serif text-sm">{item.name}</h4>
-                             <p className="font-medium text-sm mt-1">৳{((item.pricing?.salePrice || item.pricing?.basePrice || 0) * item.quantity).toLocaleString()}</p>
+                             <p className="font-medium text-sm mt-1">৳{((item.salePrice || item.basePrice || 0) * item.quantity).toLocaleString()}</p>
                           </div>
                        </div>
                     ))}

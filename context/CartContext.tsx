@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
+import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "./AuthContext";
 
 export interface CartItem extends Product {
@@ -61,7 +62,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
           const token = localStorage.getItem("token");
           if (!token) return;
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/cart`, {
+          const res = await fetch(getApiUrl("/cart"), {
               headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -94,7 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // API Call
         try {
             const token = localStorage.getItem("token");
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/cart`, {
+            await fetch(getApiUrl("/cart"), {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
@@ -153,9 +154,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const toggleCart = () => setIsOpen((prev) => !prev);
 
   const total = items.reduce((sum, item) => {
-     // Safety check in case product data is missing
-     if (!item.pricing) return sum; 
-     const price = item.pricing.salePrice || item.pricing.basePrice;
+     const price = item.salePrice || item.basePrice;
      return sum + price * item.quantity;
   }, 0);
 

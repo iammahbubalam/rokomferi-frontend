@@ -9,6 +9,18 @@ import Image from "next/image";
 import { Category } from "@/types";
 import { Button } from "@/components/ui/Button";
 
+// Helper to flatten category tree
+const flattenCategories = (cats: Category[], prefix = ""): {id: string, name: string}[] => {
+    let result: {id: string, name: string}[] = [];
+    for (const cat of cats) {
+        result.push({ id: cat.id, name: prefix + cat.name });
+        if (cat.children && cat.children.length > 0) {
+            result = result.concat(flattenCategories(cat.children, prefix + cat.name + " > "));
+        }
+    }
+    return result;
+}
+
 export default function NewProductPage() {
     const router = useRouter();
     const { user } = useAuth(); // Removed invalid token property
@@ -24,13 +36,20 @@ export default function NewProductPage() {
         salePrice: "",
         stock: "",
         stockStatus: "in_stock",
-        categoryId: "",
+        categoryIds: [] as string[],
         images: [] as string[]
     });
 
+    const getApiUrl = (endpoint: string) => {
+        const base = process.env.NEXT_PUBLIC_API_URL || "";
+        const cleanBase = base.endsWith("/api/v1") ? base : `${base}/api/v1`;
+        const safeEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+        return `${cleanBase}${safeEndpoint}`;
+    };
+
     useEffect(() => {
         // Fetch categories for the dropdown
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/categories/tree`)
+        fetch(getApiUrl("/categories/tree"))
             .then(res => res.json())
             .then(data => setCategories(data || []))
             .catch(err => console.error(err));
@@ -46,7 +65,7 @@ export default function NewProductPage() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/upload`, {
+            const res = await fetch(getApiUrl("/upload"), {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -87,11 +106,11 @@ export default function NewProductPage() {
                 basePrice: parseFloat(formData.basePrice),
                 salePrice: formData.salePrice ? parseFloat(formData.salePrice) : 0,
                 stock: parseInt(formData.stock),
-                categoryId: formData.categoryId || null // Handle empty
+                categoryIds: formData.categoryIds
             };
 
             const token = localStorage.getItem("token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/products`, {
+            const res = await fetch(getApiUrl("/admin/products"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -252,17 +271,27 @@ export default function NewProductPage() {
                     <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm space-y-4">
                          <h2 className="font-bold text-lg">Organization</h2>
                          <div>
-                            <label className="block text-sm font-medium mb-1">Category</label>
-                            <select 
-                                value={formData.categoryId}
-                                onChange={e => setFormData({...formData, categoryId: e.target.value})}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            <label className="block text-sm font-medium mb-2">Categories</label>
+                            <div className="border border-gray-300 rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
+                                {flattenCategories(categories).map(cat => (
+                                    <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                        <input 
+                                            type="checkbox"
+                                            checked={formData.categoryIds.includes(cat.id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setFormData(prev => ({...prev, categoryIds: [...prev.categoryIds, cat.id]}));
+                                                } else {
+                                                    setFormData(prev => ({...prev, categoryIds: prev.categoryIds.filter(id => id !== cat.id)}));
+                                                }
+                                            }}
+                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <span>{cat.name}</span>
+                                    </label>
                                 ))}
-                            </select>
+                                {categories.length === 0 && <span className="text-gray-400 text-sm">Loading categories...</span>}
+                            </div>
                         </div>
                     </div>
 

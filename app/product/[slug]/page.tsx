@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Left: Product Gallery (Sticky on Desktop) */}
         <div className="w-full lg:w-[55%] relative lg:sticky lg:top-24 h-fit">
            <div className="p-4 lg:p-8">
-             <ProductGallery media={product.media} />
+             <ProductGallery images={product.images || []} />
            </div>
         </div>
 
@@ -46,20 +46,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
            
            {/* Header */}
            <div className="space-y-4 border-b border-primary/10 pb-8">
-              <span className="text-secondary text-sm tracking-[0.2em] uppercase">{product.category}</span>
+              <span className="text-secondary text-sm tracking-[0.2em] uppercase">{product.categories?.[0]?.name || "Collection"}</span>
               <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-primary leading-[0.9]">
                 {product.name}
               </h1>
               <div className="flex items-center justify-between pt-2">
                  <div className="flex flex-col">
                      <span className="text-2xl font-light text-primary">
-                         ৳{(product.pricing.salePrice || product.pricing.basePrice).toLocaleString()}
+                         ৳{(product.salePrice || product.basePrice).toLocaleString()}
                      </span>
-                     {product.pricing.salePrice && (
-                         <span className="text-sm line-through text-secondary opacity-60">৳{product.pricing.basePrice.toLocaleString()}</span>
+                     {product.salePrice && (
+                         <span className="text-sm line-through text-secondary opacity-60">৳{product.basePrice.toLocaleString()}</span>
                      )}
                  </div>
-                 {product.inventory.status === 'in_stock' ? (
+                 {product.stockStatus === 'in_stock' ? (
                    <span className="text-xs text-green-600 uppercase tracking-widest flex items-center gap-2">
                      <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"/> In Stock
                    </span>
@@ -70,11 +70,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
            </div>
 
            {/* StoryBrand: The Hook */}
-           {product.weaversNote && (
+           {product.description && (
              <div className="space-y-4">
-                <h3 className="font-serif text-xl italic text-primary/80">The Weaver's Note</h3>
+                <h3 className="font-serif text-xl italic text-primary/80">Description</h3>
                 <p className="text-lg font-light leading-relaxed text-secondary/90">
-                  {product.weaversNote}
+                  {product.description}
                 </p>
              </div>
            )}
@@ -92,39 +92,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
            </div>
 
-           {/* Fabric Story */}
-           {product.fabricStory && (
-              <div className="bg-bg-secondary p-8 space-y-4 border border-white/5">
-                 <span className="text-xs uppercase tracking-widest text-secondary">Material Origin</span>
-                 <p className="text-primary leading-relaxed font-light">
-                    {product.fabricStory}
-                 </p>
-              </div>
-           )}
+           {/* Fabric Story - Removed for now as not in data model */}
 
-           {/* Specifications Table */}
-           {product.specifications && (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 border-t border-primary/10 pt-8 text-sm">
-                <div>
-                  <span className="block text-secondary text-xs uppercase mb-1">Material Composition</span>
-                  <span className="text-primary">{product.specifications.material}</span>
-                </div>
-                <div>
-                  <span className="block text-secondary text-xs uppercase mb-1">Weave Type</span>
-                  <span className="text-primary">{product.specifications.weave}</span>
-                </div>
-                <div>
-                  <span className="block text-secondary text-xs uppercase mb-1">Origin</span>
-                  <span className="text-primary">{product.specifications.origin}</span>
-                </div>
-                <div>
-                  <span className="block text-secondary text-xs uppercase mb-1">Care</span>
-                  <ul className="text-primary list-disc list-inside">
-                    {product.specifications.care.map((c, i) => <li key={i}>{c}</li>)}
-                  </ul>
-                </div>
-             </div>
-           )}
+           {/* Specifications Table - Removed for now as not in data model */}
 
         </div>
       </div>

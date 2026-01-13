@@ -97,7 +97,7 @@ export function CartDrawer() {
                     {/* Image */}
                     <div className="relative w-24 h-32 bg-gray-100 flex-shrink-0 overflow-hidden rounded-sm">
                       <Image
-                        src={item.media[0].url}
+                        src={item.images?.[0] || "/assets/placeholder.png"}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -114,11 +114,11 @@ export function CartDrawer() {
                             </h4>
                           </Link>
                           <span className="text-sm font-medium text-primary whitespace-nowrap">
-                            ৳{(item.pricing.salePrice || item.pricing.basePrice).toLocaleString()}
+                            ৳{(item.salePrice || item.basePrice || 0).toLocaleString()}
                           </span>
                         </div>
                         <p className="text-xs text-secondary uppercase tracking-wide mt-1">
-                            {item.category}
+                            {item.categories?.[0]?.name}
                         </p>
                       </div>
                       

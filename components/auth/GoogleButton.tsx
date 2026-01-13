@@ -2,6 +2,8 @@
 import { useGoogleLogin } from "@react-oauth/google";
 import { useSearchParams } from "next/navigation";
 
+import { useAuth } from "@/context/AuthContext";
+import { getApiUrl } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 
@@ -16,7 +18,7 @@ export function GoogleButton() {
         try {
             console.log("Google Code Response:", codeResponse);
             // Send authorization code to backend
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+            const res = await fetch(getApiUrl("/auth/google"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code: codeResponse.code }),

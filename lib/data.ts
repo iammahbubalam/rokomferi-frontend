@@ -44,31 +44,7 @@ export interface ProductDimensions {
   height?: number;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  sku: string;
-  category: string;
-  description: string;
-  pricing: ProductPricing;
-  media: ProductMedia[];
-  inventory: ProductInventory;
-  variants?: ProductVariant[];
-  seo?: ProductSEO;
-  dimensions?: ProductDimensions;
-  tags?: string[];
-  status: "draft" | "published" | "archived";
-  isFeatured?: boolean;
-  weaversNote?: string;
-  fabricStory?: string;
-  specifications?: {
-    material: string;
-    weave: string;
-    origin: string;
-    care: string[];
-  };
-}
+import { Product, Category } from "@/types";
 
 export interface CategoryNode {
   id: string;
@@ -76,6 +52,9 @@ export interface CategoryNode {
   slug: string;
   path?: string; 
   children?: CategoryNode[];
+  image?: string;
+  icon?: string;
+  orderIndex?: number;
 }
 
 // --- MOCK CONSTANTS (STATIC DATA) ---
@@ -237,32 +216,7 @@ export const FOOTER_SECTIONS: FooterSection[] = [
   }
 ];
 
-export interface CollectionInfo {
-  title: string;
-  description: string;
-  image: string;
-  story?: string; 
-}
-
-const COLLECTIONS_INFO: Record<string, CollectionInfo> = {
-  "eid-2026": {
-    title: "The Eid Edit",
-    description: "A curation of silence, heritage, and golden hour memories.",
-    image: "/assets/eid-hero-group.png",
-    story: "Eid is a return to the roots."
-  },
-  "wedding-guest": {
-    title: "Wedding Guest",
-    description: "For the moments that mark new beginnings.",
-    image: "/assets/saree-blue-katan.png"
-  },
-  "heritage": {
-      title: "Heritage & Heirloom",
-      description: "Investing in pieces that will outlast us.",
-      image: "/assets/eid-texture.png",
-      story: "We believe in the concept of the 'Forever Wardrobe'."
-  }
-};
+// Old Mock Collection Info removed
 
 export interface FeaturedCategory {
   id: string;
@@ -311,8 +265,7 @@ interface BackendProduct {
   stock: number;
   stockStatus: string;
   isFeatured: boolean;
-  categoryId: string;
-  category?: { name: string; slug: string };
+  categories?: { id: string; name: string; slug: string }[];
   media: { images?: string[] };
 }
 
@@ -328,59 +281,44 @@ function mapBackendProductToFrontend(bp: BackendProduct): Product {
         name: bp.name,
         slug: bp.slug,
         sku: bp.sku || "N/A",
-        category: bp.category?.name || "Uncategorized",
+        categories: bp.categories || [],
         description: bp.description,
-        status: "published",
-        pricing: {
-            basePrice: bp.basePrice,
-            salePrice: bp.salePrice,
-            currency: "BDT"
-        },
-        inventory: {
-            stockLevel: bp.stock,
-            lowStockThreshold: 5,
-            trackQuantity: true,
-            status: bp.stockStatus as any
-        },
-        media: images.map((url, i) => ({
-            id: `img-${i}`,
-            type: "image",
-            url: url,
-            alt: bp.name,
-            isThumbnail: i === 0
-        })),
-        isFeatured: bp.isFeatured,
-        // Enriched Fields (Fallback)
-        weaversNote: "Handcrafted with care.",
-        fabricStory: "Premium quality fabric sourced ethically.",
-        specifications: { material: "Cotton/Silk Blend", weave: "Handloom", origin: "Bangladesh", care: ["Dry Clean Only"] },
-        tags: ["heritage", "new"]
+        isActive: true, // simplified
+        basePrice: bp.basePrice,
+        salePrice: bp.salePrice,
+        stock: bp.stock,
+        stockStatus: bp.stockStatus as any,
+        images: images,
+        isFeatured: bp.isFeatured
     };
 }
+
+import { getApiUrl } from "@/lib/utils";
+import { Collection } from "@/types";
 
 // Helper to smooth out loading
 export async function delay(ms: number = 200) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// --- REAL API FUNCTIONS ---
+// ... REAL API FUNCTIONS ...
 
 export async function getAllProducts(): Promise<Product[]> {
     try {
-        // Use no-store to always fetch fresh data, or force-cache if preferred
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?limit=100`, { cache: 'no-store' });
+        const res = await fetch(getApiUrl("/products?limit=100"), { cache: 'no-store' });
         if (!res.ok) throw new Error("Failed to fetch products");
         const json: APIResponse<BackendProduct[]> = await res.json();
         return json.data.map(mapBackendProductToFrontend);
     } catch (error) {
         console.error("Values fetch error:", error);
+        console.error("Attempted URL:", `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?limit=100`);
         return [];
     }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${slug}`, { cache: 'no-store' });
+        const res = await fetch(getApiUrl(`/products/${slug}`), { cache: 'no-store' });
         if (!res.ok) return undefined;
         const json: BackendProduct = await res.json();
         return mapBackendProductToFrontend(json);
@@ -390,9 +328,33 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
     }
 }
 
+// ... Reviews ...
+
+// ... Static ...
+
+// ... Categories ...
+// ... Featured ...
+// ... Philosophy ...
+// ... Editorial ...
+// ... SiteConfig ...
+// ... Footer ...
+
+// ... Collections ...
+
+export async function searchProducts(query: string): Promise<Product[]> {
+  const products = await getAllProducts();
+  if (!query) return [];
+  const lowerQuery = query.toLowerCase();
+  return products.filter(p => 
+    p.name.toLowerCase().includes(lowerQuery) || 
+    p.categories.some(c => c.name.toLowerCase().includes(lowerQuery)) ||
+    p.description.toLowerCase().includes(lowerQuery)
+  );
+}
+
 export async function getProductReviews(productId: string): Promise<Review[]> {
      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${productId}/reviews`, { cache: 'no-store' });
+        const res = await fetch(getApiUrl(`/products/${productId}/reviews`), { cache: 'no-store' });
         if (!res.ok) return [];
         const json = await res.json();
         return json.reviews || [];
@@ -411,7 +373,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
 
 export async function getCategoryTree(): Promise<CategoryNode[]> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/categories/tree`, { cache: 'force-cache', next: { revalidate: 3600 } });
+        const res = await fetch(getApiUrl("/categories/tree"), { cache: 'no-store' });
         if (res.ok) {
             const data = await res.json();
             // Assuming backend returns struct similar to CategoryNode or we need a mapper.
@@ -451,15 +413,32 @@ export async function getFooterSections(): Promise<FooterSection[]> {
   return FOOTER_SECTIONS;
 }
 
-export async function getCollectionInfo(slug: string): Promise<CollectionInfo | undefined> {
-  await delay(100);
-  return COLLECTIONS_INFO[slug];
+// Re-export Collection type or align with it
+export type CollectionInfo = Collection;
+
+export async function getCollectionInfo(slug: string): Promise<Collection | undefined> {
+    try {
+        const res = await fetch(getApiUrl(`/collections/${slug}`), { cache: 'no-store' });
+        if (!res.ok) return undefined;
+        const collection: Collection = await res.json();
+        return collection;
+    } catch (error) {
+        console.error("Failed to fetch collection", error);
+        return undefined;
+    }
 }
 
 export async function getProductsByCollection(slug: string): Promise<Product[]> {
-    const products = await getAllProducts(); // Real Products
-    // In real world, we'd filter at API level
-    return products; 
+    const collection = await getCollectionInfo(slug);
+    if (!collection || !collection.products) return [];
+    
+    // Map backend products to frontend products if necessary
+    // The backend `Collection` struct returns `[]Product`.
+    // We might need to map them using `mapBackendProductToFrontend`.
+    // But `mapBackendProductToFrontend` is local.
+    // I should check if `collection.products` are `BackendProduct[]` or just IDs.
+    // My backend logic Preloads `Products`.
+    return collection.products.map((p: any) => mapBackendProductToFrontend(p));
 }
 
 export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
@@ -467,16 +446,6 @@ export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
   return FEATURED_CATEGORIES;
 }
 
-export async function searchProducts(query: string): Promise<Product[]> {
-  const products = await getAllProducts();
-  if (!query) return [];
-  const lowerQuery = query.toLowerCase();
-  return products.filter(p => 
-    p.name.toLowerCase().includes(lowerQuery) || 
-    p.category.toLowerCase().includes(lowerQuery) ||
-    p.description.toLowerCase().includes(lowerQuery)
-  );
-}
 
 // --- ORDER / FILTER METADATA (MOCKS FOR NOW) ---
 

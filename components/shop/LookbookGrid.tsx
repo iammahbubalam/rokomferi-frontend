@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import { ProductCard } from "@/components/ui/ProductCard";
 import Image from "next/image";
 
@@ -37,7 +37,7 @@ export function LookbookGrid({ products }: LookbookGridProps) {
                 <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-10">
                     <div className="relative aspect-[4/5] w-full bg-[#f4f4f4]">
                         <Image
-                          src={product.media[0].url}
+                          src={product.images?.[0] || "/assets/placeholder.png"}
                           alt={product.name}
                           fill
                           className="object-cover"
@@ -94,7 +94,7 @@ export function LookbookGrid({ products }: LookbookGridProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                             <div className="relative aspect-[3/4] md:aspect-square lg:aspect-[16/9] w-full bg-[#f4f4f4] overflow-hidden">
                                 <Image
-                                  src={product.media[1]?.url || product.media[0].url}
+                                  src={product.images?.[1] || product.images?.[0] || "/assets/placeholder.png"}
                                   alt={product.name}
                                   fill
                                   className="object-cover hover:scale-105 transition-transform duration-1000"

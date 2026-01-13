@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Search, Menu, X, User } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
@@ -12,6 +12,7 @@ import { UserMenu } from "./UserMenu";
 import { CategoryNode, SiteConfig } from "@/lib/data";
 import { SearchOverlay } from "./SearchOverlay";
 import { useIntro } from "@/context/IntroContext";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import clsx from "clsx";
 
@@ -25,6 +26,7 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { items, toggleCart } = useCart();
+  const { user } = useAuth();
   const { isIntroComplete, isLoading } = useIntro();
 
   useEffect(() => {
@@ -82,6 +84,18 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
 
             {/* Account */}
             <UserMenu />
+
+            {/* Admin Badge */}
+            {user?.isAdmin && (
+              <Link 
+                href="/admin" 
+                className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-full text-xs font-semibold text-primary transition-all group"
+                title="Admin Panel"
+              >
+                <Shield className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span className="hidden xl:inline">Admin</span>
+              </Link>
+            )}
 
             {/* Cart */}
             <button 

@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { useRef } from "react";
 

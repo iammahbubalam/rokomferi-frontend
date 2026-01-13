@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { motion } from "framer-motion";
 

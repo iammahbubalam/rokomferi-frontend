@@ -25,6 +25,8 @@ interface Address {
     zip: string;
 }
 
+import { getApiUrl } from "@/lib/utils";
+
 export default function ProfilePage() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
@@ -52,7 +54,7 @@ export default function ProfilePage() {
   const fetchOrders = async () => {
       try {
           const token = localStorage.getItem("token");
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/orders`, {
+          const res = await fetch(getApiUrl("/orders"), {
               headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
   const fetchAddresses = async () => {
       try {
           const token = localStorage.getItem("token");
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/addresses`, {
+          const res = await fetch(getApiUrl("/user/addresses"), {
               headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {

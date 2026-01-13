@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CategoryNode } from "@/lib/data";
+import { Category } from "@/types";
 import { clsx } from "clsx";
 
-export function NavMenu({ categories }: { categories: CategoryNode[] }) {
+export function NavMenu({ categories }: { categories: Category[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const navCategories = categories.filter(c => c.showInNav !== false).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
   return (
     <nav className="hidden lg:flex items-center gap-8" onMouseLeave={() => setActiveId(null)}>
-      {categories.map((category) => (
+      {navCategories.map((category) => (
         <div key={category.id} className="relative">
           {/* Top Level Item */}
           <Link
@@ -34,10 +36,16 @@ export function NavMenu({ categories }: { categories: CategoryNode[] }) {
               >
                  {category.children.map((child) => (
                    <div key={child.id} className="flex flex-col gap-4">
+                      {child.image && (
+                        <div className="relative w-full h-32 mb-2 rounded-md overflow-hidden bg-gray-50 border border-primary/5">
+                            <img src={child.image} alt={child.name} className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
                       <Link 
                         href={child.path || `/category/${child.slug}`}
-                        className="font-serif text-lg text-primary hover:underline decoration-accent-gold underline-offset-4"
+                        className="font-serif text-lg text-primary hover:underline decoration-accent-gold underline-offset-4 flex items-center gap-2"
                       >
+                        {child.icon && <span>{child.icon}</span>} {/* Simple text icon or render specific component if dynamic */}
                         {child.name}
                       </Link>
                       

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Container, Section } from "@/components/ui/Container";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import { ArrowRight } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import clsx from "clsx";

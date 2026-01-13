@@ -3,19 +3,18 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ProductMedia } from "@/lib/data";
 import clsx from "clsx";
 
 interface ProductGalleryProps {
-  media: ProductMedia[];
+  images: string[];
 }
 
-export function ProductGallery({ media }: ProductGalleryProps) {
+export function ProductGallery({ images }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const selectedImage = media[selectedIndex];
+  const selectedImage = images[selectedIndex] || "/assets/placeholder.png";
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
@@ -30,9 +29,9 @@ export function ProductGallery({ media }: ProductGalleryProps) {
       
       {/* Thumbnails (Left on Desktop, Bottom on Mobile) */}
       <div className="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto scrollbar-hide lg:max-h-[70vh]">
-         {media.map((item, idx) => (
+         {images.map((url, idx) => (
            <button
-             key={item.id}
+             key={url}
              onClick={() => setSelectedIndex(idx)}
              className={clsx(
                "relative flex-shrink-0 w-20 h-28 lg:w-24 lg:h-36 border transition-all duration-300",
@@ -40,8 +39,8 @@ export function ProductGallery({ media }: ProductGalleryProps) {
              )}
            >
              <Image 
-               src={item.url}
-               alt={item.alt}
+               src={url}
+               alt="Product Thumbnail"
                fill
                className="object-cover"
              />
@@ -58,7 +57,7 @@ export function ProductGallery({ media }: ProductGalleryProps) {
       >
          <AnimatePresence mode="wait">
             <motion.div
-              key={selectedImage.id}
+              key={selectedImage}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -67,8 +66,8 @@ export function ProductGallery({ media }: ProductGalleryProps) {
             >
               {/* Normal Image */}
                <Image
-                 src={selectedImage.url}
-                 alt={selectedImage.alt}
+                 src={selectedImage}
+                 alt="Product Image"
                  fill
                  className={clsx("object-cover transition-opacity duration-300", isZoomed ? "opacity-0" : "opacity-100")}
                  priority
@@ -78,7 +77,7 @@ export function ProductGallery({ media }: ProductGalleryProps) {
                <div 
                  className={clsx("absolute inset-0 w-full h-full bg-no-repeat transition-opacity duration-300", isZoomed ? "opacity-100" : "opacity-0")}
                  style={{
-                   backgroundImage: `url(${selectedImage.url})`,
+                   backgroundImage: `url(${selectedImage})`,
                    backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
                    backgroundSize: "200%" // 2x Zoom level
                  }}

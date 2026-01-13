@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star, Loader2 } from "lucide-react";
+import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
 interface ReviewFormProps {
@@ -33,7 +34,7 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${productId}/reviews`, {
+            const res = await fetch(getApiUrl(`/products/${productId}/reviews`), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

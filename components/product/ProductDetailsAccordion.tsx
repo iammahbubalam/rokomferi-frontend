@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,44 +45,7 @@ function AccordionItem({ title, children, isOpen: defaultOpen = false }: Accordi
 export function ProductDetailsAccordion({ product }: { product: Product }) {
   return (
     <div className="border-t border-primary/10 mt-8">
-      {product.weaversNote && (
-        <AccordionItem title="The Weaver's Note" isOpen>
-          <p className="italic text-primary/80">"{product.weaversNote}"</p>
-        </AccordionItem>
-      )}
-      
-      {product.fabricStory && (
-        <AccordionItem title="Fabric Story">
-           <p>{product.fabricStory}</p>
-        </AccordionItem>
-      )}
-
-      {product.specifications && (
-        <AccordionItem title="Specifications">
-           <dl className="grid grid-cols-1 gap-4 text-sm">
-              <div className="flex justify-between py-2 border-b border-dashed border-primary/10">
-                 <dt className="text-secondary">Material</dt>
-                 <dd className="font-medium text-primary text-right">{product.specifications.material}</dd>
-              </div>
-              <div className="flex justify-between py-2 border-b border-dashed border-primary/10">
-                 <dt className="text-secondary">Weave</dt>
-                 <dd className="font-medium text-primary text-right">{product.specifications.weave}</dd>
-              </div>
-              <div className="flex justify-between py-2 border-b border-dashed border-primary/10">
-                 <dt className="text-secondary">Origin</dt>
-                 <dd className="font-medium text-primary text-right">{product.specifications.origin}</dd>
-              </div>
-              <div className="py-2">
-                 <dt className="text-secondary mb-2">Care</dt>
-                 <dd className="font-medium text-primary">
-                    <ul className="list-disc pl-4 space-y-1">
-                       {product.specifications.care.map(c => <li key={c}>{c}</li>)}
-                    </ul>
-                 </dd>
-              </div>
-           </dl>
-        </AccordionItem>
-      )}
+      {/* Sections removed as fields are not in Product interface currently */}
 
       <AccordionItem title="Shipping & Returns">
          <p>

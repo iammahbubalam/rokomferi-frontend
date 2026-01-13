@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, ArrowRight, Loader2 } from "lucide-react";
-import { Product, searchProducts } from "@/lib/data";
+import { searchProducts } from "@/lib/data";
+import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image"; 
 
@@ -98,13 +99,13 @@ export function SearchOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: (
                           transition={{ delay: idx * 0.1 }}
                         >
                            <Link 
-                             href={`/product/${product.id}`} 
+                             href={`/product/${product.slug}`} 
                              onClick={onClose}
                              className="group flex gap-6 items-center p-4 rounded-xl hover:bg-primary/5 transition-colors"
                            >
                                  <div className="relative w-24 h-32 flex-shrink-0 overflow-hidden bg-main-secondary">
                                  <Image 
-                                    src={product.media[0].url} 
+                                    src={product.images?.[0] || "/assets/placeholder.png"} 
                                     alt={product.name} 
                                     fill 
                                     className="object-cover group-hover:scale-110 transition-transform duration-700"
@@ -112,8 +113,8 @@ export function SearchOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: (
                               </div>
                               <div>
                                  <h4 className="font-serif text-xl group-hover:text-accent-gold transition-colors">{product.name}</h4>
-                                 <span className="text-secondary text-sm mt-1 block">{product.category}</span>
-                                 <span className="text-primary font-medium mt-2 block">৳{product.pricing.basePrice.toLocaleString()}</span>
+                                 <span className="text-secondary text-sm mt-1 block">{product.categories?.[0]?.name || "Collection"}</span>
+                                 <span className="text-primary font-medium mt-2 block">৳{(product.basePrice || 0).toLocaleString()}</span>
                               </div>
                            </Link>
                         </motion.div>

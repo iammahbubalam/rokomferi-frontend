@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Product } from "@/lib/data";
+import { Product } from "@/types";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { ShoppingBag, Eye } from "lucide-react";
@@ -19,12 +19,12 @@ export function ProductCard({ product, index = 0, variant = "default", aspectRat
   const { addToCart } = useCart();
   
   // Pricing Strategy
-  const price = product.pricing.salePrice || product.pricing.basePrice;
-  const originalPrice = product.pricing.salePrice ? product.pricing.basePrice : null;
+  const price = product.salePrice || product.basePrice;
+  const originalPrice = product.salePrice ? product.basePrice : null;
   
   // Status Logic
-  const isNew = product.tags?.includes('new') || product.tags?.includes('eid');
-  const isSoldOut = product.inventory.status === 'out_of_stock';
+  const isFeatured = product.isFeatured;
+  const isSoldOut = product.stockStatus === 'out_of_stock';
   
   return (
     <div className="group relative flex flex-col gap-4 mb-8 break-inside-avoid">
@@ -36,7 +36,7 @@ export function ProductCard({ product, index = 0, variant = "default", aspectRat
            className="w-full h-full relative"
         >
           <Image
-            src={product.media[0].url}
+            src={product.images?.[0] || "/assets/placeholder.png"}
             alt={product.name}
             fill
             className="object-cover"
@@ -49,12 +49,12 @@ export function ProductCard({ product, index = 0, variant = "default", aspectRat
 
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-           {isNew && (
+           {isFeatured && (
              <span className="bg-white/90 backdrop-blur text-black text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
-               New Arrival
+               Featured
              </span>
            )}
-           {product.pricing.salePrice && (
+           {product.salePrice && (
              <span className="bg-accent-gold/90 text-white text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
                Sale
              </span>
@@ -86,7 +86,7 @@ export function ProductCard({ product, index = 0, variant = "default", aspectRat
       <div className="flex flex-col gap-1 items-start">
         {/* Category / Subtitle */}
         <span className="text-[10px] uppercase tracking-[0.2em] text-secondary/60">
-          {product.category}
+          {product.categories?.[0]?.name || "Collection"}
         </span>
 
         {/* Title */}
@@ -111,17 +111,6 @@ export function ProductCard({ product, index = 0, variant = "default", aspectRat
            )}
         </div>
 
-        {/* Variant Indicators (Static for now, but implies depth) */}
-        {product.variants && (
-           <div className="h-4 flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-              {product.variants.slice(0, 3).map(v => (
-                 <span key={v.id} className="text-[10px] text-secondary border border-primary/20 px-1 rounded-sm uppercase">
-                    {v.name}
-                 </span>
-              ))}
-              {product.variants.length > 3 && <span className="text-[10px] text-secondary">+</span>}
-           </div>
-        )}
       </div>
     </div>
   );

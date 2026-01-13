@@ -8,6 +8,22 @@ export interface Category {
   icon?: string;
   image?: string;
   isActive?: boolean;
+  showInNav?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+  path?: string;
+}
+
+export interface Collection {
+    id: string;
+    title: string;
+    slug: string;
+    description: string;
+    image: string;
+    story: string;
+    isActive: boolean;
+    products?: Product[];
 }
 
 export interface Product {
@@ -20,10 +36,10 @@ export interface Product {
     stock: number;
     stockStatus: 'in_stock' | 'out_of_stock' | 'pre_order';
     images: string[];
-    categoryId: string;
-    category?: Category;
+    categories: Category[];
     sku: string;
     isActive: boolean;
+    isFeatured?: boolean;
 }
 
 export interface Review {

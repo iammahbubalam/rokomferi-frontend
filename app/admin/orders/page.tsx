@@ -5,6 +5,8 @@ import { Order } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 
+import { getApiUrl } from "@/lib/utils";
+
 export default function AdminOrdersPage() {
     const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
@@ -20,7 +22,16 @@ export default function AdminOrdersPage() {
         setIsLoading(true);
         try {
             const token = localStorage.getItem("token");
-            const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/orders`);
+            // If getApiUrl returns a relative path, we treat it carefully or construct full URL if fetch needs it. 
+            // Actually fetch supports relative URLs in Next.js usually, but let's see. 
+            // The original code was using `new URL(...)`. 
+            // getApiUrl returns absolute if env var is absolute. 
+            // Let's just pass `getApiUrl` string to fetch.
+            // But wait, the original code had: const url = new URL(...) then url.searchParams.set(...)
+            // So I need to use getApiUrl as base.
+            
+            const url = new URL(getApiUrl("/admin/orders"));
+
             if (statusFilter) url.searchParams.append("status", statusFilter);
             
             const res = await fetch(url.toString(), {
@@ -40,7 +51,7 @@ export default function AdminOrdersPage() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/orders/${orderId}/status`, {
+            const res = await fetch(getApiUrl(`/admin/orders/${orderId}/status`), {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

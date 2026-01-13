@@ -12,7 +12,9 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  FolderTree,
+  Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +39,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: "/admin" },
     { label: "Products", icon: Package, href: "/admin/products" },
+    { label: "Categories", icon: FolderTree, href: "/admin/categories" },
+    { label: "Collections", icon: Layers, href: "/admin/collections" },
     { label: "Orders", icon: ShoppingBag, href: "/admin/orders" },
     { label: "Customers", icon: Users, href: "/admin/customers" },
     { label: "Settings", icon: Settings, href: "/admin/settings" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { Product, ProductVariant } from "@/lib/data";
+import { Product } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
@@ -9,33 +9,18 @@ import clsx from "clsx";
 
 interface AddToCartButtonProps {
   product: Product;
-  variant?: ProductVariant;
   disabled?: boolean;
 }
 
-export function AddToCartButton({ product, variant, disabled }: AddToCartButtonProps) {
+export function AddToCartButton({ product, disabled }: AddToCartButtonProps) {
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddToCart = async () => {
     setIsAdding(true);
     try {
-      // Construct the cart item
-      const effectivePrice = variant?.price;
-      const basePricing = product.pricing;
-      
-      const cartItem = variant 
-        ? { 
-            ...product, 
-            id: variant.id, 
-            name: `${product.name} - ${variant.name}`,
-            pricing: effectivePrice ? { basePrice: effectivePrice, currency: basePricing.currency } : basePricing
-          }
-        : product;
-        
-      await addToCart(cartItem as Product);
+      await addToCart(product);
     } finally {
-      // Small delay to show the "Adding" state for better UX feedback
       setTimeout(() => setIsAdding(false), 500);
     }
   };
