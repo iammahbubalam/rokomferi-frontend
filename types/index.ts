@@ -4,6 +4,10 @@ export interface Category {
   slug: string;
   parentId?: string;
   children?: Category[];
+  orderIndex?: number;
+  icon?: string;
+  image?: string;
+  isActive?: boolean;
 }
 
 export interface Product {
