@@ -55,6 +55,8 @@ export interface CategoryNode {
   image?: string;
   icon?: string;
   orderIndex?: number;
+  isActive?: boolean;
+  showInNav?: boolean;
 }
 
 // --- MOCK CONSTANTS (STATIC DATA) ---
@@ -376,11 +378,18 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
         const res = await fetch(getApiUrl("/categories/tree"), { cache: 'no-store' });
         if (res.ok) {
             const data = await res.json();
-            // Assuming backend returns struct similar to CategoryNode or we need a mapper.
-            // For robustness, if data is array (tree), return it.
-            // If backend hasn't implemented Tree structure properly yet, this might break.
-            // Safe approach: Return data if it looks like array, else Mock.
-            if (Array.isArray(data)) return data; 
+            if (Array.isArray(data)) {
+                // Filter for navbar: only active AND showInNav categories
+                const filterForNav = (cats: CategoryNode[]): CategoryNode[] => {
+                    return cats
+                        .filter(c => c.isActive && c.showInNav)
+                        .map(c => ({
+                            ...c,
+                            children: c.children ? filterForNav(c.children) : []
+                        }));
+                };
+                return filterForNav(data);
+            }
         }
     } catch(e) { console.error("Category Tree fetch failed", e); }
     
