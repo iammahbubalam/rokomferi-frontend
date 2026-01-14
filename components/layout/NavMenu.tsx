@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Category } from "@/types";
+import { Category, Collection } from "@/types";
 import { clsx } from "clsx";
 
-export function NavMenu({ categories }: { categories: Category[] }) {
+export function NavMenu({ categories, collections }: { categories: Category[], collections: Collection[] }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const navCategories = categories.filter(c => c.showInNav !== false).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
@@ -72,6 +72,52 @@ export function NavMenu({ categories }: { categories: Category[] }) {
           </AnimatePresence>
         </div>
       ))}
+
+      {/* Collections - Fixed Menu Item */}
+      <div className="relative">
+        <Link
+          href="/collections"
+          className="text-sm uppercase tracking-[0.1em] text-primary hover:text-accent-gold transition-colors py-4 inline-block font-medium"
+          onMouseEnter={() => setActiveId("collections")}
+        >
+          Collections
+        </Link>
+        <AnimatePresence>
+           {activeId === "collections" && collections && collections.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-full right-0 w-[800px] bg-white border border-primary/5 shadow-2xl p-8 z-50 grid grid-cols-3 gap-8"
+                style={{ right: '-200px' }} // Center align somewhat relative to parent if needed, or stick to left/right
+              >
+                  {collections.map(collection => (
+                     <div key={collection.id} className="group flex flex-col gap-3">
+                         <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm bg-gray-100">
+                             {collection.image ? (
+                               <img 
+                                 src={collection.image} 
+                                 alt={collection.title} 
+                                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" 
+                               />
+                             ) : (
+                               <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
+                             )}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+                         </div>
+                         <div>
+                            <Link href={`/collection/${collection.slug}`} className="block">
+                                <h4 className="font-serif text-xl text-primary group-hover:text-accent-gold transition-colors">{collection.title}</h4>
+                            </Link>
+                            <p className="text-xs text-secondary mt-1 line-clamp-2">{collection.description}</p>
+                         </div>
+                     </div>
+                  ))}
+              </motion.div>
+           )}
+        </AnimatePresence>
+      </div>
     </nav>
   );
 }

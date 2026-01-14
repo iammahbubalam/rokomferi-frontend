@@ -6,11 +6,13 @@ import clsx from "clsx";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "white" | "outline-white";
+  size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 }
 
 export function Button({ 
   variant = "primary", 
+  size = "md",
   children, 
   className,
   ...props 
@@ -23,8 +25,16 @@ export function Button({
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={clsx(
-        "relative uppercase tracking-[0.2em] text-[11px] font-medium px-10 py-4 transition-all duration-300 rounded-none border border-transparent",
+        "relative uppercase tracking-[0.2em] font-medium transition-all duration-300 rounded-none border border-transparent",
         "flex items-center justify-center gap-2", // Ensure centered content
+        
+        // Sizes
+        size === "sm" && "px-4 py-2 text-[10px]",
+        size === "md" && "px-10 py-4 text-[11px]",
+        size === "lg" && "px-12 py-5 text-[12px]",
+
+        // Primary: Solid Dark -> Solid Gold
+
         
         // Primary: Solid Dark -> Solid Gold
         variant === "primary" && "bg-primary text-white hover:bg-accent-gold hover:text-white",

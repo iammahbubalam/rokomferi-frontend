@@ -16,12 +16,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import clsx from "clsx";
 
+import { Collection } from "@/types";
+
 interface NavbarProps {
   categories: CategoryNode[];
+  collections: Collection[];
   siteConfig: SiteConfig;
 }
 
-export function Navbar({ categories, siteConfig }: NavbarProps) {
+export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -60,7 +63,7 @@ export function Navbar({ categories, siteConfig }: NavbarProps) {
 
           {/* 2. Desktop Navigation (Center - Mega Menu) */}
           <div className="hidden lg:block">
-            <NavMenu categories={categories} />
+            <NavMenu categories={categories} collections={collections} />
           </div>
 
           {/* 3. Actions (Right) */}

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description: "A premium minimalist e-commerce experience.",
 };
 
-import { getCategoryTree, getFooterSections, getSiteConfig } from "@/lib/data";
+import { getCategoryTree, getFooterSections, getSiteConfig, getCollections } from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
@@ -38,10 +38,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Fetch global data on server
-  const [siteConfig, categories, footerSections] = await Promise.all([
+  const [siteConfig, categories, footerSections, collections] = await Promise.all([
     getSiteConfig(),
     getCategoryTree(),
-    getFooterSections()
+    getFooterSections(),
+    getCollections()
   ]);
 
   return (
@@ -54,7 +55,7 @@ export default async function RootLayout({
             <IntroProvider>
               <IntroOverlay />
               <CartProvider>
-                <Navbar categories={categories} siteConfig={siteConfig} />
+                <Navbar categories={categories} collections={collections} siteConfig={siteConfig} />
                 <main className="flex-grow pt-[88px] md:pt-[104px]"> 
                   {/* pt to offset fixed header height approx */}
                   {children}

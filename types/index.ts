@@ -40,6 +40,17 @@ export interface Product {
     sku: string;
     isActive: boolean;
     isFeatured?: boolean;
+    lowStockThreshold: number;
+}
+
+export interface InventoryLog {
+    id: number;
+    productId: string;
+    variantId?: string;
+    changeAmount: number;
+    reason: string;
+    referenceId: string;
+    createdAt: string;
 }
 
 export interface Review {

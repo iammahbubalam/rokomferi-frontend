@@ -1,30 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApiUrl, cn } from "@/lib/utils";
+import { getApiUrl } from "@/lib/utils";
 import { Collection, Product } from "@/types";
-import { Loader2, Plus, Trash2, Edit2, Image as ImageIcon, Save, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit2, ShoppingBag, Eye, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
+import { CollectionFormDrawer } from "@/components/admin/collections/CollectionFormDrawer";
+import Link from "next/link";
 
 export default function AdminCollectionsPage() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [currentCollection, setCurrentCollection] = useState<Partial<Collection>>({});
     
-    // For Product Assignment
-    const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [showProductModal, setShowProductModal] = useState(false);
+    // Drawer State
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [editingCollection, setEditingCollection] = useState<Partial<Collection> | null>(null);
 
     useEffect(() => {
         fetchCollections();
-        fetchProducts();
     }, []);
 
     const fetchCollections = async () => {
         try {
-            const res = await fetch(getApiUrl("/collections"));
+            const token = localStorage.getItem("token");
+            const res = await fetch(getApiUrl("/admin/collections"), {
+                 headers: { Authorization: `Bearer ${token}` }
+            });
             const data = await res.json();
             setCollections(data || []);
         } finally {
@@ -32,41 +34,18 @@ export default function AdminCollectionsPage() {
         }
     };
 
-    const fetchProducts = async () => {
-        const res = await fetch(getApiUrl("/products?limit=100"));
-        const data = await res.json();
-        setAllProducts(data.data || []);
+    const handleCreate = () => {
+        setEditingCollection(null);
+        setIsDrawerOpen(true);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const url = currentCollection.id 
-            ? getApiUrl(`/admin/collections/${currentCollection.id}`)
-            : getApiUrl("/admin/collections");
-        const method = currentCollection.id ? "PUT" : "POST";
-
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(url, {
-                method,
-                headers: { 
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}` 
-                },
-                body: JSON.stringify(currentCollection)
-            });
-            if (res.ok) {
-                fetchCollections();
-                setIsEditing(false);
-                setCurrentCollection({});
-            }
-        } catch (error) {
-            console.error(error);
-        }
+    const handleEdit = (collection: Collection) => {
+        setEditingCollection(collection);
+        setIsDrawerOpen(true);
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return;
+        if (!confirm("Are you sure? This action cannot be undone.")) return;
         try {
             const token = localStorage.getItem("token");
             await fetch(getApiUrl(`/admin/collections/${id}`), {
@@ -79,129 +58,149 @@ export default function AdminCollectionsPage() {
         }
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        
-        const formData = new FormData();
-        formData.append("file", file);
-        
+    const handleToggleActive = async (collection: Collection) => {
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(getApiUrl("/upload"), {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData
+            const res = await fetch(getApiUrl(`/admin/collections/${collection.id}`), {
+                method: "PUT",
+                headers: { 
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}` 
+                },
+                body: JSON.stringify({ ...collection, isActive: !collection.isActive })
             });
-            const data = await res.json();
-            if (data.url) {
-                setCurrentCollection(prev => ({ ...prev, image: data.url }));
+            if (res.ok) {
+                fetchCollections();
             }
         } catch (error) {
             console.error(error);
         }
     };
 
-    if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
+    if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-light">Collections</h1>
-                <Button onClick={() => { setCurrentCollection({}); setIsEditing(true); }}>
+        <div className="space-y-8 max-w-7xl mx-auto pb-12">
+            
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+                <div>
+                   <h1 className="text-3xl font-serif text-primary">Collections</h1>
+                   <p className="text-gray-500 mt-1">Curate and manage your product compilations.</p>
+                </div>
+                <Button onClick={handleCreate} className="shadow-lg shadow-primary/20">
                     <Plus className="w-4 h-4 mr-2" /> New Collection
                 </Button>
             </div>
 
-            {isEditing && (
-                <div className="bg-white p-6 border border-gray-100 shadow-sm space-y-4">
-                    <h2 className="text-lg font-medium">{currentCollection.id ? "Edit Collection" : "New Collection"}</h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <input 
-                                placeholder="Title" 
-                                className="w-full p-2 border" 
-                                value={currentCollection.title || ""}
-                                onChange={e => setCurrentCollection({...currentCollection, title: e.target.value})}
-                                required
-                            />
-                            <input 
-                                placeholder="Slug (optional)" 
-                                className="w-full p-2 border" 
-                                value={currentCollection.slug || ""}
-                                onChange={e => setCurrentCollection({...currentCollection, slug: e.target.value})}
-                            />
-                        </div>
-                        <textarea 
-                            placeholder="Description" 
-                            className="w-full p-2 border h-20"
-                            value={currentCollection.description || ""}
-                            onChange={e => setCurrentCollection({...currentCollection, description: e.target.value})}
-                        />
-                         <textarea 
-                            placeholder="Story (Rich Text Narrative)" 
-                            className="w-full p-2 border h-32 font-serif"
-                            value={currentCollection.story || ""}
-                            onChange={e => setCurrentCollection({...currentCollection, story: e.target.value})}
-                        />
-                        
-                        <div className="flex items-center gap-4">
-                             {currentCollection.image && (
-                                <div className="relative w-20 h-20 border">
-                                    <Image src={currentCollection.image} alt="Preview" fill className="object-cover" />
+            {/* Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {collections.map(collection => (
+                    <div key={collection.id} className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                        {/* Image Area */}
+                        <div className="relative aspect-[16/9] bg-gray-50 overflow-hidden">
+                            {collection.image ? (
+                                <Image 
+                                    src={collection.image} 
+                                    alt={collection.title} 
+                                    fill 
+                                    className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-300 font-serif">
+                                    No Cover Image
                                 </div>
                             )}
-                            <label className="cursor-pointer bg-gray-50 px-4 py-2 border hover:bg-gray-100 flex items-center gap-2">
-                                <ImageIcon className="w-4 h-4" /> Upload Hero Image
-                                <input type="file" hidden onChange={handleImageUpload} />
-                            </label>
-                        </div>
-                        
-                        <div className="flex justify-end gap-2">
-                            <Button type="button" variant="secondary" className="px-6 py-2" onClick={() => setIsEditing(false)}>Cancel</Button>
-                            <Button type="submit"><Save className="w-4 h-4 mr-2" /> Save</Button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {collections.map(collection => (
-                    <div key={collection.id} className="group bg-white border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="relative h-48 bg-gray-50">
-                            {collection.image ? (
-                                <Image src={collection.image} alt={collection.title} fill className="object-cover" />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-                            )}
-                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => { setCurrentCollection(collection); setIsEditing(true); }} className="p-2 bg-white rounded-full shadow hover:text-blue-600">
+                            
+                            {/* Overlay Actions */}
+                            <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex justify-end gap-2">
+                                <Link 
+                                    href={`/collection/${collection.slug}`} 
+                                    target="_blank"
+                                    className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-primary transition-colors"
+                                    title="View Public Page"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                </Link>
+                                <button 
+                                    onClick={() => handleEdit(collection)} 
+                                    className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-primary transition-colors"
+                                    title="Edit Collection"
+                                >
                                     <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => handleDelete(collection.id)} className="p-2 bg-white rounded-full shadow hover:text-red-600">
+                                <button 
+                                    onClick={() => handleDelete(collection.id)} 
+                                    className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-red-600 transition-colors"
+                                    title="Delete"
+                                >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
+
+                            {/* Status Toggle - Clickable */}
+                            <div className="absolute top-3 right-3">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleActive(collection);
+                                    }}
+                                    className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full shadow-sm backdrop-blur transition-all duration-200 hover:scale-105 ${
+                                        collection.isActive 
+                                        ? 'bg-green-500/90 text-white hover:bg-green-600' 
+                                        : 'bg-gray-500/90 text-white hover:bg-gray-600'
+                                    }`}
+                                >
+                                    {collection.isActive ? 'Active' : 'Draft'}
+                                </button>
+                            </div>
                         </div>
-                        <div className="p-4">
-                            <h3 className="text-lg font-medium">{collection.title}</h3>
-                            <p className="text-sm text-gray-500 line-clamp-2 mt-1">{collection.description}</p>
-                            <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                                <span className="text-xs uppercase tracking-wider text-gray-400">
-                                    {collection.products?.length || 0} Products
-                                </span>
-                                <Button variant="secondary" className="px-4 py-2" onClick={() => {
-                                    // Open Product Manager for this collection
-                                    // For simplicity, just alert for now, strictly CRUD first.
-                                    alert("Product assignment UI coming next");
-                                }}>
-                                    Manage Products
+
+                        {/* Content */}
+                        <div className="p-6 flex-1 flex flex-col">
+                            <div className="flex-1">
+                                <h3 className="text-xl font-serif text-primary mb-2 line-clamp-1">{collection.title}</h3>
+                                <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed h-10">{collection.description || <span className="italic text-gray-300">No description provided</span>}</p>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-1.5 text-secondary">
+                                    <ShoppingBag className="w-4 h-4" />
+                                    <span className="font-medium">{collection.products?.length || 0}</span> Products
+                                </div>
+                                <Button 
+                                    variant="secondary" 
+                                    className="text-[10px] h-8 px-4 border-gray-200 text-gray-600 hover:border-primary hover:bg-primary hover:text-white shadow-none" 
+                                    onClick={() => handleEdit(collection)}
+                                >
+                                    Manage Details
                                 </Button>
                             </div>
                         </div>
                     </div>
                 ))}
+
+                {/* Empty State / Add CTA */}
+                {collections.length === 0 && (
+                     <button onClick={handleCreate} className="group border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center gap-4 text-gray-400 hover:border-primary hover:text-primary hover:bg-gray-50 transition-all min-h-[300px]">
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus className="w-8 h-8" />
+                        </div>
+                        <span className="font-serif text-lg">Create First Collection</span>
+                     </button>
+                )}
             </div>
+
+            {/* Drawer */}
+            <CollectionFormDrawer 
+                isOpen={isDrawerOpen}
+                isCreating={!editingCollection}
+                collection={editingCollection || {}}
+                onClose={() => setIsDrawerOpen(false)}
+                onSuccess={() => {
+                    fetchCollections();
+                }}
+            />
         </div>
     );
 }

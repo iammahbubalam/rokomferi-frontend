@@ -291,7 +291,8 @@ function mapBackendProductToFrontend(bp: BackendProduct): Product {
         stock: bp.stock,
         stockStatus: bp.stockStatus as any,
         images: images,
-        isFeatured: bp.isFeatured
+        isFeatured: bp.isFeatured,
+        lowStockThreshold: 5
     };
 }
 
@@ -434,6 +435,18 @@ export async function getCollectionInfo(slug: string): Promise<Collection | unde
     } catch (error) {
         console.error("Failed to fetch collection", error);
         return undefined;
+    }
+}
+
+export async function getCollections(): Promise<Collection[]> {
+    try {
+        const res = await fetch(getApiUrl("/collections"), { cache: 'no-store' });
+        if (!res.ok) return [];
+        const collections: Collection[] = await res.json();
+        return collections;
+    } catch (error) {
+        console.error("Failed to fetch collections", error);
+        return [];
     }
 }
 
