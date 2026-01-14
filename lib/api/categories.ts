@@ -5,24 +5,26 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
-  sort?: 'newest' | 'price_asc' | 'price_desc' | 'popular';
+  sort?: "newest" | "price_asc" | "price_desc" | "popular";
 }
 
 /**
  * Fetch a single category by slug
  */
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+export async function getCategoryBySlug(
+  slug: string
+): Promise<Category | null> {
   try {
-    const res = await fetch(getApiUrl(`/categories/slug/${slug}`), { 
-      cache: 'no-store' 
+    const res = await fetch(getApiUrl(`/categories/slug/${slug}`), {
+      cache: "no-store",
     });
-    
+
     if (res.ok) {
       return await res.json();
     }
     return null;
   } catch (error) {
-    console.error('Failed to fetch category:', error);
+    console.error("Failed to fetch category:", error);
     return null;
   }
 }
@@ -36,24 +38,25 @@ export async function getCategoryProducts(
 ): Promise<Product[]> {
   try {
     const params = new URLSearchParams();
-    params.set('category', slug);
-    
-    if (filters?.minPrice) params.set('minPrice', filters.minPrice.toString());
-    if (filters?.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
-    if (filters?.inStock !== undefined) params.set('inStock', filters.inStock.toString());
-    if (filters?.sort) params.set('sort', filters.sort);
-    
+    params.set("category", slug);
+
+    if (filters?.minPrice) params.set("minPrice", filters.minPrice.toString());
+    if (filters?.maxPrice) params.set("maxPrice", filters.maxPrice.toString());
+    if (filters?.inStock !== undefined)
+      params.set("inStock", filters.inStock.toString());
+    if (filters?.sort) params.set("sort", filters.sort);
+
     const res = await fetch(getApiUrl(`/products?${params.toString()}`), {
-      cache: 'no-store'
+      cache: "no-store",
     });
-    
+
     if (res.ok) {
       const data = await res.json();
       return data.products || [];
     }
     return [];
   } catch (error) {
-    console.error('Failed to fetch category products:', error);
+    console.error("Failed to fetch category products:", error);
     return [];
   }
 }
@@ -63,10 +66,10 @@ export async function getCategoryProducts(
  */
 export async function getAllCategoriesFlat(): Promise<Category[]> {
   try {
-    const res = await fetch(getApiUrl('/categories/tree'), {
-      cache: 'no-store'
+    const res = await fetch(getApiUrl("/categories/tree"), {
+      cache: "no-store",
     });
-    
+
     if (res.ok) {
       const tree: Category[] = await res.json();
       // Flatten the tree
@@ -83,7 +86,7 @@ export async function getAllCategoriesFlat(): Promise<Category[]> {
     }
     return [];
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
+    console.error("Failed to fetch categories:", error);
     return [];
   }
 }

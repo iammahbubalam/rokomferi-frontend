@@ -20,12 +20,31 @@ const manrope = Manrope({
   weight: ["200", "300", "400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "Rokomferi | Opulence Minimal",
-  description: "A premium minimalist e-commerce experience.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getSiteConfig();
+  return {
+    title: {
+      default: config.name,
+      template: `%s | ${config.name}`,
+    },
+    description: config.description,
+    icons: {
+      icon: config.favicon || "/favicon.ico",
+      shortcut: config.favicon || "/favicon.ico",
+      apple: config.favicon || "/favicon.ico",
+    },
+    openGraph: {
+      images: [config.logo], // Fallback/Default OG
+    },
+  };
+}
 
-import { getCategoryTree, getFooterSections, getSiteConfig, getCollections } from "@/lib/data";
+import {
+  getCategoryTree,
+  getFooterSections,
+  getSiteConfig,
+  getCollections,
+} from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
@@ -38,12 +57,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Fetch global data on server
-  const [siteConfig, categories, footerSections, collections] = await Promise.all([
-    getSiteConfig(),
-    getCategoryTree(),
-    getFooterSections(),
-    getCollections()
-  ]);
+  const [siteConfig, categories, footerSections, collections] =
+    await Promise.all([
+      getSiteConfig(),
+      getCategoryTree(),
+      getFooterSections(),
+      getCollections(),
+    ]);
 
   return (
     <html lang="en">
@@ -55,12 +75,19 @@ export default async function RootLayout({
             <IntroProvider>
               <IntroOverlay />
               <CartProvider>
-                <Navbar categories={categories} collections={collections} siteConfig={siteConfig} />
-                <main className="flex-grow pt-[88px] md:pt-[104px]"> 
+                <Navbar
+                  categories={categories}
+                  collections={collections}
+                  siteConfig={siteConfig}
+                />
+                <main className="flex-grow pt-[88px] md:pt-[104px]">
                   {/* pt to offset fixed header height approx */}
                   {children}
                 </main>
-                <Footer siteConfig={siteConfig} footerSections={footerSections} />
+                <Footer
+                  siteConfig={siteConfig}
+                  footerSections={footerSections}
+                />
                 <CartDrawer />
               </CartProvider>
             </IntroProvider>

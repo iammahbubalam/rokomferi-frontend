@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Category, Product } from '@/types';
-import { getCategoryBySlug, getCategoryProducts, ProductFilters } from '@/lib/api/categories';
-import { getCategoryTree } from '@/lib/data';
-import { findCategoryBySlug, buildBreadcrumbs, Breadcrumb } from '@/lib/category-utils';
+import { useState, useEffect } from "react";
+import { Category, Product } from "@/types";
+import {
+  getCategoryBySlug,
+  getCategoryProducts,
+  ProductFilters,
+} from "@/lib/api/categories";
+import { getAllActiveCategories } from "@/lib/data";
+import {
+  findCategoryBySlug,
+  buildBreadcrumbs,
+  Breadcrumb,
+} from "@/lib/category-utils";
 
 export interface UseCategoryResult {
   category: Category | null;
@@ -33,13 +41,13 @@ export function useCategory(slug: string): UseCategoryResult {
       setError(null);
 
       try {
-        // Fetch category tree (for breadcrumbs and navigation)
-        const tree = await getCategoryTree();
+        // Fetch all active categories (not just showInNav)
+        const tree = await getAllActiveCategories();
         setAllCategories(tree);
 
         // Find the target category
         const foundCategory = findCategoryBySlug(slug, tree);
-        
+
         if (!foundCategory) {
           throw new Error(`Category with slug "${slug}" not found`);
         }
@@ -53,10 +61,11 @@ export function useCategory(slug: string): UseCategoryResult {
         // Fetch products for this category
         const categoryProducts = await getCategoryProducts(slug, filters);
         setProducts(categoryProducts);
-
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load category'));
-        console.error('Category fetch error:', err);
+        setError(
+          err instanceof Error ? err : new Error("Failed to load category")
+        );
+        console.error("Category fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -73,6 +82,6 @@ export function useCategory(slug: string): UseCategoryResult {
     isLoading,
     error,
     filters,
-    setFilters
+    setFilters,
   };
 }

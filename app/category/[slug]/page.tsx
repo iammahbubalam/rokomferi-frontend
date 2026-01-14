@@ -1,83 +1,160 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { useCategory } from '@/hooks/useCategory';
-import { CategoryHeader } from '@/components/category/CategoryHeader';
-import { CategorySidebar } from '@/components/category/CategorySidebar';
-import { CategoryGrid } from '@/components/category/CategoryGrid';
-import { Container } from '@/components/ui/Container';
-import { Loader2 } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { use } from "react";
+import { useCategory } from "@/hooks/useCategory";
+import { Container } from "@/components/ui/Container";
+import { ProductCard } from "@/components/ui/ProductCard";
+import { Loader2 } from "lucide-react";
+import { notFound } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export default function CategoryPage({ params }: CategoryPageProps) {
-  // Unwrap async params using React.use()
   const { slug } = use(params);
 
-  // Use the category hook for all data management
-  const {
-    category,
-    products,
-    allCategories,
-    breadcrumbs,
-    isLoading,
-    error,
-    filters,
-    setFilters
-  } = useCategory(slug);
+  const { category, products, isLoading, error } = useCategory(slug);
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-gray-600">Loading category...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="w-6 h-6 animate-spin text-white/30" />
       </div>
     );
   }
 
-  // Error state
   if (error || !category) {
     return notFound();
   }
 
+  const hasImage = category.image && category.image.length > 0;
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Category Header */}
-      <CategoryHeader 
-        category={category}
-        breadcrumbs={breadcrumbs}
-        productCount={products.length}
-      />
-
-      {/* Main Content */}
-      <Container className="py-12">
-        <div className="flex flex-col lg:flex-row gap-12">
-          
-          {/* Sidebar */}
-          <CategorySidebar
-            categories={allCategories}
-            activeCategory={category}
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
-
-          {/* Product Grid */}
-          <div className="flex-1">
-            <CategoryGrid 
-              products={products}
-              isLoading={isLoading}
+    <div className="min-h-screen bg-[#0a0a0a]">
+      {/* Premium Hero */}
+      <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
+        {/* Background */}
+        {hasImage ? (
+          <motion.div
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5, ease: [0.25, 0.1, 0.25, 1] }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={category.image!}
+              alt={category.name}
+              fill
+              className="object-cover"
+              priority
             />
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[#0a0a0a]" />
+          </motion.div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a]" />
+        )}
 
+        {/* Hero Content */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="text-center px-6"
+          >
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: 60 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="h-[1px] bg-white/30 mx-auto mb-8"
+            />
+
+            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white tracking-[0.02em] mb-6">
+              {category.name}
+            </h1>
+
+            {category.metaDescription && (
+              <p className="text-white/50 text-sm md:text-base tracking-wide max-w-md mx-auto mb-8">
+                {category.metaDescription}
+              </p>
+            )}
+
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: 60 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="h-[1px] bg-white/30 mx-auto mt-8"
+            />
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="text-white/30 text-[10px] uppercase tracking-[0.4em] mt-10"
+            >
+              {products.length} Exclusive Pieces
+            </motion.p>
+          </motion.div>
         </div>
-      </Container>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+        >
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent"
+          />
+        </motion.div>
+      </section>
+
+      {/* Products Section */}
+      <section className="py-24 md:py-32 bg-white">
+        <Container>
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            {products.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{
+                  duration: 0.6,
+                  delay: index * 0.05,
+                  ease: [0.25, 0.1, 0.25, 1],
+                }}
+              >
+                <ProductCard
+                  product={product}
+                  index={index}
+                  aspectRatio="aspect-[3/4]"
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {products.length === 0 && (
+            <div className="text-center py-32">
+              <p className="text-secondary/40 text-sm tracking-widest uppercase">
+                Coming Soon
+              </p>
+            </div>
+          )}
+        </Container>
+      </section>
     </div>
   );
 }
-

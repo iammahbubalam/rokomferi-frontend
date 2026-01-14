@@ -55,7 +55,6 @@ export function ProductForm({
     images: initialData?.images || ([] as string[]),
     // Variants - We need to cast or manage them. initialData might have variants from backend
     // But our frontend Product type MIGHT NOT have variants property fully Typed in `types/index.ts`?
-    // Let's check. Step 3881 shows Product has `variants?: Variant[]` ? NO.
     // Step 3881 interface Product does NOT have variants.
     // Backend HAS variants.
     // I need to add variants to Frontend Type if I want to use it here safe.
@@ -136,7 +135,7 @@ export function ProductForm({
   const removeVariant = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      variants: prev.variants.filter((_, i) => i !== index),
+      variants: prev.variants.filter((_: any, i: number) => i !== index),
     }));
   };
 
@@ -543,7 +542,13 @@ export function ProductForm({
                   <select
                     value={formData.stockStatus}
                     onChange={(e) =>
-                      setFormData({ ...formData, stockStatus: e.target.value })
+                      setFormData({
+                        ...formData,
+                        stockStatus: e.target.value as
+                          | "in_stock"
+                          | "out_of_stock"
+                          | "pre_order",
+                      })
                     }
                     className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary bg-white"
                   >
