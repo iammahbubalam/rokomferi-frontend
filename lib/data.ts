@@ -512,8 +512,17 @@ export async function getAllActiveCategories(): Promise<CategoryNode[]> {
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const products = await getAllProducts();
-  return products.filter((p) => p.isFeatured);
+  try {
+    const res = await fetch(getApiUrl("/products?is_featured=true&limit=6"), {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("Failed to fetch featured products");
+    const json: APIResponse<BackendProduct[]> = await res.json();
+    return json.data.map(mapBackendProductToFrontend);
+  } catch (error) {
+    console.error("Featured fetch error:", error);
+    return [];
+  }
 }
 
 export async function getPhilosophyContent(): Promise<PhilosophyContent> {
