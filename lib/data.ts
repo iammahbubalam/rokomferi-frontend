@@ -373,7 +373,7 @@ export async function getAllProducts(): Promise<Product[]> {
     console.error("Values fetch error:", error);
     console.error(
       "Attempted URL:",
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/products?limit=100`
+      `${process.env.NEXT_PUBLIC_API_URL}/products?limit=100`
     );
     return [];
   }
