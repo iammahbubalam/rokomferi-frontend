@@ -157,6 +157,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromCart = async (productId: string) => {
+    if (!productId) {
+      console.warn("Attempted to remove item with no ID");
+      return;
+    }
+
     if (user) {
       // Call DELETE endpoint for authenticated users
       try {
