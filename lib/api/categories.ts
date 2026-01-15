@@ -9,27 +9,6 @@ export interface ProductFilters {
 }
 
 /**
- * Fetch a single category by slug
- */
-export async function getCategoryBySlug(
-  slug: string
-): Promise<Category | null> {
-  try {
-    const res = await fetch(getApiUrl(`/categories/slug/${slug}`), {
-      cache: "no-store",
-    });
-
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (error) {
-    console.error("Failed to fetch category:", error);
-    return null;
-  }
-}
-
-/**
  * Fetch products for a specific category with filters
  */
 export async function getCategoryProducts(

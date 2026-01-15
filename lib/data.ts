@@ -619,8 +619,48 @@ export async function getProductsByCollection(
   return collection.products.map((p: any) => mapBackendProductToFrontend(p));
 }
 
+// Helper to flatten tree
+function flattenCategories(nodes: any[]): any[] {
+  let flat: any[] = [];
+  for (const node of nodes) {
+    flat.push(node);
+    if (node.children && node.children.length > 0) {
+      flat = flat.concat(flattenCategories(node.children));
+    }
+  }
+  return flat;
+}
+
 export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
-  await delay(200);
+  try {
+    const res = await fetch(getApiUrl("/categories"), {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const tree = await res.json();
+      const allCategories = flattenCategories(tree);
+
+      // Filter isFeatured
+      const featured = allCategories.filter((c: any) => c.isFeatured === true);
+
+      if (featured.length > 0) {
+        // Map to FeaturedCategory
+        return featured.map((c: any, index: number) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          image:
+            c.image ||
+            "https://images.unsplash.com/photo-1579546929518-9e396f3cc809", // Fallback image
+          description: c.metaDescription || "Shop now",
+          size: index === 0 ? "large" : "small",
+        }));
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+  }
+  // Fallback if no featured categories found
   return FEATURED_CATEGORIES;
 }
 

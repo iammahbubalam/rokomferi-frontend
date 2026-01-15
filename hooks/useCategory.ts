@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { Category, Product } from "@/types";
-import {
-  getCategoryBySlug,
-  getCategoryProducts,
-  ProductFilters,
-} from "@/lib/api/categories";
+import { getCategoryProducts, ProductFilters } from "@/lib/api/categories";
 import { getAllActiveCategories } from "@/lib/data";
 import {
   findCategoryBySlug,

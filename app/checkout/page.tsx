@@ -53,6 +53,57 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  // Saved Addresses
+  interface SavedAddress {
+    id: string;
+    type: string;
+    address: string;
+    city: string;
+    zip: string;
+    phone?: string;
+    division?: string;
+    district?: string;
+    thana?: string;
+  }
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedAddresses();
+    }
+  }, [user]);
+
+  const fetchSavedAddresses = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl("/user/addresses"), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSavedAddresses(data || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch addresses", e);
+    }
+  };
+
+  const handleSelectSavedAddress = (addr: SavedAddress) => {
+    setSelectedAddressId(addr.id);
+    setFormData((prev) => ({
+      ...prev,
+      address: addr.address || "",
+      division: addr.division || addr.city || "",
+      district: addr.district || "",
+      thana: addr.thana || "",
+      zip: addr.zip || "",
+      phone: addr.phone || prev.phone,
+    }));
+  };
+
   const [isFormValid, setIsFormValid] = useState(false);
 
   // Validate Form
@@ -239,6 +290,63 @@ export default function CheckoutPage() {
               <h2 className="text-xs uppercase tracking-[0.2em] font-bold border-b border-primary/10 pb-4 mb-8 text-secondary">
                 Shipping Address
               </h2>
+
+              {/* Saved Addresses */}
+              {savedAddresses.length > 0 && (
+                <div className="mb-8">
+                  <p className="text-sm text-secondary mb-4">
+                    Select a saved address or enter a new one:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {savedAddresses.map((addr) => (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => handleSelectSavedAddress(addr)}
+                        className={`text-left p-4 border rounded-lg transition-all ${
+                          selectedAddressId === addr.id
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-primary/20 hover:border-primary/40"
+                        }`}
+                      >
+                        <p className="font-medium text-sm mb-1">
+                          {addr.type || "Saved Address"}
+                        </p>
+                        <p className="text-xs text-secondary leading-relaxed">
+                          {addr.address}
+                          <br />
+                          {addr.city} {addr.zip && `- ${addr.zip}`}
+                        </p>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedAddressId(null);
+                        setFormData((prev) => ({
+                          ...prev,
+                          address: "",
+                          division: "",
+                          district: "",
+                          thana: "",
+                          zip: "",
+                        }));
+                      }}
+                      className={`text-left p-4 border rounded-lg transition-all border-dashed ${
+                        selectedAddressId === null
+                          ? "border-primary bg-primary/5"
+                          : "border-primary/30 hover:border-primary/50"
+                      }`}
+                    >
+                      <p className="font-medium text-sm mb-1">+ New Address</p>
+                      <p className="text-xs text-secondary">
+                        Enter a different address
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="group relative">
                   <input

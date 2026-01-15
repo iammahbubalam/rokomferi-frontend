@@ -109,7 +109,7 @@ export default function ContentPage() {
           newMeta["global"] = {
             key: "settings_global",
             updatedAt: data.updatedAt,
-            itemCount: 4, // Fixed sections: Branding, Contact, Socials, SEO
+            itemCount: 4,
           };
         }
 
@@ -157,6 +157,7 @@ export default function ContentPage() {
       metaKey: "about",
       color: "bg-amber-50 text-amber-600",
     },
+
     {
       id: "shipping",
       title: "Shipping Policy",
