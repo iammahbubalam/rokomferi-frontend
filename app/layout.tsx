@@ -6,6 +6,9 @@ import { Footer } from "@/components/layout/Footer";
 import { IntroProvider } from "@/context/IntroContext";
 import { IntroOverlay } from "@/components/layout/IntroOverlay";
 
+// Force dynamic rendering to prevent static build errors with no-store fetches
+export const dynamic = "force-dynamic";
+
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
