@@ -151,7 +151,7 @@ export function CartDrawer() {
                             onClick={() =>
                               updateQuantity(item.id, item.quantity - 1)
                             }
-                            className="p-1 hover:bg-gray-50 text-secondary hover:text-primary transition-colors disabled:opacity-50"
+                            className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30"
                             disabled={item.quantity <= 1}
                           >
                             <Minus className="w-3 h-3" />
@@ -163,7 +163,7 @@ export function CartDrawer() {
                             onClick={() =>
                               updateQuantity(item.id, item.quantity + 1)
                             }
-                            className="p-1 hover:bg-gray-50 text-secondary hover:text-primary transition-colors"
+                            className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -172,7 +172,7 @@ export function CartDrawer() {
                         {/* Remove */}
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="text-xs text-secondary hover:text-status-error transition-colors underline decoration-transparent hover:decoration-status-error underline-offset-4"
+                          className="px-2 py-1 text-xs text-secondary hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-95 rounded transition-all duration-150"
                         >
                           Remove
                         </button>

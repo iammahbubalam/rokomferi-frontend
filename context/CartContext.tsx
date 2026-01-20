@@ -120,39 +120,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addToCart = async (product: Product) => {
+  const addToCart = (product: Product) => {
+    // Store previous state for potential rollback
+    const previousItems = [...items];
+
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+
+    // BACKGROUND SYNC with ROLLBACK on failure
     if (user) {
-      // API Call
-      try {
-        const token = localStorage.getItem("token");
-        await fetch(getApiUrl("/cart"), {
+      const token = localStorage.getItem("token");
+      if (token) {
+        fetch(getApiUrl("/cart"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ productId: product.id, quantity: 1 }),
-        });
-        // Refresh Cart
-        mergeAndSyncCart();
-        setIsOpen(true);
-      } catch (error) {
-        console.error(error);
+        })
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error("Server rejected cart update");
+            }
+          })
+          .catch((error) => {
+            console.error("Cart sync failed, rolling back:", error);
+            // ROLLBACK: Revert to previous state
+            setItems(previousItems);
+            // TODO: Show toast notification to user
+          });
       }
-    } else {
-      // Local Logic
-      setItems((prev) => {
-        const existing = prev.find((item) => item.id === product.id);
-        if (existing) {
-          return prev.map((item) =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-        return [...prev, { ...product, quantity: 1 }];
-      });
-      setIsOpen(true);
     }
   };
 
@@ -183,7 +191,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
+      prev.map((item) =>
+        item.id === productId ? { ...item, quantity } : item,
+      ),
     );
   };
 

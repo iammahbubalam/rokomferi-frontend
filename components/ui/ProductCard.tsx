@@ -85,22 +85,21 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           )}
         </div>
 
-        {/* Buttons - Block Style (Reveal on hover desktop, visible on touch if desired or kept hidden until interaction) */}
-        {/* Design Choice: Reveal on hover for luxury feel. */}
+        {/* Buttons - Block Style with tactile feedback */}
         {!isOutOfStock && (
           <div className="absolute bottom-0 left-0 right-0 flex h-11 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
-            {/* Add to Cart - White */}
+            {/* Add to Cart - White with click feedback */}
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-white text-black border-t border-r border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors"
+              className="flex-1 bg-white text-black border-t border-r border-gray-200 hover:bg-gray-100 active:bg-gray-200 active:scale-[0.98] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-150"
             >
               <ShoppingBag size={14} />
               <span>Add</span>
             </button>
-            {/* Buy Now - Accent (Gold/Primary) */}
+            {/* Buy Now - Gold with click feedback */}
             <button
               onClick={handleBuyNow}
-              className="flex-1 bg-[#D4AF37] text-white hover:bg-black border-t border-[#D4AF37] hover:border-black flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors"
+              className="flex-1 bg-[#D4AF37] text-white hover:bg-[#c9a432] active:bg-[#b8942d] active:scale-[0.98] border-t border-[#D4AF37] hover:border-[#c9a432] flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-150"
             >
               <CreditCard size={14} />
               <span>Buy Now</span>

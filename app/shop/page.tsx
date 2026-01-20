@@ -25,34 +25,34 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div className="min-h-screen bg-[#faf9f7]">
-      {/* Elegant Hero with Background */}
-      <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+      {/* Hero with Left-Aligned Content */}
+      <section className="relative h-[35vh] min-h-[280px] max-h-[400px] overflow-hidden">
         {/* Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-right bg-no-repeat"
           style={{
             backgroundImage: `url('/images/shop-hero.png')`,
           }}
         />
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        {/* Strong Left Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-transparent" />
 
-        {/* Content */}
-        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-          <span className="inline-block text-[11px] uppercase tracking-[0.4em] text-white/70 mb-6 border border-white/30 px-4 py-2">
-            Curated Collection
-          </span>
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-white mb-6 leading-tight">
-            Shop All
-          </h1>
-          <p className="text-white/80 max-w-xl mx-auto text-base md:text-lg leading-relaxed font-light">
-            Discover our complete collection of heritage craftsmanship — where
-            tradition meets contemporary elegance.
-          </p>
+        {/* Content - Left Aligned */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
+            <div className="max-w-md">
+              <span className="inline-block text-[10px] uppercase tracking-[0.3em] text-[#D4AF37] mb-3 font-semibold">
+                Curated Collection
+              </span>
+              <h1 className="font-serif text-4xl md:text-5xl text-white mb-3 leading-[1.1]">
+                Shop All
+              </h1>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Explore our complete heritage collection.
+              </p>
+            </div>
+          </div>
         </div>
-
-        {/* Bottom Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#faf9f7] to-transparent" />
       </section>
 
       <Container className="py-12 md:py-16">
