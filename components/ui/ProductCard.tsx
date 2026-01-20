@@ -28,7 +28,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         )
       : 0;
 
-  const isOutOfStock = product.stock <= 0;
+  const isOutOfStock =
+    product.stock <= 0 || product.stockStatus === "out_of_stock";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -109,7 +110,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[2px] z-20">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[2px] z-30 pointer-events-auto cursor-not-allowed">
             <span className="bg-black text-white px-4 py-2 text-xs uppercase tracking-widest font-bold">
               Sold Out
             </span>

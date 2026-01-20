@@ -127,7 +127,23 @@ function getPrice(p: Product): number {
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  // Reuse the existing fetch all strategy for consistency since we don't have a verified single ID endpoint
-  const { products } = await getShopProducts({});
-  return products.find((p) => p.id === id) || null;
+  // Use the dedicated endpoint for single product fetch
+  // This bypasses the search/filter limit of 500 items
+  try {
+    const res = await fetch(getApiUrl(`/product/${id}`), {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.warn(`Product fetch failed: ${id} - ${res.statusText}`);
+      return null;
+    }
+
+    // Backend returns the product object directly, not wrapped in { data: ... }
+    const product: Product = await res.json();
+    return product;
+  } catch (error) {
+    console.error("GetProductById Error:", error);
+    return null;
+  }
 }

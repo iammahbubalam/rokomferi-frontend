@@ -105,81 +105,107 @@ export function CartDrawer() {
                   </Button>
                 </div>
               ) : (
-                items.map((item) => (
-                  <motion.div layout key={item.id} className="flex gap-4 group">
-                    {/* Image */}
-                    <div className="relative w-24 h-32 bg-gray-100 flex-shrink-0 overflow-hidden rounded-sm">
-                      <Image
-                        src={item.images?.[0] || ""}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                items.map((item) => {
+                  const isOutOfStock =
+                    item.stock <= 0 || item.stockStatus === "out_of_stock";
+                  const isMaxStock = item.quantity >= item.stock;
 
-                    {/* Details */}
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div>
-                        <div className="flex justify-between items-start gap-4">
-                          <Link
-                            href={`/product/${item.slug}`}
-                            onClick={toggleCart}
-                          >
-                            <h4 className="font-serif text-base text-primary leading-tight hover:text-accent-gold transition-colors">
-                              {item.name}
-                            </h4>
-                          </Link>
-                          <span className="text-sm font-medium text-primary whitespace-nowrap">
-                            ৳
-                            {(
-                              item.salePrice ||
-                              item.basePrice ||
-                              0
-                            ).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="text-xs text-secondary uppercase tracking-wide mt-1">
-                          {item.categories?.[0]?.name}
-                        </p>
+                  return (
+                    <motion.div
+                      layout
+                      key={item.id}
+                      className={clsx(
+                        "flex gap-4 group",
+                        isOutOfStock && "opacity-75 grayscale-[0.5]",
+                      )}
+                    >
+                      {/* Image */}
+                      <div className="relative w-24 h-32 bg-gray-100 flex-shrink-0 overflow-hidden rounded-sm">
+                        <Image
+                          src={item.images?.[0] || ""}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-[10px] font-bold uppercase tracking-widest border border-white px-2 py-1">
+                              Sold Out
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Controls */}
-                      <div className="flex items-center justify-between mt-4">
-                        {/* Quantity */}
-                        <div className="flex items-center border border-gray-200 rounded-sm">
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                            className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30"
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-8 text-center text-xs font-medium text-primary">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                            className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
+                      {/* Details */}
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <div className="flex justify-between items-start gap-4">
+                            <Link
+                              href={`/product/${item.slug}`}
+                              onClick={toggleCart}
+                            >
+                              <h4 className="font-serif text-base text-primary leading-tight hover:text-accent-gold transition-colors">
+                                {item.name}
+                              </h4>
+                            </Link>
+                            <span className="text-sm font-medium text-primary whitespace-nowrap">
+                              ৳
+                              {(
+                                item.salePrice ||
+                                item.basePrice ||
+                                0
+                              ).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-secondary uppercase tracking-wide mt-1">
+                            {item.categories?.[0]?.name}
+                          </p>
+                          {isMaxStock && !isOutOfStock && (
+                            <p className="text-[10px] text-orange-500 mt-1">
+                              Max available stock reached
+                            </p>
+                          )}
                         </div>
 
-                        {/* Remove */}
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="px-2 py-1 text-xs text-secondary hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-95 rounded transition-all duration-150"
-                        >
-                          Remove
-                        </button>
+                        {/* Controls */}
+                        <div className="flex items-center justify-between mt-4">
+                          {/* Quantity */}
+                          <div className="flex items-center border border-gray-200 rounded-sm">
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity - 1)
+                              }
+                              className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30"
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="w-8 text-center text-xs font-medium text-primary">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
+                              className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                              disabled={isMaxStock || isOutOfStock}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Remove */}
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="px-2 py-1 text-xs text-secondary hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-95 rounded transition-all duration-150"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
             </div>
 
@@ -204,15 +230,33 @@ export function CartDrawer() {
                   <span>৳{total.toLocaleString()}</span>
                 </div>
 
-                <Link
-                  href="/checkout"
-                  onClick={toggleCart}
-                  className="block w-full"
-                >
-                  <Button className="w-full py-4 text-xs font-bold tracking-[0.15em] uppercase">
-                    Checkout Securely
-                  </Button>
-                </Link>
+                {/* Checkout Button with Logic */}
+                {items.some(
+                  (i) => i.stock <= 0 || i.stockStatus === "out_of_stock",
+                ) ? (
+                  <div className="space-y-2">
+                    <Button
+                      disabled
+                      className="w-full py-4 text-xs font-bold tracking-[0.15em] uppercase opacity-50 cursor-not-allowed"
+                    >
+                      Remove Sold Out Items
+                    </Button>
+                    <p className="text-xs text-red-500 text-center font-medium">
+                      Please remove out of stock items to proceed.
+                    </p>
+                  </div>
+                ) : (
+                  <Link
+                    href="/checkout"
+                    onClick={toggleCart}
+                    className="block w-full"
+                  >
+                    <Button className="w-full py-4 text-xs font-bold tracking-[0.15em] uppercase">
+                      Checkout Securely
+                    </Button>
+                  </Link>
+                )}
+
                 <p className="text-[10px] text-center text-gray-400">
                   Tax included. Returns accepted within 30 days.
                 </p>

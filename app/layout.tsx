@@ -81,8 +81,8 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <GoogleAuthProvider>
-          <AuthContextProvider>
+        <AuthContextProvider>
+          <GoogleAuthProvider>
             <IntroProvider>
               <IntroOverlay />
               <CartProvider>
@@ -102,8 +102,8 @@ export default async function RootLayout({
                 <CartDrawer />
               </CartProvider>
             </IntroProvider>
-          </AuthContextProvider>
-        </GoogleAuthProvider>
+          </GoogleAuthProvider>
+        </AuthContextProvider>
       </body>
     </html>
   );

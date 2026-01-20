@@ -12,6 +12,7 @@ interface User {
   avatar?: string;
   role: string;
   isAdmin?: boolean;
+  phone?: string;
 }
 
 interface AuthContextType {

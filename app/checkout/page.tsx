@@ -3,109 +3,48 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/utils";
-import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getProductById } from "@/lib/api/shop";
-import { CartItem } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
+import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
+import { AddressManager, Address } from "@/components/checkout/AddressManager";
 
 export default function CheckoutPage() {
-  const { items, total } = useCart();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams(); // 1. Get params
+
+  // 1. DATA FLOW (State Machine)
+  const { state } = useCheckoutFlow();
+  const { status, items, total, error, isDirectLoading } = state;
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // Direct Checkout State
-  const [directItem, setDirectItem] = useState<CartItem | null>(null);
-  const isDirect = searchParams.get("type") === "direct";
-
-  // Fetch Direct Item
-  useEffect(() => {
-    const fetchDirectItem = async () => {
-      const productId = searchParams.get("productId");
-      const qty = parseInt(searchParams.get("quantity") || "1");
-
-      if (isDirect && productId) {
-        try {
-          const product = await getProductById(productId);
-          if (product) {
-            setDirectItem({ ...product, quantity: qty });
-          }
-        } catch (e) {
-          console.error("Failed to fetch direct item", e);
-        }
-      }
-    };
-    fetchDirectItem();
-  }, [isDirect, searchParams]);
-
-  // Determine effective items and total
-  const effectiveItems = isDirect && directItem ? [directItem] : items;
-
-  const effectiveTotal =
-    isDirect && directItem
-      ? (directItem.salePrice || directItem.basePrice) * directItem.quantity
-      : total;
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Auth Guard
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isAuthLoading && !user) {
       router.push("/login?redirect=/checkout");
     }
-  }, [user, isLoading, router]);
+  }, [user, isAuthLoading, router]);
 
   // Form State
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    deliveryLocation: "inside_dhaka",
-    division: "",
-    district: "",
-    thana: "",
-    address: "",
-    landmark: "",
-    zip: "",
-  });
+  const [deliveryLocation, setDeliveryLocation] = useState("inside_dhaka");
+  const [email, setEmail] = useState("");
 
-  // Pre-fill Form with User Data
+  // Address State managed by AddressManager
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+
+  // Pre-fill Email
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        firstName: user.firstName || prev.firstName,
-        lastName: user.lastName || prev.lastName,
-        email: user.email || prev.email,
-      }));
-    }
+    if (user?.email) setEmail(user.email);
   }, [user]);
 
-  // Saved Addresses
-  interface SavedAddress {
-    id: string;
-    type: string;
-    address: string;
-    city: string;
-    zip: string;
-    phone?: string;
-    division?: string;
-    district?: string;
-    thana?: string;
-  }
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null,
-  );
-
+  // Fetch Saved Addresses
   useEffect(() => {
     if (user) {
       fetchSavedAddresses();
@@ -127,65 +66,81 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSelectSavedAddress = (addr: SavedAddress) => {
-    setSelectedAddressId(addr.id);
-    setFormData((prev) => ({
-      ...prev,
-      address: addr.address || "",
-      division: addr.division || addr.city || "",
-      district: addr.district || "",
-      thana: addr.thana || "",
-      zip: addr.zip || "",
-      phone: addr.phone || prev.phone,
-    }));
-  };
-
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  // Validate Form
-  useEffect(() => {
-    const {
-      firstName,
-      phone,
-      address,
-      division,
-      district,
-      thana,
-      deliveryLocation,
-    } = formData;
-    const isValid =
-      firstName?.trim() !== "" &&
-      phone.trim() !== "" &&
-      address.trim() !== "" &&
-      division.trim() !== "" &&
-      district.trim() !== "" &&
-      thana.trim() !== "" &&
-      deliveryLocation.trim() !== "";
-    setIsFormValid(isValid);
-  }, [formData]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleCheckout = async () => {
-    setIsSubmitting(true);
-    setErrorMsg(null);
-    try {
-      const token = localStorage.getItem("token");
+    if (!selectedAddress) return;
 
-      // Construct Payload
+    setIsSubmitting(true);
+    setSubmitError(null);
+    const token = localStorage.getItem("token");
+
+    try {
+      // 1. If "New Address" + "Save Address" checked, save it first
+      if (selectedAddress.id === "new" && selectedAddress.saveAddress) {
+        try {
+          await fetch(getApiUrl("/user/addresses"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              label: selectedAddress.label || "Home",
+              firstName: selectedAddress.firstName,
+              phone: selectedAddress.phone,
+              addressLine: selectedAddress.address,
+              division: selectedAddress.division,
+              district: selectedAddress.district,
+              thana: selectedAddress.thana,
+              postalCode: selectedAddress.zip,
+              isDefault: savedAddresses.length === 0, // First one is default
+            }),
+          });
+          // Don't fail checkout if save fails, just log it
+        } catch (saveErr) {
+          console.warn("Failed to save new address:", saveErr);
+        }
+      }
+      // 2. If Existing Address + "isEdited", Update it
+      else if (selectedAddress.id !== "new" && selectedAddress.isEdited) {
+        try {
+          await fetch(getApiUrl(`/user/addresses/${selectedAddress.id}`), {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              label: selectedAddress.label || "Home",
+              firstName: selectedAddress.firstName,
+              phone: selectedAddress.phone,
+              addressLine: selectedAddress.address,
+              division: selectedAddress.division,
+              district: selectedAddress.district,
+              thana: selectedAddress.thana,
+              postalCode: selectedAddress.zip,
+            }),
+          });
+        } catch (updateErr) {
+          console.warn("Failed to update address:", updateErr);
+        }
+      }
+
+      // 2. Place Order
       const payload = {
-        paymentMethod: "cod", // Default for now
+        paymentMethod: "cod",
         address: {
-          ...formData,
+          firstName: selectedAddress.firstName,
+          lastName: selectedAddress.lastName,
+          email: email,
+          phone: selectedAddress.phone,
+          address: selectedAddress.address,
+          division: selectedAddress.division,
+          district: selectedAddress.district,
+          thana: selectedAddress.thana,
+          zip: selectedAddress.zip,
+          deliveryLocation: deliveryLocation, // Include zone
         },
-        // IMPORTANT: Send items explicitly for Direct Checkout
-        // Backend MUST support this override for true isolation.
-        items: effectiveItems.map((item) => ({
+        items: items.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
         })),
@@ -208,18 +163,59 @@ export default function CheckoutPage() {
       setIsSuccess(true);
     } catch (error: any) {
       console.error(error);
-      setErrorMsg(error.message || "Failed to place order. Please try again.");
+      setSubmitError(
+        error.message || "Failed to place order. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const shippingCost = formData.deliveryLocation === "outside_dhaka" ? 150 : 80;
-  // Final total already calculated in effectiveTotal + shipping logic below?
-  // Wait, I removed the `finalTotal` variable in the previous step but it was used here implicitly?
-  // Actually, I should declare `finalTotal` based on `effectiveTotal` to keep it clean.
+  const shippingCost = deliveryLocation === "outside_dhaka" ? 150 : 80;
 
-  if (effectiveItems.length === 0 && !isSuccess) {
+  // Validation
+  const isFormValid =
+    selectedAddress &&
+    selectedAddress.firstName?.trim() !== "" &&
+    selectedAddress.phone?.trim() !== "" &&
+    selectedAddress.address?.trim() !== "" &&
+    selectedAddress.division?.trim() !== "" &&
+    selectedAddress.district?.trim() !== "" &&
+    selectedAddress.thana?.trim() !== "";
+
+  // --- RENDER LOGIC (FAIL FAST) ---
+
+  // 1. Initializing (Loading Direct Item)
+  if (status === "initializing" || isDirectLoading) {
+    return (
+      <div className="min-h-screen pt-40 pb-20 bg-bg-primary flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Critical Error (Invalid Link, OOS, Network)
+  if (status === "error") {
+    return (
+      <div className="min-h-screen pt-40 pb-20 bg-bg-primary text-center flex flex-col items-center px-4">
+        <Container>
+          <div className="bg-red-50 text-red-600 p-8 rounded-lg max-w-md mx-auto border border-red-100">
+            <h1 className="font-serif text-2xl mb-4">Unable to Proceed</h1>
+            <p className="mb-6">{error}</p>
+            <Link href="/shop">
+              <Button variant="outline">Back to Shop</Button>
+            </Link>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  // 3. Empty State (Ready but no items)
+  if (status === "ready" && items.length === 0 && !isSuccess) {
     return (
       <div className="min-h-screen pt-40 pb-20 bg-bg-primary text-center flex flex-col items-center">
         <Container>
@@ -230,13 +226,14 @@ export default function CheckoutPage() {
             Looks like you haven't added any items to your bag yet.
           </p>
           <Link href="/shop">
-            <Button>Start Shopping</Button>
+            <Button>Continue Shopping</Button>
           </Link>
         </Container>
       </div>
     );
   }
 
+  // 4. Success State
   if (isSuccess) {
     return (
       <div className="min-h-screen pt-32 pb-20 bg-bg-primary flex flex-col items-center justify-center text-center px-4">
@@ -253,13 +250,12 @@ export default function CheckoutPage() {
             Order Confirmed
           </h1>
           <p className="text-secondary text-sm leading-relaxed mb-8">
-            Thank you for your purchase,{" "}
+            Thank you for your purchase. We have received your order and will
+            begin preparing it with care. You will receive updates at{" "}
             <span className="font-medium text-primary">
-              {formData.firstName}
+              {selectedAddress?.phone}
             </span>
-            . We have received your order and will begin preparing it with care.
-            You will receive an SMS updates at{" "}
-            <span className="font-medium text-primary">{formData.phone}</span>.
+            .
           </p>
 
           <Link href="/">
@@ -270,6 +266,7 @@ export default function CheckoutPage() {
     );
   }
 
+  // 5. Checkout Form (Ready with items)
   return (
     <div className="min-h-screen pt-24 pb-20 bg-bg-primary text-primary">
       <Container className="max-w-[1920px] px-6 md:px-12 lg:px-24">
@@ -277,9 +274,9 @@ export default function CheckoutPage() {
           Checkout
         </h1>
 
-        {errorMsg && (
+        {submitError && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-8">
-            {errorMsg}
+            {submitError}
           </div>
         )}
 
@@ -297,130 +294,36 @@ export default function CheckoutPage() {
                     type="email"
                     name="email"
                     placeholder=" "
-                    value={formData.email}
-                    onChange={handleChange}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
                   />
                   <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
                     Email Address (Optional)
                   </label>
                 </div>
-
-                <div className="group relative">
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    placeholder=" "
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Phone Number <span className="text-red-400">*</span>
-                  </label>
-                </div>
               </div>
             </section>
 
-            {/* Shipping Address */}
+            {/* Shipping Address - DELEGATED TO COMPONENT */}
             <section>
               <h2 className="text-xs uppercase tracking-[0.2em] font-bold border-b border-primary/10 pb-4 mb-8 text-secondary">
                 Shipping Address
               </h2>
 
-              {/* Saved Addresses */}
-              {savedAddresses.length > 0 && (
-                <div className="mb-8">
-                  <p className="text-sm text-secondary mb-4">
-                    Select a saved address or enter a new one:
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {savedAddresses.map((addr) => (
-                      <button
-                        key={addr.id}
-                        type="button"
-                        onClick={() => handleSelectSavedAddress(addr)}
-                        className={`text-left p-4 border rounded-lg transition-all ${
-                          selectedAddressId === addr.id
-                            ? "border-primary bg-primary/5 ring-1 ring-primary"
-                            : "border-primary/20 hover:border-primary/40"
-                        }`}
-                      >
-                        <p className="font-medium text-sm mb-1">
-                          {addr.type || "Saved Address"}
-                        </p>
-                        <p className="text-xs text-secondary leading-relaxed">
-                          {addr.address}
-                          <br />
-                          {addr.city} {addr.zip && `- ${addr.zip}`}
-                        </p>
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedAddressId(null);
-                        setFormData((prev) => ({
-                          ...prev,
-                          address: "",
-                          division: "",
-                          district: "",
-                          thana: "",
-                          zip: "",
-                        }));
-                      }}
-                      className={`text-left p-4 border rounded-lg transition-all border-dashed ${
-                        selectedAddressId === null
-                          ? "border-primary bg-primary/5"
-                          : "border-primary/30 hover:border-primary/50"
-                      }`}
-                    >
-                      <p className="font-medium text-sm mb-1">+ New Address</p>
-                      <p className="text-xs text-secondary">
-                        Enter a different address
-                      </p>
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AddressManager
+                savedAddresses={savedAddresses}
+                onSelectAddress={(addr) => setSelectedAddress(addr)}
+                userFirstName={user?.firstName}
+                userLastName={user?.lastName}
+                defaultPhone={user?.phone || ""}
+              />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="firstName"
-                    required
-                    placeholder=" "
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    First Name <span className="text-red-400">*</span>
-                  </label>
-                </div>
-
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="lastName"
-                    placeholder=" "
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Last Name
-                  </label>
-                </div>
-              </div>
-
-              <div className="group relative mt-6">
+              <div className="group relative mt-8">
                 <select
                   name="deliveryLocation"
-                  value={formData.deliveryLocation}
-                  onChange={handleChange}
+                  value={deliveryLocation}
+                  onChange={(e) => setDeliveryLocation(e.target.value)}
                   className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors text-primary appearance-none cursor-pointer"
                 >
                   <option value="inside_dhaka">Inside Dhaka (80 BDT)</option>
@@ -429,102 +332,8 @@ export default function CheckoutPage() {
                 <label className="absolute left-0 -top-2 text-xs text-accent-gold">
                   Delivery Zone <span className="text-red-400">*</span>
                 </label>
-                {/* Custom Arrow */}
                 <div className="absolute right-0 top-4 pointer-events-none">
                   <ArrowRight className="w-4 h-4 text-secondary/50 rotate-90" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="division"
-                    required
-                    placeholder=" "
-                    value={formData.division}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Division <span className="text-red-400">*</span>
-                  </label>
-                </div>
-
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="district"
-                    required
-                    placeholder=" "
-                    value={formData.district}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    District <span className="text-red-400">*</span>
-                  </label>
-                </div>
-
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="thana"
-                    required
-                    placeholder=" "
-                    value={formData.thana}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Thana <span className="text-red-400">*</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="group relative mt-6">
-                <input
-                  type="text"
-                  name="address"
-                  required
-                  placeholder=" "
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                />
-                <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                  House / Road / Block / Flat{" "}
-                  <span className="text-red-400">*</span>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="landmark"
-                    placeholder=" "
-                    value={formData.landmark}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Landmark / Common Place Name (Optional)
-                  </label>
-                </div>
-
-                <div className="group relative">
-                  <input
-                    type="text"
-                    name="zip"
-                    placeholder=" "
-                    value={formData.zip}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
-                  />
-                  <label className="absolute left-0 top-4 text-secondary/60 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-accent-gold peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-accent-gold cursor-text">
-                    Postal Code
-                  </label>
                 </div>
               </div>
             </section>
@@ -535,58 +344,45 @@ export default function CheckoutPage() {
             <div className="bg-white p-8 lg:p-12 shadow-xl border border-primary/5">
               <h2 className="font-serif text-2xl mb-8">Order Summary</h2>
 
-              {isDirectLoading ? (
-                /* Skeleton Loader */
-                <div className="space-y-6 mb-8 animate-pulse">
-                  <div className="flex gap-4">
-                    <div className="w-16 h-20 bg-gray-200" />
-                    <div className="flex-grow space-y-2">
-                      <div className="h-4 bg-gray-200 w-3/4" />
-                      <div className="h-4 bg-gray-200 w-1/4" />
+              <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-4">
+                    <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
+                      {item.images?.[0] && (
+                        <Image
+                          src={item.images[0]}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="flex-grow">
+                      <h4 className="font-serif text-sm">{item.name}</h4>
+                      <p className="font-medium text-sm mt-1">
+                        ৳
+                        {(
+                          (item.salePrice || item.basePrice || 0) *
+                          item.quantity
+                        ).toLocaleString()}
+                      </p>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
-                  {effectiveItems.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
-                        {item.images?.[0] && (
-                          <Image
-                            src={item.images[0]}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        )}
-                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <div className="flex-grow">
-                        <h4 className="font-serif text-sm">{item.name}</h4>
-                        <p className="font-medium text-sm mt-1">
-                          ৳
-                          {(
-                            (item.salePrice || item.basePrice || 0) *
-                            item.quantity
-                          ).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                ))}
+              </div>
 
               <div className="space-y-3 py-6 border-t border-primary/10 text-sm">
                 <div className="flex justify-between text-secondary">
                   <span>Subtotal</span>
-                  <span>৳{effectiveTotal.toLocaleString()}</span>
+                  <span>৳{total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-secondary">
                   <span>
                     Shipping (
-                    {formData.deliveryLocation === "outside_dhaka"
+                    {deliveryLocation === "outside_dhaka"
                       ? "Outside Dhaka"
                       : "Inside Dhaka"}
                     )
@@ -598,7 +394,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-xl font-serif py-6 border-t border-primary/10 mb-8">
                 <span>Total</span>
                 {/* Calculate final total with shipping dynamically based on effectiveTotal */}
-                <span>৳{(effectiveTotal + shippingCost).toLocaleString()}</span>
+                <span>৳{(total + shippingCost).toLocaleString()}</span>
               </div>
 
               <Button
