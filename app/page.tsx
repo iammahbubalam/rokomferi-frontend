@@ -1,40 +1,39 @@
 import { HeroCinematic } from "@/components/home/HeroCinematic";
-import { FeaturedCollection } from "@/components/home/FeaturedCollection";
+import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { MasonryCategories } from "@/components/home/MasonryCategories";
+import { FeaturedCollections } from "@/components/home/FeaturedCollections";
 
 import {
   getFeaturedProducts,
   getFeaturedCategories,
   getHeroSlides,
+  getCollections,
 } from "@/lib/data";
 
-// This is now a Server Component!
 export default async function Home() {
   console.log("Rendering Home Page (Server)");
 
   // Parallel Data Fetching
-  // Parallel Data Fetching
-  const heroData = getHeroSlides();
-  const productsData = getFeaturedProducts();
-  const categoriesData = getFeaturedCategories();
-
-  // Wait for all data
-  const [slides, products, categories] = await Promise.all([
-    heroData,
-    productsData,
-    categoriesData,
+  const [slides, products, categories, collections] = await Promise.all([
+    getHeroSlides(),
+    getFeaturedProducts(),
+    getFeaturedCategories(),
+    getCollections(),
   ]);
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
-      {/* Cinematic Hero split screen with Marquee */}
+      {/* SECTION 1: Hero Slider */}
       <HeroCinematic slides={slides} />
 
-      {/* Asymmetrical Editorial Grid */}
+      {/* SECTION 2: Shop by Category */}
       <MasonryCategories categories={categories} />
 
-      {/* Dark Mode Horizontal Scroll Collection */}
-      <FeaturedCollection products={products} />
+      {/* SECTION 3: Featured Collections */}
+      <FeaturedCollections collections={collections} />
+
+      {/* SECTION 4: New Arrivals / Featured Products */}
+      <FeaturedProducts products={products} />
     </div>
   );
 }

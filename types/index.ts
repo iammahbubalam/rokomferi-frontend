@@ -41,6 +41,7 @@ export interface Product {
   sku: string;
   isActive: boolean;
   isFeatured?: boolean;
+  isNew?: boolean;
   lowStockThreshold: number;
 }
 
