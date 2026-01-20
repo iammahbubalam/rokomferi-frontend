@@ -2,143 +2,105 @@
 
 import { motion } from "framer-motion";
 import { Product } from "@/types";
-import { ProductCard } from "@/components/ui/ProductCard";
 import Image from "next/image";
+import clsx from "clsx";
+import { useCart } from "@/context/CartContext";
+import { ShoppingBag } from "lucide-react";
+import Link from "next/link";
 
 interface LookbookGridProps {
   products: Product[];
 }
 
 export function LookbookGrid({ products }: LookbookGridProps) {
+  const { addToCart } = useCart();
+
   return (
-    <div className="flex flex-col gap-20 md:gap-32">
-      {/* 
-        We split products into chunks to create a repeating asymmetrical pattern.
-        Pattern A: Large Feature Left (Product 0) + Stacked Right (Product 1, 2)
-        Pattern B: Standard Grid (Product 3, 4, 5)
-        Pattern C: Large Feature Right (Product 6) + Stacked Left (Product 7, 8)
-      */}
-
+    <div className="flex flex-col gap-24 md:gap-40 py-12">
       {products.map((product, index) => {
-        // We will manually construct the grid by grouping via index logic is tricky in map.
-        // Instead, let's just use CSS Grid with dynamic classes based on index.
+        const isEven = index % 2 === 0;
 
-        // Actually, for a true lookbook feel, we need more control than just a map.
-        // Let's iterate in chunks of 6? Or just map with conditional logic.
-
-        // Simpler approach: A responsive grid where some items span 2 columns.
-
-        const isFeatured = index % 5 === 0; // Every 5th item is large
-        const isWide = index % 5 === 3; // Every 3rd item in the cycle is wide
-
-        if (isFeatured) {
-          // Full Width Hero style for Product
-          return (
-            <div
-              key={product.id}
-              className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-10"
+        return (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className={clsx(
+              "flex flex-col md:flex-row items-center gap-12 md:gap-24",
+              !isEven && "md:flex-row-reverse",
+            )}
+          >
+            {/* Large Editorial Image */}
+            <Link
+              href={`/product/${product.slug}`}
+              className="w-full md:w-3/5 aspect-[3/4] md:aspect-[4/5] relative bg-[#f4f4f4] overflow-hidden group cursor-pointer"
             >
-              <div className="relative aspect-[4/5] w-full bg-[#f4f4f4]">
-                <Image
-                  src={product.images?.[0] || ""}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="px-4 md:px-12 flex flex-col items-start gap-6">
-                <span className="text-secondary uppercase tracking-[0.3em] text-xs">
-                  Featured Piece
-                </span>
-                <h2 className="font-serif text-4xl md:text-5xl leading-tight">
+              <Image
+                src={product.images?.[0] || ""}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 60vw"
+              />
+              <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500" />
+            </Link>
+
+            {/* Product Details & Purchase Card */}
+            <div className="w-full md:w-2/5 flex flex-col items-center md:items-start text-center md:text-left">
+              <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.4em] font-medium mb-6">
+                Collection 2026
+              </span>
+              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-primary mb-6 leading-tight">
+                <Link
+                  href={`/product/${product.slug}`}
+                  className="hover:text-black/70 transition-colors"
+                >
                   {product.name}
-                </h2>
-                <p className="text-secondary/80 font-light leading-relaxed max-w-sm">
-                  {product.description ||
-                    "A masterpiece of craftsmanship, designed for moments that matter."}
-                </p>
-                <ProductCard
-                  product={product}
-                  variant="default"
-                  index={index}
-                />
-                {/* Note: We actually probably want a custom call to action here instead of card, but card is safe. 
-                            Actually, let's just render the Card normally but maybe hide the image since we showed it big? 
-                            Or just render the product card nicely. 
-                        */}
+                </Link>
+              </h2>
+              <p className="text-secondary/70 font-light leading-relaxed mb-10 max-w-md">
+                {product.description ||
+                  "Defined by exceptional craftsmanship and timeless elegance. This piece embodies the essence of modern luxury."}
+              </p>
+
+              {/* Custom Elegant Action Area */}
+              <div className="flex flex-col items-center md:items-start gap-4 w-full max-w-[280px]">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-serif text-primary">
+                    ৳{(product.salePrice || product.basePrice).toLocaleString()}
+                  </span>
+                  {product.salePrice &&
+                    product.salePrice < product.basePrice && (
+                      <span className="text-sm text-gray-400 line-through">
+                        ৳{product.basePrice.toLocaleString()}
+                      </span>
+                    )}
+                </div>
+
+                <button
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock <= 0}
+                  className="group w-full bg-black text-white hover:bg-[#D4AF37] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed px-8 py-4 flex items-center justify-center gap-3 transition-colors duration-300"
+                >
+                  <ShoppingBag size={18} />
+                  <span className="text-xs font-bold uppercase tracking-[0.2em]">
+                    {product.stock > 0 ? "Add to Bag" : "Sold Out"}
+                  </span>
+                </button>
+                <div className="h-px w-full bg-gray-100 mt-2" />
+                <Link
+                  href={`/product/${product.slug}`}
+                  className="text-xs uppercase tracking-widest text-gray-500 hover:text-black transition-colors border-b border-transparent hover:border-black pb-1"
+                >
+                  View Details
+                </Link>
               </div>
             </div>
-          );
-        }
-
-        return null; // Handle others in groups?
-        // This is getting complex to blend with map.
-        // Let's stick to the Masonry-style Grid from the previous plan but refined.
+          </motion.div>
+        );
       })}
-
-      {/* 
-         Alternative: CSS Grid Auto-Flow with span classes.
-      */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 gap-y-24 items-start">
-        {products.map((product, i) => {
-          const isHero = i === 0; // First item always hero
-          const isLarge = !isHero && i % 4 === 1; // 2nd, 6th, 10th...
-
-          // Grid Spans
-          // Hero: col-span-12
-          // Large: col-span-6 or 8
-          // Regular: col-span-4 or 6
-
-          let spanClass = "col-span-1 md:col-span-1 lg:col-span-4";
-          if (isHero)
-            spanClass =
-              "col-span-1 md:col-span-2 lg:col-span-12 mb-20 md:mb-32";
-          else if (isLarge)
-            spanClass = "col-span-1 md:col-span-1 lg:col-span-6 lg:row-span-2";
-
-          return (
-            <motion.div
-              key={product.id}
-              className={`${spanClass} flex flex-col gap-4`}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8 }}
-            >
-              {isHero ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                  <div className="relative aspect-[3/4] md:aspect-square lg:aspect-[16/9] w-full bg-[#f4f4f4] overflow-hidden">
-                    <Image
-                      src={product.images?.[1] || product.images?.[0] || ""}
-                      alt={product.name}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-1000"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-6 items-start max-w-md">
-                    <span className="text-secondary text-xs uppercase tracking-[0.3em]">
-                      Editor's Choice
-                    </span>
-                    <h2 className="font-serif text-5xl md:text-6xl">
-                      {product.name}
-                    </h2>
-                    <p className="text-lg font-light text-secondary/80">
-                      {product.description}
-                    </p>
-                    <ProductCard product={product} variant="default" />
-                    {/* We hide the image in card purely via CSS if needed, 
-                                    or just let it be a mini thumbnail. 
-                                    Actually let's just use ProductCard standardly but wrapper styles matter.
-                                */}
-                  </div>
-                </div>
-              ) : (
-                <ProductCard product={product} index={i} />
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
     </div>
   );
 }

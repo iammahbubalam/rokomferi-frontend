@@ -10,6 +10,7 @@ export interface ShopParams {
   maxPrice?: number;
   inStock?: boolean;
   search?: string;
+  view?: "grid" | "lookbook";
 }
 
 export interface ShopResponse {

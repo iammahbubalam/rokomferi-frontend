@@ -5,6 +5,7 @@ import { getShopProducts, ShopParams } from "@/lib/api/shop";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Pagination } from "@/components/ui/Pagination";
+import { LookbookGrid } from "@/components/shop/LookbookGrid";
 
 export const metadata = {
   title: "Shop All | Rokomferi",
@@ -22,6 +23,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     getAllCategoriesFlat(),
     getShopProducts(params),
   ]);
+
+  const isLookbookView = params.view === "lookbook";
 
   return (
     <div className="min-h-screen bg-[#faf9f7]">
@@ -59,23 +62,21 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         {/* Floating Filter Bar (replaces sidebar) */}
         <FilterSidebar categories={categories} />
 
-        {/* Product Grid - Full Width Now */}
+        {/* Product Grid or Lookbook Grid */}
         <Suspense
           fallback={
             <div className="h-96 animate-pulse bg-gray-100 rounded-lg" />
           }
         >
-          <ProductGrid products={products} />
+          {isLookbookView ? (
+            <LookbookGrid products={products} />
+          ) : (
+            <ProductGrid products={products} />
+          )}
         </Suspense>
 
-        {/* Pagination */}
         <div className="mt-12">
           <Pagination totalPages={pagination.totalPages} />
-        </div>
-
-        {/* Summary */}
-        <div className="text-center text-xs text-secondary/40 font-medium uppercase tracking-widest mt-4">
-          Showing {products.length} of {pagination.total} Products
         </div>
       </Container>
     </div>

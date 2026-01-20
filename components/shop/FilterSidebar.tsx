@@ -167,32 +167,72 @@ export function FilterSidebar({ categories, className }: FilterSidebarProps) {
             </div>
           </div>
 
-          {/* Availability */}
-          <div className="flex flex-col gap-2">
+          {/* View Toggle */}
+          <div className="flex flex-col gap-2 ml-auto pl-6 border-l border-gray-100">
             <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
-              Availability
+              View
             </label>
-            <button
-              onClick={() => pushFilter({ inStock: inStock ? null : "true" })}
-              className={clsx(
-                "px-4 py-2.5 text-sm font-medium border transition-colors",
-                inStock
-                  ? "bg-black text-white border-black"
-                  : "bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400",
-              )}
-            >
-              {inStock ? "✓ In Stock Only" : "In Stock Only"}
-            </button>
+            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-sm border border-gray-200">
+              <button
+                onClick={() => pushFilter({ view: "grid" })}
+                className={clsx(
+                  "p-1.5 rounded-sm transition-all",
+                  !searchParams.get("view") ||
+                    searchParams.get("view") === "grid"
+                    ? "bg-white shadow-sm text-black"
+                    : "text-gray-400 hover:text-black",
+                )}
+                title="Grid View"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => pushFilter({ view: "lookbook" })}
+                className={clsx(
+                  "p-1.5 rounded-sm transition-all",
+                  searchParams.get("view") === "lookbook"
+                    ? "bg-white shadow-sm text-black"
+                    : "text-gray-400 hover:text-black",
+                )}
+                title="Lookbook View"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M3 14h18" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Clear All */}
           {hasActiveFilters && (
-            <button
-              onClick={handleClearAll}
-              className="text-sm text-red-600 hover:text-red-800 font-medium underline underline-offset-2 pb-2.5"
-            >
-              Reset All
-            </button>
+            <div className="flex flex-col gap-2 justify-end pb-2">
+              <button
+                onClick={handleClearAll}
+                className="text-sm text-red-600 hover:text-red-800 font-medium underline underline-offset-2"
+              >
+                Reset All
+              </button>
+            </div>
           )}
         </div>
       </div>
