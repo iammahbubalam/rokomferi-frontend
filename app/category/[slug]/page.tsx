@@ -137,11 +137,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   ease: [0.25, 0.1, 0.25, 1],
                 }}
               >
-                <ProductCard
-                  product={product}
-                  index={index}
-                  aspectRatio="aspect-[3/4]"
-                />
+                <ProductCard product={product} index={index} />
               </motion.div>
             ))}
           </motion.div>
