@@ -59,7 +59,7 @@ import {
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
-import { AuthProvider } from "@/components/auth/AuthProvider";
+import { GoogleAuthProvider } from "@/components/auth/AuthProvider";
 import { AuthContextProvider } from "@/context/AuthContext";
 
 export default async function RootLayout({
@@ -81,7 +81,7 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <AuthProvider>
+        <GoogleAuthProvider>
           <AuthContextProvider>
             <IntroProvider>
               <IntroOverlay />
@@ -103,7 +103,7 @@ export default async function RootLayout({
               </CartProvider>
             </IntroProvider>
           </AuthContextProvider>
-        </AuthProvider>
+        </GoogleAuthProvider>
       </body>
     </html>
   );

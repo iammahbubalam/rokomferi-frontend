@@ -125,3 +125,9 @@ export async function getShopProducts(
 function getPrice(p: Product): number {
   return p.salePrice && p.salePrice < p.basePrice ? p.salePrice : p.basePrice;
 }
+
+export async function getProductById(id: string): Promise<Product | null> {
+  // Reuse the existing fetch all strategy for consistency since we don't have a verified single ID endpoint
+  const { products } = await getShopProducts({});
+  return products.find((p) => p.id === id) || null;
+}

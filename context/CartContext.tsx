@@ -164,25 +164,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const removeFromCart = async (productId: string) => {
-    if (!productId) {
-      console.warn("Attempted to remove item with no ID");
-      return;
-    }
+  const removeFromCart = (productId: string) => {
+    if (!productId) return;
 
+    // 1. Store previous state for rollback
+    const previousItems = [...items];
+
+    // 2. OPTIMISTIC UPDATE: Remove immediately
+    setItems((prev) => prev.filter((item) => item.id !== productId));
+
+    // 3. BACKGROUND SYNC
     if (user) {
-      // Call DELETE endpoint for authenticated users
-      try {
-        const token = localStorage.getItem("token");
-        await fetch(getApiUrl(`/cart/${productId}`), {
+      const token = localStorage.getItem("token");
+      if (token) {
+        fetch(getApiUrl(`/cart/${productId}`), {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        });
-      } catch (error) {
-        console.error("Failed to remove from server cart", error);
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Remove failed");
+          })
+          .catch((error) => {
+            console.error("Remove failed, rolling back", error);
+            setItems(previousItems); // Rollback
+            // TODO: Toast error
+          });
       }
     }
-    setItems((prev) => prev.filter((item) => item.id !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -190,11 +198,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeFromCart(productId);
       return;
     }
+
+    // 1. Store previous
+    const previousItems = [...items];
+
+    // 2. OPTIMISTIC UPDATE
     setItems((prev) =>
       prev.map((item) =>
         item.id === productId ? { ...item, quantity } : item,
       ),
     );
+
+    // 3. BACKGROUND SYNC
+    if (user) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Debouncing could be good here, but for now direct sync implies "Save"
+        // Actually, for quantity, usually we send the DELTA or the NEW TOTAL.
+        // The backend /cart POST adds to existing? Or sets?
+        // Usually POST /cart adds. We might need a PUT /cart/items/{id} or similar to set absolute quantity.
+        // Looking at addToCart logic: it sends { productId, quantity: 1 } via POST.
+        // If backend only supports ADD, we might have trouble setting exact quantity if we decrease.
+        // Let's assume for now we don't have a specific "Update Quantity" endpoint verified?
+        // Wait, looking at lines 85-94 in original file:
+        /*
+          body: JSON.stringify({
+            productId: item.id,
+            quantity: item.quantity,
+          }),
+        */
+        // This was for merging.
+        // Let's try to assume POST /cart adds, so we might need a specific PUT endpoint?
+        // Or if the backend implementation logic (which I don't see) handles "set".
+        // Use standard convention: If I can't verify backend, I'll stick to local state for quantity for now
+        // BUT user asked for "blazingly fast remove". I fixed remove.
+        // Update Quantity was just missing. I will leave updateQuantity local-only
+        // for safety unless I confirm backend supports it, TO AVOID BREAKING IT.
+        // Wait, if I don't sync quantity, it reverts on refresh.
+        // I will add a TODO or try a likely endpoint strictly for the "Remove" task requested.
+        // Actually, stick to the USER REQUEST: "when i click remove it took too muh time".
+        // I will ONLY fix removeFromCart to be optimistic.
+        // I will leave updateQuantity as is to avoid scope creep/bugs.
+      }
+    }
   };
 
   const toggleCart = () => setIsOpen((prev) => !prev);

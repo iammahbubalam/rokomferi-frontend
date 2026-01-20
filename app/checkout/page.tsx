@@ -9,15 +9,51 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getProductById } from "@/lib/api/shop";
+import { CartItem } from "@/context/CartContext";
 
 export default function CheckoutPage() {
   const { items, total } = useCart();
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams(); // 1. Get params
+
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Direct Checkout State
+  const [directItem, setDirectItem] = useState<CartItem | null>(null);
+  const isDirect = searchParams.get("type") === "direct";
+
+  // Fetch Direct Item
+  useEffect(() => {
+    const fetchDirectItem = async () => {
+      const productId = searchParams.get("productId");
+      const qty = parseInt(searchParams.get("quantity") || "1");
+
+      if (isDirect && productId) {
+        try {
+          const product = await getProductById(productId);
+          if (product) {
+            setDirectItem({ ...product, quantity: qty });
+          }
+        } catch (e) {
+          console.error("Failed to fetch direct item", e);
+        }
+      }
+    };
+    fetchDirectItem();
+  }, [isDirect, searchParams]);
+
+  // Determine effective items and total
+  const effectiveItems = isDirect && directItem ? [directItem] : items;
+
+  const effectiveTotal =
+    isDirect && directItem
+      ? (directItem.salePrice || directItem.basePrice) * directItem.quantity
+      : total;
 
   // Auth Guard
   useEffect(() => {
@@ -67,7 +103,7 @@ export default function CheckoutPage() {
   }
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -129,7 +165,7 @@ export default function CheckoutPage() {
   }, [formData]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -140,15 +176,19 @@ export default function CheckoutPage() {
     setErrorMsg(null);
     try {
       const token = localStorage.getItem("token");
+
       // Construct Payload
       const payload = {
         paymentMethod: "cod", // Default for now
         address: {
           ...formData,
-          // Add explicit shipping cost if needed by backend,
-          // but backend calculates total from Items usually.
-          // Backend order_usecase.go uses `req.Address` as JSONB.
         },
+        // IMPORTANT: Send items explicitly for Direct Checkout
+        // Backend MUST support this override for true isolation.
+        items: effectiveItems.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+        })),
       };
 
       const res = await fetch(getApiUrl("/checkout"), {
@@ -166,9 +206,6 @@ export default function CheckoutPage() {
       }
 
       setIsSuccess(true);
-      // Ideally clear cart here, but backend clears it.
-      // Client state might need refresh (CartContext syncs automatically on next fetch or we force it).
-      // Reloading page or redirecting handles it.
     } catch (error: any) {
       console.error(error);
       setErrorMsg(error.message || "Failed to place order. Please try again.");
@@ -177,11 +214,12 @@ export default function CheckoutPage() {
     }
   };
 
-  // Dynamic Shipping Cost
   const shippingCost = formData.deliveryLocation === "outside_dhaka" ? 150 : 80;
-  const finalTotal = total + shippingCost;
+  // Final total already calculated in effectiveTotal + shipping logic below?
+  // Wait, I removed the `finalTotal` variable in the previous step but it was used here implicitly?
+  // Actually, I should declare `finalTotal` based on `effectiveTotal` to keep it clean.
 
-  if (items.length === 0 && !isSuccess) {
+  if (effectiveItems.length === 0 && !isSuccess) {
     return (
       <div className="min-h-screen pt-40 pb-20 bg-bg-primary text-center flex flex-col items-center">
         <Container>
@@ -497,40 +535,53 @@ export default function CheckoutPage() {
             <div className="bg-white p-8 lg:p-12 shadow-xl border border-primary/5">
               <h2 className="font-serif text-2xl mb-8">Order Summary</h2>
 
-              <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
-                      {item.images?.[0] && (
-                        <Image
-                          src={item.images[0]}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      )}
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex-grow">
-                      <h4 className="font-serif text-sm">{item.name}</h4>
-                      <p className="font-medium text-sm mt-1">
-                        ৳
-                        {(
-                          (item.salePrice || item.basePrice || 0) *
-                          item.quantity
-                        ).toLocaleString()}
-                      </p>
+              {isDirectLoading ? (
+                /* Skeleton Loader */
+                <div className="space-y-6 mb-8 animate-pulse">
+                  <div className="flex gap-4">
+                    <div className="w-16 h-20 bg-gray-200" />
+                    <div className="flex-grow space-y-2">
+                      <div className="h-4 bg-gray-200 w-3/4" />
+                      <div className="h-4 bg-gray-200 w-1/4" />
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
+                  {effectiveItems.map((item) => (
+                    <div key={item.id} className="flex gap-4">
+                      <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
+                        {item.images?.[0] && (
+                          <Image
+                            src={item.images[0]}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                          />
+                        )}
+                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-serif text-sm">{item.name}</h4>
+                        <p className="font-medium text-sm mt-1">
+                          ৳
+                          {(
+                            (item.salePrice || item.basePrice || 0) *
+                            item.quantity
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-3 py-6 border-t border-primary/10 text-sm">
                 <div className="flex justify-between text-secondary">
                   <span>Subtotal</span>
-                  <span>৳{total.toLocaleString()}</span>
+                  <span>৳{effectiveTotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-secondary">
                   <span>
@@ -546,7 +597,8 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between text-xl font-serif py-6 border-t border-primary/10 mb-8">
                 <span>Total</span>
-                <span>৳{finalTotal.toLocaleString()}</span>
+                {/* Calculate final total with shipping dynamically based on effectiveTotal */}
+                <span>৳{(effectiveTotal + shippingCost).toLocaleString()}</span>
               </div>
 
               <Button
@@ -557,8 +609,8 @@ export default function CheckoutPage() {
                 {isSubmitting
                   ? "Processing..."
                   : isFormValid
-                  ? "Place Order"
-                  : "Fill Details to Order"}
+                    ? "Place Order"
+                    : "Fill Details to Order"}
               </Button>
 
               <p className="text-center text-[10px] text-secondary/60 mt-4 uppercase tracking-widest">

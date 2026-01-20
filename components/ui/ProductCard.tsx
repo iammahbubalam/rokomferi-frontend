@@ -39,8 +39,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
-    router.push("/checkout");
+    // Direct Checkout: Don't add to cart, just redirect with params
+    router.push(`/checkout?type=direct&productId=${product.id}&quantity=1`);
   };
 
   return (

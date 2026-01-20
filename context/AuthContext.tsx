@@ -23,7 +23,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthContextProvider({ children }: { children: React.ReactNode }) {
+export function AuthContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  console.log("AuthContextProvider Rendering"); // DEBUG
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -35,8 +40,8 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     // Ideally use cookies for middleware, but let's stick to the established pattern.
     const token = localStorage.getItem("token");
     if (!token) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -51,7 +56,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
         // Backend returns role, set isAdmin based on role
         setUser({
           ...userData,
-          isAdmin: userData.role === 'admin'
+          isAdmin: userData.role === "admin",
         });
       } else {
         // Token invalid/expired
@@ -71,30 +76,33 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
 
   const logout = async () => {
     try {
-        // Optional: Call backend logout
-        const token = localStorage.getItem("token");
-        if (token) {
-            await fetch(getApiUrl("/auth/logout"), {
-                method: "POST",
-                 headers: { Authorization: `Bearer ${token}` },
-            });
-        }
+      // Optional: Call backend logout
+      const token = localStorage.getItem("token");
+      if (token) {
+        await fetch(getApiUrl("/auth/logout"), {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
     } catch (e) {
-        console.error(e);
+      console.error(e);
     }
-    
+
     localStorage.removeItem("token");
     // Clear cookies too if used
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-    
+    document.cookie =
+      "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+
     setUser(null);
     router.push("/");
     router.refresh();
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, logout, refreshUser: fetchUser }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, logout, refreshUser: fetchUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
