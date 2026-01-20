@@ -4,46 +4,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
 import clsx from "clsx";
-import { motion } from "framer-motion";
 import { ShoppingBag, Eye } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
-  index?: number;
-  variant?: "default" | "inverted";
-  aspectRatio?: string;
+  variant?: "default" | "inverted"; // default = light bg, inverted = dark bg
+  aspectRatio?: "portrait" | "square";
 }
 
 export function ProductCard({
   product,
-  index = 0,
   variant = "default",
-  aspectRatio = "aspect-[3/4.5]",
+  aspectRatio = "portrait",
 }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const textColor = variant === "inverted" ? "text-white" : "text-primary";
+  const secondaryColor =
+    variant === "inverted" ? "text-white/60" : "text-secondary";
 
-  // Pricing Strategy
-  const price = product.salePrice || product.basePrice;
-  const originalPrice = product.salePrice ? product.basePrice : null;
-
-  // Status Logic
-  const isFeatured = product.isFeatured;
-  const isSoldOut = product.stockStatus === "out_of_stock";
+  // Format Price
+  const formattedPrice = new Intl.NumberFormat("en-BD", {
+    style: "currency",
+    currency: "BDT",
+    minimumFractionDigits: 0,
+  }).format(product.salePrice || product.basePrice);
 
   return (
-    <div className="group relative flex flex-col gap-4 mb-8 break-inside-avoid">
+    <div className="group relative flex flex-col gap-4">
       {/* Image Container */}
       <Link
         href={`/product/${product.slug}`}
-        className={`block relative overflow-hidden ${aspectRatio} w-full bg-[#f0f0f0]`}
+        className="block relative overflow-hidden bg-gray-100"
       >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }} // smooth luxurious ease
-          className="w-full h-full relative"
+        <div
+          className={clsx(
+            "relative w-full transition-transform duration-700 ease-out group-hover:scale-105",
+            aspectRatio === "portrait" ? "aspect-[3/4]" : "aspect-square",
+          )}
         >
-          {product.images?.[0] ? (
+          {/* Main Image */}
+          {product.images && product.images[0] ? (
             <Image
               src={product.images[0]}
               alt={product.name}
@@ -52,82 +52,88 @@ export function ProductCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs uppercase tracking-widest">
               No Image
             </div>
           )}
 
-          {/* Overlay Gradient (subtle darkening on bottom for text readability if needed, or visual depth) */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-        </motion.div>
+          {/* Hover Image (if available) - Simple Fade */}
+          {product.images && product.images[1] && (
+            <Image
+              src={product.images[1]}
+              alt={product.name}
+              fill
+              className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            />
+          )}
+        </div>
 
         {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-          {isFeatured && (
-            <span className="bg-white/90 backdrop-blur text-black text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
-              Featured
-            </span>
-          )}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
           {product.salePrice && (
-            <span className="bg-accent-gold/90 text-white text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
+            <span className="bg-accent-gold text-white text-[10px] uppercase font-bold tracking-widest px-2 py-1">
               Sale
             </span>
           )}
-          {isSoldOut && (
-            <span className="bg-black/80 text-white text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium">
+          {product.stockStatus === "out_of_stock" && (
+            <span className="bg-primary text-white text-[10px] uppercase font-bold tracking-widest px-2 py-1">
               Sold Out
             </span>
           )}
         </div>
 
-        {/* Quick Actions (Slide up on hover) */}
-        {!isSoldOut && (
-          <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20 flex gap-2">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                addToCart(product);
-              }}
-              className="flex-1 bg-white text-primary h-10 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2 shadow-lg"
-            >
-              <ShoppingBag className="w-3 h-3" /> Quick Add
-            </button>
-          </div>
-        )}
+        {/* Hover Actions - Minimalist Overlay */}
+        <div className="absolute bottom-0 left-0 w-full p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center gap-3">
+          <button
+            className="bg-white text-primary p-3 rounded-full hover:bg-primary hover:text-white transition-colors shadow-lg"
+            title="Quick View"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            className="bg-white text-primary p-3 rounded-full hover:bg-primary hover:text-white transition-colors shadow-lg"
+            title="Add to Cart"
+          >
+            <ShoppingBag className="w-4 h-4" />
+          </button>
+        </div>
       </Link>
 
-      {/* Product Info */}
-      <div className="flex flex-col gap-1 items-start">
-        {/* Category / Subtitle */}
-        <span className="text-[10px] uppercase tracking-[0.2em] text-secondary/60">
-          {product.categories?.[0]?.name || "Collection"}
-        </span>
-
-        {/* Title */}
-        <Link
-          href={`/product/${product.slug}`}
-          className="group-hover:opacity-70 transition-opacity"
-        >
-          <h3
+      {/* Details - Minimalist */}
+      <div className="flex flex-col items-start gap-1">
+        {product.categories && product.categories[0] && (
+          <span
             className={clsx(
-              "font-serif text-lg leading-tight text-primary",
-              variant === "inverted" ? "text-white" : "text-primary"
+              "text-[10px] uppercase tracking-widest opacity-70",
+              secondaryColor,
             )}
           >
+            {product.categories[0].name}
+          </span>
+        )}
+
+        <Link
+          href={`/product/${product.slug}`}
+          className="group-hover:text-accent-gold transition-colors"
+        >
+          <h3 className={clsx("font-serif text-lg leading-tight", textColor)}>
             {product.name}
           </h3>
         </Link>
 
-        {/* Price Row */}
-        <div className="flex items-center gap-3 mt-1 text-sm font-medium tracking-wide">
+        <div className="flex items-center gap-2 mt-1">
           <span
-            className={variant === "inverted" ? "text-white" : "text-primary"}
+            className={clsx("font-medium text-sm tracking-wide", textColor)}
           >
-            ৳{price.toLocaleString()}
+            {formattedPrice}
           </span>
-          {originalPrice && (
-            <span className="text-secondary/50 line-through text-xs decoration-secondary/30">
-              ৳{originalPrice.toLocaleString()}
+          {product.salePrice && (
+            <span className="text-xs text-red-500/70 line-through">
+              {new Intl.NumberFormat("en-BD", {
+                style: "currency",
+                currency: "BDT",
+                minimumFractionDigits: 0,
+              }).format(product.basePrice)}
             </span>
           )}
         </div>

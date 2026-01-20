@@ -4,21 +4,20 @@
   /* Typography */
   --font-display: var(--font-cormorant), serif;
   --font-body: var(--font-manrope), sans-serif;
+  --font-script: var(--font-pinyon), cursive;
 
-  /* Colors - Mapping to 'Opulence Minimal' Corrected Palette */
-  --color-main: #f9f8f6; /* Alabaster Paper */
-  --color-main-secondary: #ebe9e4; /* Warm Greige */
-  --color-card: #ffffff; /* Pure White */
+  /* Colors - Heritage Modern Palette */
+  --color-main: #f9f8f6; /* Alabaster Paper - Unchanged */
+  --color-main-secondary: #e6e4e0; /* Slightly deeper greige */
+  --color-card: #ffffff;
 
-  --color-primary: #2c2c2c; /* Soft Black */
-  --color-secondary: #595959; /* Darkened Stone Grey for readability */
+  --color-primary: #1a1a1a; /* Deep Charcoal - Sharper than before */
+  --color-secondary: #4a4a4a;
 
-  --color-accent-gold: #9c846a; /* Darkened Muted Bronze for borders/text */
-  --color-accent-light: #bfa588; /* Original Muted Bronze for backgrounds */
-  --color-status-error: #9e4747; /* Vintage Red */
-  /* New Rich Colors */
-  --color-rich-olive: #3a3832; /* Deep muted olive for section contrast */
-  --color-rich-charcoal: #1c1c1c; /* Almost black for depth */
+  --color-accent-gold: #c5a059; /* Antique Gold - Less yellow, more metallic */
+  --color-accent-light: #e0cca7;
+
+  --color-cultural: #9a3412; /* Terracotta - For tiny authentic details */
 }
 
 /* Global Reset & Base Styles */

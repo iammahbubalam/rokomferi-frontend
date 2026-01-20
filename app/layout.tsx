@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Cormorant_Garamond, Manrope, Pinyon_Script } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -21,6 +21,13 @@ const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
   weight: ["200", "300", "400", "500", "600", "700"],
+});
+
+const pinyon = Pinyon_Script({
+  variable: "--font-pinyon",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -71,7 +78,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${cormorant.variable} ${manrope.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
+        className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
         <AuthProvider>
           <AuthContextProvider>
