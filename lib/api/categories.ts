@@ -1,6 +1,7 @@
 import { Category, Product } from "@/types";
 import { getApiUrl } from "@/lib/utils";
 
+// Types for Filters
 export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
@@ -9,11 +10,34 @@ export interface ProductFilters {
 }
 
 /**
- * Fetch products for a specific category with filters
+ * Server Data Access Layer for Categories
+ * Uses native fetch with caching for performance
  */
+
+// 1. Get All Categories (Flat)
+// Cache: 1 hour (3600s)
+export async function getAllCategoriesFlat(): Promise<Category[]> {
+  try {
+    const res = await fetch(getApiUrl("/categories/tree"), {
+      next: { revalidate: 3600 },
+    });
+
+    if (res.ok) {
+      const tree: Category[] = await res.json();
+      return flattenCategoryTree(tree);
+    }
+    return [];
+  } catch (error) {
+    console.error("DAL Error [getAllCategoriesFlat]:", error);
+    return [];
+  }
+}
+
+// 2. Get Products by Category Slug
+// Cache: No Store (Filtering is dynamic)
 export async function getCategoryProducts(
   slug: string,
-  filters?: ProductFilters
+  filters?: ProductFilters,
 ): Promise<Product[]> {
   try {
     const params = new URLSearchParams();
@@ -35,37 +59,29 @@ export async function getCategoryProducts(
     }
     return [];
   } catch (error) {
-    console.error("Failed to fetch category products:", error);
+    console.error(`DAL Error [getCategoryProducts] for ${slug}:`, error);
     return [];
   }
 }
 
-/**
- * Fetch all categories in a flat structure (including hidden ones)
- */
-export async function getAllCategoriesFlat(): Promise<Category[]> {
-  try {
-    const res = await fetch(getApiUrl("/categories/tree"), {
-      cache: "no-store",
-    });
+// 3. Get Single Category Details (Metadata)
+// Cache: 1 hour
+export async function getCategoryDetails(
+  slug: string,
+): Promise<Category | null> {
+  // Since we don't have a direct /categories/:slug endpoint in the mock description,
+  // we fetch the tree and find it. Ideally, backend provides this.
+  const all = await getAllCategoriesFlat();
+  return all.find((c) => c.slug === slug) || null;
+}
 
-    if (res.ok) {
-      const tree: Category[] = await res.json();
-      // Flatten the tree
-      const flatten = (nodes: Category[]): Category[] => {
-        return nodes.reduce((acc, node) => {
-          acc.push(node);
-          if (node.children?.length) {
-            acc.push(...flatten(node.children));
-          }
-          return acc;
-        }, [] as Category[]);
-      };
-      return flatten(tree);
+// Helper: Flatten Tree
+function flattenCategoryTree(nodes: Category[]): Category[] {
+  return nodes.reduce((acc, node) => {
+    acc.push(node);
+    if (node.children?.length) {
+      acc.push(...flattenCategoryTree(node.children));
     }
-    return [];
-  } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    return [];
-  }
+    return acc;
+  }, [] as Category[]);
 }

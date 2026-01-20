@@ -1,87 +1,242 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState, useEffect } from "react";
+import { Category } from "@/types";
+import { X, ChevronDown } from "lucide-react";
 import clsx from "clsx";
-import { motion } from "framer-motion";
-import { FilterMetadata } from "@/lib/data";
 
 interface FilterSidebarProps {
-  metadata: FilterMetadata;
+  categories: Category[];
+  className?: string;
 }
 
-export function FilterSidebar({ metadata }: FilterSidebarProps) {
-  const pathname = usePathname();
+export function FilterSidebar({ categories, className }: FilterSidebarProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+
+  useEffect(() => {
+    setMinPrice(searchParams.get("minPrice") || "");
+    setMaxPrice(searchParams.get("maxPrice") || "");
+  }, [searchParams]);
+
+  const activeCategories = searchParams.get("category")?.split(",") || [];
+  const inStock = searchParams.get("inStock") === "true";
+  const currentSort = searchParams.get("sort") || "newest";
+  const hasActiveFilters =
+    activeCategories.length > 0 ||
+    inStock ||
+    searchParams.get("minPrice") ||
+    searchParams.get("maxPrice");
+
+  const createQueryString = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([name, value]) => {
+        if (value === null) {
+          params.delete(name);
+        } else {
+          if (name === "category") {
+            const current = params.get("category")?.split(",") || [];
+            if (current.includes(value)) {
+              const next = current.filter((c) => c !== value);
+              if (next.length > 0) params.set("category", next.join(","));
+              else params.delete("category");
+            } else {
+              params.set("category", [...current, value].join(","));
+            }
+          } else {
+            params.set(name, value);
+          }
+        }
+      });
+      params.set("page", "1");
+      return params.toString();
+    },
+    [searchParams],
+  );
+
+  const pushFilter = (updates: Record<string, string | null>) => {
+    router.push(`?${createQueryString(updates)}`, { scroll: false });
+  };
+
+  const applyPrice = () => {
+    pushFilter({ minPrice: minPrice || null, maxPrice: maxPrice || null });
+  };
+
+  const handleClearAll = () => router.push("/shop");
+
+  const removeFilter = (type: string, value?: string) => {
+    if (type === "category" && value) pushFilter({ category: value });
+    else if (type === "price") pushFilter({ minPrice: null, maxPrice: null });
+    else if (type === "inStock") pushFilter({ inStock: null });
+  };
+
+  const getCategoryName = (slug: string) =>
+    categories.find((c) => c.slug === slug)?.name || slug;
+
   return (
-    <nav className="w-full md:w-64 flex-shrink-0 md:sticky md:top-32 self-start space-y-12">
-      {/* Dynamic Categories */}
-      <div>
-        <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
-          Categories ({metadata.categories.length})
-        </h3>
-        <ul className="space-y-4">
-          <li key="all">
-             <Link 
-               href="/shop" 
-               className={clsx(
-                 "block text-sm transition-colors duration-300 relative group",
-                 pathname === "/shop" ? "text-primary font-medium" : "text-secondary hover:text-primary"
-               )}
-             >
-               <span className="relative z-10">View All</span>
-               {pathname === "/shop" && (
-                 <motion.div layoutId="sidebar-active" className="absolute -left-3 top-1.5 w-1.5 h-1.5 bg-accent-gold rounded-full" />
-               )}
-             </Link>
-          </li>
-          {metadata.categories.map((cat) => {
-            const isActive = pathname.includes(cat.slug); // Simple check for now
-            return (
-              <li key={cat.slug}>
-                <Link 
-                  href={`/shop?category=${cat.slug}`} 
-                  className={clsx(
-                    "flex justify-between items-center text-sm transition-colors duration-300 relative group",
-                    isActive ? "text-primary font-medium" : "text-secondary hover:text-primary"
-                  )}
-                >
-                  <span className="relative z-10">{cat.name}</span>
-                  <span className="text-[10px] opacity-50">{cat.count}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+    <div className={clsx("mb-10", className)}>
+      {/* Filter Bar with Labels */}
+      <div className="bg-white border border-gray-200 p-5 rounded-sm">
+        <div className="flex flex-wrap items-end gap-6">
+          {/* Sort By */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+              Sort By
+            </label>
+            <div className="relative">
+              <select
+                value={currentSort}
+                onChange={(e) => pushFilter({ sort: e.target.value })}
+                className="appearance-none bg-gray-50 border border-gray-200 hover:border-gray-400 px-4 py-2.5 pr-10 text-sm cursor-pointer focus:outline-none focus:border-black transition-colors min-w-[160px]"
+              >
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low → High</option>
+                <option value="price_desc">Price: High → Low</option>
+                <option value="name">Alphabetical</option>
+              </select>
+              <ChevronDown
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
+              />
+            </div>
+          </div>
 
-      {/* Dynamic Colors Filter */}
-      <div>
-        <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
-          Color
-        </h3>
-        <div className="flex flex-wrap gap-2">
-            {metadata.colors.map(color => (
-                <button 
-                  key={color} 
-                  className="px-3 py-1 text-xs border border-primary/10 hover:border-primary/40 rounded-sm transition-all"
-                >
-                    {color}
-                </button>
-            ))}
+          {/* Category */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+              Category
+            </label>
+            <div className="relative">
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) pushFilter({ category: e.target.value });
+                }}
+                className="appearance-none bg-gray-50 border border-gray-200 hover:border-gray-400 px-4 py-2.5 pr-10 text-sm cursor-pointer focus:outline-none focus:border-black transition-colors min-w-[160px]"
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option
+                    key={cat.id}
+                    value={cat.slug}
+                    disabled={activeCategories.includes(cat.slug)}
+                  >
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
+              />
+            </div>
+          </div>
+
+          {/* Price Range */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+              Price Range (৳)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-20 bg-gray-50 border border-gray-200 hover:border-gray-400 px-3 py-2.5 text-sm focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+              />
+              <span className="text-gray-400">—</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-20 bg-gray-50 border border-gray-200 hover:border-gray-400 px-3 py-2.5 text-sm focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+              />
+              <button
+                onClick={applyPrice}
+                className="px-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+              >
+                Go
+              </button>
+            </div>
+          </div>
+
+          {/* Availability */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+              Availability
+            </label>
+            <button
+              onClick={() => pushFilter({ inStock: inStock ? null : "true" })}
+              className={clsx(
+                "px-4 py-2.5 text-sm font-medium border transition-colors",
+                inStock
+                  ? "bg-black text-white border-black"
+                  : "bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400",
+              )}
+            >
+              {inStock ? "✓ In Stock Only" : "In Stock Only"}
+            </button>
+          </div>
+
+          {/* Clear All */}
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearAll}
+              className="text-sm text-red-600 hover:text-red-800 font-medium underline underline-offset-2 pb-2.5"
+            >
+              Reset All
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Dynamic Price Range */}
-      <div>
-        <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-secondary mb-6 pb-2 border-b border-primary/10">
-          Price Range
-        </h3>
-        <div className="text-xs text-secondary/70">
-           From ৳{metadata.priceRange.min.toLocaleString()} to ৳{metadata.priceRange.max.toLocaleString()}
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          <span className="text-xs text-gray-500 font-medium">
+            Active Filters:
+          </span>
+
+          {activeCategories.map((slug) => (
+            <button
+              key={slug}
+              onClick={() => removeFilter("category", slug)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
+            >
+              {getCategoryName(slug)}
+              <X size={12} />
+            </button>
+          ))}
+
+          {(searchParams.get("minPrice") || searchParams.get("maxPrice")) && (
+            <button
+              onClick={() => removeFilter("price")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
+            >
+              ৳{searchParams.get("minPrice") || "0"} — ৳
+              {searchParams.get("maxPrice") || "∞"}
+              <X size={12} />
+            </button>
+          )}
+
+          {inStock && (
+            <button
+              onClick={() => removeFilter("inStock")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
+            >
+              In Stock
+              <X size={12} />
+            </button>
+          )}
         </div>
-      </div>
-    </nav>
+      )}
+    </div>
   );
 }

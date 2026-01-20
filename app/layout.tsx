@@ -7,7 +7,8 @@ import { IntroProvider } from "@/context/IntroContext";
 import { IntroOverlay } from "@/components/layout/IntroOverlay";
 
 // Force dynamic rendering to prevent static build errors with no-store fetches
-export const dynamic = "force-dynamic";
+// Force dynamic rendering removed to enable Static Site Generation (SSG)
+// export const dynamic = "force-dynamic";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",

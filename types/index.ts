@@ -43,6 +43,8 @@ export interface Product {
   isFeatured?: boolean;
   isNew?: boolean;
   lowStockThreshold: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface InventoryLog {
