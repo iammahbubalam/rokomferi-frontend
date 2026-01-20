@@ -21,14 +21,8 @@ export default function LoginPage() {
           transition={{ duration: 10, ease: "linear" }}
           className="absolute inset-0 w-full h-full"
         >
-          <Image
-            src="/assets/eid-hero.png"
-            alt="Rokomferi Heritage"
-            fill
-            className="object-cover opacity-80"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/20" />
+          {/* Fallback to solid color since static asset is removed */}
+          <div className="absolute inset-0 bg-[#1a1a1a]" />
         </motion.div>
 
         <div className="absolute bottom-20 left-20 z-10 max-w-md text-white">

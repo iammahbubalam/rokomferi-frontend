@@ -140,7 +140,7 @@ export interface HeroSlide {
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 1,
-    image: "/assets/eid-hero.png",
+    image: "",
     title: "Moonlit Silence",
     subtitle: "The Eid 2026 Edit",
     description:
@@ -148,7 +148,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 2,
-    image: "/assets/eid-hero-group.png",
+    image: "",
     title: "Legacy of Loom",
     subtitle: "The Eid Heritage Edit",
     description:
@@ -156,7 +156,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 3,
-    image: "/assets/saree-blue-katan.png",
+    image: "",
     title: "Royal Weaves",
     subtitle: "Katan Collection",
     description: "The sheen of pure silk, the weight of gold zari.",
@@ -183,7 +183,7 @@ export const PHILOSOPHY_CONTENT: PhilosophyContent = {
     "Rokomferi weaves that thread back together.",
   ],
   ctaText: "Explore the Eid Edit",
-  image: "/assets/eid-philosophy.png",
+  image: "",
   imageAlt: "Artisan hands weaving gold thread",
 };
 
@@ -199,7 +199,7 @@ export const EDITORIAL_CONTENT: EditorialContent = {
   title: "Stitching Memories",
   description:
     "A tribute to the warmth of community. Our Heritage Collection is designed for the golden hours of reunion.",
-  image: "/assets/eid-editorial.png",
+  image: "",
 };
 
 export interface SiteConfig {
@@ -282,7 +282,7 @@ export const FEATURED_CATEGORIES: FeaturedCategory[] = [
     id: "fc1",
     name: "Katan Sarees",
     slug: "sarees-katan",
-    image: "/assets/saree-blue-katan.png",
+    image: "",
     description: "The queen of silks. Woven for grandeur.",
     size: "large",
   },
@@ -290,14 +290,14 @@ export const FEATURED_CATEGORIES: FeaturedCategory[] = [
     id: "fc2",
     name: "Salwar Kameez",
     slug: "salwar-kameez",
-    image: "/assets/threepiece-peach.png",
+    image: "",
     size: "small",
   },
   {
     id: "fc3",
     name: "Designer Kurtis",
     slug: "kurtis",
-    image: "/assets/kurti-emerald.png",
+    image: "",
     size: "small",
   },
 ];
@@ -373,14 +373,14 @@ export async function getAllProducts(): Promise<Product[]> {
     console.error("Values fetch error:", error);
     console.error(
       "Attempted URL:",
-      `${process.env.NEXT_PUBLIC_API_URL}/products?limit=100`
+      `${process.env.NEXT_PUBLIC_API_URL}/products?limit=100`,
     );
     return [];
   }
 }
 
 export async function getProductBySlug(
-  slug: string
+  slug: string,
 ): Promise<Product | undefined> {
   try {
     const res = await fetch(getApiUrl(`/products/${slug}`), {
@@ -416,7 +416,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
     (p) =>
       p.name.toLowerCase().includes(lowerQuery) ||
       p.categories.some((c) => c.name.toLowerCase().includes(lowerQuery)) ||
-      p.description.toLowerCase().includes(lowerQuery)
+      p.description.toLowerCase().includes(lowerQuery),
   );
 }
 
@@ -586,7 +586,7 @@ export async function getFooterSections(): Promise<FooterSection[]> {
 export type CollectionInfo = Collection;
 
 export async function getCollectionInfo(
-  slug: string
+  slug: string,
 ): Promise<Collection | undefined> {
   try {
     const res = await fetch(getApiUrl(`/collections/${slug}`), {
@@ -614,7 +614,7 @@ export async function getCollections(): Promise<Collection[]> {
 }
 
 export async function getProductsByCollection(
-  slug: string
+  slug: string,
 ): Promise<Product[]> {
   const collection = await getCollectionInfo(slug);
   if (!collection || !collection.products) return [];
@@ -683,7 +683,7 @@ export interface FilterMetadata {
 }
 
 export async function getFilterMetadata(
-  categorySlug?: string
+  categorySlug?: string,
 ): Promise<FilterMetadata> {
   await delay(300);
   return {
@@ -743,7 +743,7 @@ const MOCK_ORDERS: Order[] = [
         name: "Royal Blue Katan Silk",
         quantity: 1,
         price: 12500,
-        image: "/assets/saree-blue-katan.png",
+        image: "",
       },
     ],
     timeline: [
@@ -773,14 +773,14 @@ export async function getOrderById(id: string): Promise<Order | undefined> {
 }
 
 export async function subscribeToNewsletter(
-  email: string
+  email: string,
 ): Promise<{ success: boolean; message: string }> {
   await delay(1000);
   return { success: true, message: "Welcome to the circle." };
 }
 
 export async function submitContactForm(
-  data: any
+  data: any,
 ): Promise<{ success: boolean }> {
   await delay(1000);
   return { success: true };
@@ -819,7 +819,7 @@ export async function getAboutPage(): Promise<AboutPage | null> {
 }
 
 export async function getPolicyPage(
-  key: "policy_shipping" | "policy_return"
+  key: "policy_shipping" | "policy_return",
 ): Promise<PolicyPage | null> {
   try {
     const res = await fetch(getApiUrl(`/content/${key}`), {
