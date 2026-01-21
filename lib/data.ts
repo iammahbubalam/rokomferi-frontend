@@ -364,7 +364,7 @@ export async function delay(ms: number = 200) {
 export async function getAllProducts(): Promise<Product[]> {
   try {
     const res = await fetch(getApiUrl("/products?limit=100"), {
-      cache: "no-store",
+      next: { revalidate: 60 * 60 }, // 1 hour for large dumps
     });
     if (!res.ok) throw new Error("Failed to fetch products");
     const json: APIResponse<BackendProduct[]> = await res.json();
@@ -384,7 +384,7 @@ export async function getProductBySlug(
 ): Promise<Product | undefined> {
   try {
     const res = await fetch(getApiUrl(`/products/${slug}`), {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     if (!res.ok) return undefined;
     const json: BackendProduct = await res.json();
@@ -423,7 +423,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
 export async function getProductReviews(productId: string): Promise<Review[]> {
   try {
     const res = await fetch(getApiUrl(`/products/${productId}/reviews`), {
-      cache: "no-store",
+      next: { revalidate: 60 * 5 },
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -441,7 +441,7 @@ export async function getProductReviews(productId: string): Promise<Review[]> {
 export async function getHeroSlides(): Promise<HeroSlide[]> {
   try {
     const res = await fetch(getApiUrl("/content/home_hero"), {
-      cache: "no-store",
+      next: { revalidate: 300 }, // 5 mins
     }); // Use no-store for dynamic content
     if (res.ok) {
       const data = await res.json();
@@ -459,7 +459,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   try {
     const res = await fetch(getApiUrl("/categories/tree"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -488,7 +488,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
 export async function getAllActiveCategories(): Promise<CategoryNode[]> {
   try {
     const res = await fetch(getApiUrl("/categories/tree"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -514,7 +514,7 @@ export async function getAllActiveCategories(): Promise<CategoryNode[]> {
 export async function getFeaturedProducts(): Promise<Product[]> {
   try {
     const res = await fetch(getApiUrl("/products?is_featured=true&limit=6"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (!res.ok) throw new Error("Failed to fetch featured products");
     const json: APIResponse<BackendProduct[]> = await res.json();
@@ -568,7 +568,7 @@ export async function getSiteConfig(): Promise<SiteConfig> {
 export async function getFooterSections(): Promise<FooterSection[]> {
   try {
     const res = await fetch(getApiUrl("/content/home_footer"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -590,7 +590,7 @@ export async function getCollectionInfo(
 ): Promise<Collection | undefined> {
   try {
     const res = await fetch(getApiUrl(`/collections/${slug}`), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (!res.ok) return undefined;
     const collection: Collection = await res.json();
@@ -603,7 +603,9 @@ export async function getCollectionInfo(
 
 export async function getCollections(): Promise<Collection[]> {
   try {
-    const res = await fetch(getApiUrl("/collections"), { cache: "no-store" });
+    const res = await fetch(getApiUrl("/collections"), {
+      next: { revalidate: 300 },
+    });
     if (!res.ok) return [];
     const collections: Collection[] = await res.json();
     return collections;
@@ -643,7 +645,7 @@ function flattenCategories(nodes: any[]): any[] {
 export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
   try {
     const res = await fetch(getApiUrl("/categories"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const tree = await res.json();
@@ -791,7 +793,7 @@ export async function submitContactForm(
 export async function getGlobalSettings(): Promise<GlobalSettings | null> {
   try {
     const res = await fetch(getApiUrl("/content/settings_global"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -806,7 +808,7 @@ export async function getGlobalSettings(): Promise<GlobalSettings | null> {
 export async function getAboutPage(): Promise<AboutPage | null> {
   try {
     const res = await fetch(getApiUrl("/content/content_about"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -823,7 +825,7 @@ export async function getPolicyPage(
 ): Promise<PolicyPage | null> {
   try {
     const res = await fetch(getApiUrl(`/content/${key}`), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();
@@ -838,7 +840,7 @@ export async function getPolicyPage(
 export async function getFAQ(): Promise<FAQPage | null> {
   try {
     const res = await fetch(getApiUrl("/content/content_faq"), {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
     if (res.ok) {
       const data = await res.json();

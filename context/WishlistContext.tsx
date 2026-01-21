@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { getApiUrl } from "@/lib/utils";
 import { Product } from "@/types";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export interface WishlistItem {
+interface WishlistItem {
   id: string;
   productId: string;
   product: Product;
@@ -21,8 +16,8 @@ export interface WishlistItem {
 interface WishlistContextType {
   items: WishlistItem[];
   isLoading: boolean;
-  addToWishlist: (product: Product) => Promise<void>;
-  removeFromWishlist: (productId: string) => Promise<void>;
+  addToWishlist: (product: Product) => void;
+  removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
 }
 
@@ -32,51 +27,35 @@ const WishlistContext = createContext<WishlistContextType | undefined>(
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Fetch Wishlist on Mount/Login
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (user && token) {
-      fetchWishlist(token);
-    } else {
-      setItems([]);
-    }
-  }, [user]);
+  // 1. QUERY: Fetch Wishlist
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["wishlist", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return [];
 
-  const fetchWishlist = async (token: string) => {
-    setIsLoading(true);
-    try {
       const res = await fetch(getApiUrl("/wishlist"), {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (res.ok) {
         const data = await res.json();
-        setItems(data.items || []);
+        return (data.items || []) as WishlistItem[];
       }
-    } catch (error) {
-      console.error("Failed to fetch wishlist", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 min
+  });
 
-  const addToWishlist = async (product: Product) => {
-    const token = localStorage.getItem("token");
-    if (!user || !token) return;
+  // 2. MUTATION: Add
+  const addMutation = useMutation({
+    mutationFn: async (product: Product) => {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Not authenticated");
 
-    // Optimistic Update
-    const optimisticItem: WishlistItem = {
-      id: `temp-${Date.now()}`,
-      productId: product.id,
-      product: product,
-      addedAt: new Date().toISOString(),
-    };
-
-    setItems((prev) => [...prev, optimisticItem]);
-
-    try {
       const res = await fetch(getApiUrl("/wishlist"), {
         method: "POST",
         headers: {
@@ -85,34 +64,73 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({ productId: product.id }),
       });
-      if (!res.ok) {
-        throw new Error("Failed to add");
-      }
-      // Background re-fetch to ensure sync (optional but safer for IDs)
-      // fetchWishlist(token);
-    } catch (error) {
-      console.error("Failed to add to wishlist", error);
-      // Revert
-      setItems((prev) => prev.filter((item) => item.productId !== product.id));
-    }
+
+      if (!res.ok) throw new Error("Failed to add");
+    },
+    onMutate: async (product) => {
+      const key = ["wishlist", user?.id];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<WishlistItem[]>(key) || [];
+
+      // Optimistic
+      const optimisticItem: WishlistItem = {
+        id: `temp-${Date.now()}`,
+        productId: product.id,
+        product: product,
+        addedAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(key, [...previous, optimisticItem]);
+      return { previous };
+    },
+    onError: (err, product, context) => {
+      queryClient.setQueryData(["wishlist", user?.id], context?.previous);
+      console.error(err);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist", user?.id] });
+    },
+  });
+
+  const addToWishlist = (product: Product) => {
+    if (!user) return; // Or show login modal
+    addMutation.mutate(product);
   };
 
-  const removeFromWishlist = async (productId: string) => {
-    const token = localStorage.getItem("token");
-    if (!user || !token) return;
+  // 3. MUTATION: Remove
+  const removeMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Not authenticated");
 
-    // Optimistic Update
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
-
-    try {
       await fetch(getApiUrl(`/wishlist/${productId}`), {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch (error) {
-      console.error("Failed to remove from wishlist", error);
-      fetchWishlist(token); // Revert on error
-    }
+    },
+    onMutate: async (productId) => {
+      const key = ["wishlist", user?.id];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<WishlistItem[]>(key) || [];
+
+      queryClient.setQueryData(
+        key,
+        previous.filter((i) => i.product.id !== productId),
+      );
+      return { previous };
+    },
+    onError: (err, productId, context) => {
+      queryClient.setQueryData(["wishlist", user?.id], context?.previous);
+      console.error(err);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist", user?.id] });
+    },
+  });
+
+  const removeFromWishlist = (productId: string) => {
+    if (!user) return;
+    removeMutation.mutate(productId);
   };
 
   const isInWishlist = (productId: string) => {
@@ -141,3 +159,4 @@ export function useWishlist() {
   }
   return context;
 }
+export type { WishlistItem };

@@ -34,8 +34,9 @@ export async function getShopProducts(
     searchParams.set("limit", "500"); // Fetch all for filtering
     searchParams.set("page", "1");
 
+    // OPTIMIZATION: Cache this heavy fetch for 60 seconds
     const res = await fetch(getApiUrl(`/products?${searchParams.toString()}`), {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
@@ -131,7 +132,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   // This bypasses the search/filter limit of 500 items
   try {
     const res = await fetch(getApiUrl(`/product/${id}`), {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {

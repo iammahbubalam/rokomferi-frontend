@@ -38,7 +38,9 @@ export default function AdminCategoriesPage() {
     handleOutdent,
     saveChanges,
     refetch,
-  } = useAdminCategories();
+    deleteCategory,
+    updateCategory,
+  } = useAdminCategories(); // Deconstruct new actions
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -100,51 +102,16 @@ export default function AdminCategoriesPage() {
       variant: "danger",
     });
     if (!confirmed) return;
-    try {
-      await fetch(getApiUrl(`/admin/categories/${id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      refetch();
-    } catch (e) {
-      console.error("Delete failed:", e);
-    }
+
+    await deleteCategory(id);
   };
 
   const handleToggleActive = async (id: string, value: boolean) => {
-    try {
-      const category = items.find((c) => c.id === id);
-      if (!category) return;
-      await fetch(getApiUrl(`/admin/categories/${id}`), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ ...category, isActive: value }),
-      });
-      refetch();
-    } catch (e) {
-      console.error("Toggle failed:", e);
-    }
+    await updateCategory(id, { isActive: value });
   };
 
   const handleToggleNav = async (id: string, value: boolean) => {
-    try {
-      const category = items.find((c) => c.id === id);
-      if (!category) return;
-      await fetch(getApiUrl(`/admin/categories/${id}`), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ ...category, showInNav: value }),
-      });
-      refetch();
-    } catch (e) {
-      console.error("Toggle failed:", e);
-    }
+    await updateCategory(id, { showInNav: value });
   };
 
   const handleSave = async () => {

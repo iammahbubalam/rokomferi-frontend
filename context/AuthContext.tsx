@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { createContext, useContext } from "react";
+import { useRouter } from "next/navigation";
 import { getApiUrl } from "@/lib/utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface User {
   id: string;
@@ -29,55 +30,48 @@ export function AuthContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  console.log("AuthContextProvider Rendering"); // DEBUG
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
+  const queryClient = useQueryClient();
 
-  const fetchUser = async () => {
-    // Only fetch if token exists (simple check, full verification happens on backend)
-    // We check cookie or localStorage. Using localStorage for simplicity as per GoogleButton.
-    // Ideally use cookies for middleware, but let's stick to the established pattern.
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      // Safe check for window/localStorage
+      if (typeof window === "undefined") return null;
 
-    try {
-      const res = await fetch(getApiUrl("/auth/me"), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = localStorage.getItem("token");
+      if (!token) return null;
 
-      if (res.ok) {
-        const userData = await res.json();
-        // Backend returns role, set isAdmin based on role
-        setUser({
-          ...userData,
-          isAdmin: userData.role === "admin",
+      try {
+        const res = await fetch(getApiUrl("/auth/me"), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-      } else {
-        // Token invalid/expired
-        localStorage.removeItem("token");
-        setUser(null);
-      }
-    } catch (error) {
-      console.error("Failed to fetch user:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
+        if (res.ok) {
+          const userData = await res.json();
+          return {
+            ...userData,
+            isAdmin: userData.role === "admin",
+          };
+        } else {
+          // Token invalid/expired
+          localStorage.removeItem("token");
+          return null;
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+        return null;
+      }
+    },
+    // Don't retry on auth failure (usually means 401/403)
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
 
   const logout = async () => {
     try {
-      // Optional: Call backend logout
       const token = localStorage.getItem("token");
       if (token) {
         await fetch(getApiUrl("/auth/logout"), {
@@ -95,14 +89,25 @@ export function AuthContextProvider({
     document.cookie =
       "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
 
-    setUser(null);
+    // Update query cache instantly
+    queryClient.setQueryData(["user"], null);
+
+    // Clear other user-related queries
+    queryClient.removeQueries({ queryKey: ["cart"] });
+    queryClient.removeQueries({ queryKey: ["wishlist"] });
+
     router.push("/");
     router.refresh();
   };
 
+  const refreshUser = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["user"] });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, logout, refreshUser: fetchUser }}
+      // user defaults to undefined during loading in react-query, force null if undefined
+      value={{ user: user ?? null, isLoading, logout, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

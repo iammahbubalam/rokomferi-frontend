@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import {
   Image as ImageIcon,
@@ -35,93 +36,73 @@ interface ContentMeta {
 
 export default function ContentPage() {
   const [activeEditor, setActiveEditor] = useState<ContentType>(null);
-  const [loading, setLoading] = useState(true);
-  const [meta, setMeta] = useState<Record<string, ContentMeta>>({});
 
-  useEffect(() => {
-    async function fetchMeta() {
-      try {
-        const [
-          heroRes,
-          footerRes,
-          aboutRes,
-          shippingRes,
-          returnRes,
-          globalRes,
-        ] = await Promise.all([
-          fetch(getApiUrl("/content/home_hero"), { cache: "no-store" }),
-          fetch(getApiUrl("/content/home_footer"), { cache: "no-store" }),
-          fetch(getApiUrl("/content/content_about"), { cache: "no-store" }),
-          fetch(getApiUrl("/content/policy_shipping"), { cache: "no-store" }),
-          fetch(getApiUrl("/content/policy_return"), { cache: "no-store" }),
-          fetch(getApiUrl("/content/settings_global"), { cache: "no-store" }),
+  const fetchContentMeta = async (path: string) => {
+    try {
+      const res = await fetch(getApiUrl(path));
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  };
+
+  const { data: meta = {}, isLoading: loading } = useQuery({
+    queryKey: ["admin_content_meta"],
+    queryFn: async () => {
+      const [hero, footer, about, shipping, returns, global_settings] =
+        await Promise.all([
+          fetchContentMeta("/content/home_hero"),
+          fetchContentMeta("/content/home_footer"),
+          fetchContentMeta("/content/content_about"),
+          fetchContentMeta("/content/policy_shipping"),
+          fetchContentMeta("/content/policy_return"),
+          fetchContentMeta("/content/settings_global"),
         ]);
 
-        const newMeta: Record<string, ContentMeta> = {};
+      const newMeta: Record<string, ContentMeta> = {};
 
-        if (heroRes.ok) {
-          const data = await heroRes.json();
-          newMeta["hero"] = {
-            key: "home_hero",
-            updatedAt: data.updatedAt,
-            itemCount: data.content?.slides?.length || 0,
-          };
-        }
+      if (hero)
+        newMeta["hero"] = {
+          key: "home_hero",
+          updatedAt: hero.updatedAt,
+          itemCount: hero.content?.slides?.length || 0,
+        };
+      if (footer)
+        newMeta["footer"] = {
+          key: "home_footer",
+          updatedAt: footer.updatedAt,
+          itemCount: footer.content?.sections?.length || 0,
+        };
+      if (about)
+        newMeta["about"] = {
+          key: "content_about",
+          updatedAt: about.updatedAt,
+          itemCount: about.content?.blocks?.length || 0,
+        };
+      if (shipping)
+        newMeta["shipping"] = {
+          key: "policy_shipping",
+          updatedAt: shipping.updatedAt,
+          itemCount: shipping.content?.sections?.length || 0,
+        };
+      if (returns)
+        newMeta["return"] = {
+          key: "policy_return",
+          updatedAt: returns.updatedAt,
+          itemCount: returns.content?.sections?.length || 0,
+        };
+      if (global_settings)
+        newMeta["global"] = {
+          key: "settings_global",
+          updatedAt: global_settings.updatedAt,
+          itemCount: 4,
+        };
 
-        if (footerRes.ok) {
-          const data = await footerRes.json();
-          newMeta["footer"] = {
-            key: "home_footer",
-            updatedAt: data.updatedAt,
-            itemCount: data.content?.sections?.length || 0,
-          };
-        }
-
-        if (aboutRes.ok) {
-          const data = await aboutRes.json();
-          newMeta["about"] = {
-            key: "content_about",
-            updatedAt: data.updatedAt,
-            itemCount: data.content?.blocks?.length || 0,
-          };
-        }
-
-        if (shippingRes.ok) {
-          const data = await shippingRes.json();
-          newMeta["shipping"] = {
-            key: "policy_shipping",
-            updatedAt: data.updatedAt,
-            itemCount: data.content?.sections?.length || 0,
-          };
-        }
-
-        if (returnRes.ok) {
-          const data = await returnRes.json();
-          newMeta["return"] = {
-            key: "policy_return",
-            updatedAt: data.updatedAt,
-            itemCount: data.content?.sections?.length || 0,
-          };
-        }
-
-        if (globalRes.ok) {
-          const data = await globalRes.json();
-          newMeta["global"] = {
-            key: "settings_global",
-            updatedAt: data.updatedAt,
-            itemCount: 4,
-          };
-        }
-
-        setMeta(newMeta);
-      } catch (e) {
-        console.error("Failed to fetch content metadata", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchMeta();
-  }, [activeEditor]);
+      return newMeta;
+    },
+    staleTime: 60 * 1000,
+  });
 
   const sections = [
     {
@@ -252,7 +233,7 @@ export default function ContentPage() {
                             Updated{" "}
                             {format(
                               new Date(sectionMeta.updatedAt),
-                              "MMM d, yyyy • h:mm a"
+                              "MMM d, yyyy • h:mm a",
                             )}
                           </div>
                         )}

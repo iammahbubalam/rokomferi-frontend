@@ -64,6 +64,7 @@ import { AuthContextProvider } from "@/context/AuthContext";
 
 import { WishlistProvider } from "@/context/WishlistContext";
 import { DialogProvider } from "@/context/DialogContext";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 export default async function RootLayout({
   children,
@@ -84,33 +85,35 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
-        <AuthContextProvider>
-          <GoogleAuthProvider>
-            <DialogProvider>
-              <IntroProvider>
-                <IntroOverlay />
-                <CartProvider>
-                  <WishlistProvider>
-                    <Navbar
-                      categories={categories}
-                      collections={collections}
-                      siteConfig={siteConfig}
-                    />
-                    <main className="flex-grow pt-[88px] md:pt-[104px]">
-                      {/* pt to offset fixed header height approx */}
-                      {children}
-                    </main>
-                    <Footer
-                      siteConfig={siteConfig}
-                      footerSections={footerSections}
-                    />
-                    <CartDrawer />
-                  </WishlistProvider>
-                </CartProvider>
-              </IntroProvider>
-            </DialogProvider>
-          </GoogleAuthProvider>
-        </AuthContextProvider>
+        <QueryProvider>
+          <AuthContextProvider>
+            <GoogleAuthProvider>
+              <DialogProvider>
+                <IntroProvider>
+                  <IntroOverlay />
+                  <CartProvider>
+                    <WishlistProvider>
+                      <Navbar
+                        categories={categories}
+                        collections={collections}
+                        siteConfig={siteConfig}
+                      />
+                      <main className="flex-grow pt-[88px] md:pt-[104px]">
+                        {/* pt to offset fixed header height approx */}
+                        {children}
+                      </main>
+                      <Footer
+                        siteConfig={siteConfig}
+                        footerSections={footerSections}
+                      />
+                      <CartDrawer />
+                    </WishlistProvider>
+                  </CartProvider>
+                </IntroProvider>
+              </DialogProvider>
+            </GoogleAuthProvider>
+          </AuthContextProvider>
+        </QueryProvider>
       </body>
     </html>
   );

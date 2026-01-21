@@ -31,20 +31,49 @@ export interface UseCheckoutFlowResult {
   clearCart: () => void;
 }
 
-export function useCheckoutFlow(): UseCheckoutFlowResult {
+export function useCheckoutFlow(
+  initialProduct?: Product | null,
+  initialQuantity: number = 1,
+): UseCheckoutFlowResult {
   const searchParams = useSearchParams();
   const { items: cartItems, total: cartTotal, clearCart } = useCart();
 
   // Initial State Derivation
+  // Use searchParams to determine mode, but prefer payload if present
   const isDirect = searchParams.get("type") === "direct";
 
-  const [state, setState] = useState<CheckoutState>({
-    status: "initializing",
-    mode: isDirect ? "direct" : "cart",
-    items: [],
-    total: 0,
-    isDirectLoading: isDirect, // Start true if direct
-    error: undefined,
+  // If we have initialProduct, we can start as READY immediately
+  const hasInitialData = isDirect && !!initialProduct;
+
+  const [state, setState] = useState<CheckoutState>(() => {
+    if (hasInitialData && initialProduct) {
+      const directItem: CartItem = {
+        ...initialProduct,
+        quantity: initialQuantity,
+      };
+      const directTotal =
+        (initialProduct.salePrice &&
+        initialProduct.salePrice < initialProduct.basePrice
+          ? initialProduct.salePrice
+          : initialProduct.basePrice) * initialQuantity;
+      return {
+        status: "ready",
+        mode: "direct",
+        items: [directItem],
+        total: directTotal,
+        isDirectLoading: false,
+        error: undefined,
+      };
+    }
+
+    return {
+      status: "initializing",
+      mode: isDirect ? "direct" : "cart",
+      items: [],
+      total: 0,
+      isDirectLoading: isDirect, // Start true if direct and no initial data
+      error: undefined,
+    };
   });
 
   // State Machine Trigger
@@ -52,7 +81,14 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
     let isMounted = true;
 
     async function initialize() {
-      // 1. DIRECT MODE
+      // 1. DATA ALREADY LOADED (Server Component)
+      if (hasInitialData) {
+        // Already initialized in useState, but we should sync if props change?
+        // For now assumption is initialData is static for the render
+        return;
+      }
+
+      // 2. DIRECT MODE (Client Fetch Fallback)
       if (isDirect) {
         const productId = searchParams.get("productId");
         const qty = parseInt(searchParams.get("quantity") || "1");
@@ -109,7 +145,7 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
 
             setState((prev) => ({
               ...prev,
-              status: "ready", // State Machine Transition -> READY
+              status: "ready",
               isDirectLoading: false,
               items: [directItem],
               total: directTotal,
@@ -129,12 +165,8 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
           }
         }
       }
-      // 2. CART MODE
+      // 3. CART MODE
       else {
-        // Just sync with CartContext, but wrapper in effect to be consistent
-        // We only transition to READY here. Empty check happens in UI or can be an error state.
-        // For now, let's keep it READY so the UI can show "Empty Bag" message naturally.
-
         setState((prev) => ({
           ...prev,
           status: "ready",
@@ -152,7 +184,7 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
     return () => {
       isMounted = false;
     };
-  }, [isDirect, searchParams, cartItems, cartTotal]);
+  }, [isDirect, searchParams, cartItems, cartTotal, hasInitialData]);
 
   const refresh = () => {
     // Logic to re-trigger initialization if needed

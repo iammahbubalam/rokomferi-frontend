@@ -5,15 +5,15 @@ import {
   useContext,
   useState,
   useEffect,
-  useRef,
   ReactNode,
 } from "react";
 import { Product } from "@/types";
 import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "./AuthContext";
 import { useDialog } from "./DialogContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export interface CartItem extends Product {
+interface CartItem extends Product {
   quantity: number;
 }
 
@@ -33,271 +33,268 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const dialog = useDialog();
-  const [items, setItems] = useState<CartItem[]>([]);
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Sync Logic with Cart Merge on Login
-  useEffect(() => {
-    if (!isClient) return;
-
-    if (user) {
-      // Authenticated: Merge guest cart with server cart
-      mergeAndSyncCart();
-    } else {
-      // Guest: Load from Local Storage
-      const saved = localStorage.getItem("rokomferi-cart");
-      if (saved) {
-        try {
-          setItems(JSON.parse(saved));
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        setItems([]);
+  // 1. QUERY: Fetch Cart (Guest from LS, User from API)
+  const { data: items = [] } = useQuery({
+    queryKey: ["cart", user?.id || "guest"],
+    queryFn: async () => {
+      // GUEST MODE
+      if (!user) {
+        if (typeof window === "undefined") return [];
+        const saved = localStorage.getItem("rokomferi-cart");
+        return saved ? (JSON.parse(saved) as CartItem[]) : [];
       }
-    }
-  }, [user, isClient]);
 
-  // Guest: Save to Local Storage
-  useEffect(() => {
-    if (!user && isClient) {
-      localStorage.setItem("rokomferi-cart", JSON.stringify(items));
-    }
-  }, [items, user, isClient]);
-
-  // Merge guest cart with server cart on login
-  const mergeAndSyncCart = async () => {
-    try {
+      // USER MODE
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) return [];
 
-      // 1. Get guest cart from localStorage
-      const guestCartRaw = localStorage.getItem("rokomferi-cart");
-      const guestItems: CartItem[] = guestCartRaw
-        ? JSON.parse(guestCartRaw)
-        : [];
-
-      // 2. If guest cart has items, sync them to server
-      if (guestItems.length > 0) {
-        // Add each guest item to server cart
-        for (const item of guestItems) {
-          await fetch(getApiUrl("/cart"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              productId: item.id,
-              quantity: item.quantity,
-            }),
-          });
-        }
-        // Clear guest cart after merge
-        localStorage.removeItem("rokomferi-cart");
-      }
-
-      // 3. Fetch merged cart from server
       const res = await fetch(getApiUrl("/cart"), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.items) {
-          const mappedItems = data.items.map((i: any) => ({
-            ...i.product,
-            quantity: i.quantity,
-          }));
-          setItems(mappedItems);
-        } else {
-          setItems([]);
-        }
+      if (!res.ok) {
+        return [];
       }
-    } catch (error) {
-      console.error("Failed to merge/fetch cart", error);
-    }
-  };
 
-  // Pending Adds Ref (to prevent race conditions)
-  const pendingAdds = useRef<Record<string, Promise<void>>>({});
+      const data = await res.json();
+      if (data.items) {
+        return data.items.map((i: any) => ({
+          ...i.product,
+          quantity: i.quantity,
+        })) as CartItem[];
+      }
+      return [];
+    },
+    // Guest cart doesn't change from outside, User cart might
+    staleTime: user ? 1000 * 60 : Infinity,
+  });
+
+  // 2. MUTATION: Add to Cart
+  const addMutation = useMutation({
+    mutationFn: async (product: Product) => {
+      // GUEST
+      if (!user) {
+        const current =
+          queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
+        const existing = current.find((i) => i.id === product.id);
+        const newItem = existing
+          ? { ...existing, quantity: existing.quantity + 1 }
+          : { ...product, quantity: 1 };
+
+        const newItems = existing
+          ? current.map((i) => (i.id === product.id ? newItem : i))
+          : [...current, newItem];
+
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
+        return newItems;
+      }
+
+      // USER
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl("/cart"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+      });
+      if (!res.ok) throw new Error("Failed to add");
+      return null;
+    },
+    onMutate: async (product) => {
+      // Optimistic Update
+      const key = ["cart", user?.id || "guest"];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CartItem[]>(key) || [];
+
+      const existing = previous.find((i) => i.id === product.id);
+      const optimistic = existing
+        ? previous.map((i) =>
+            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
+          )
+        : [...previous, { ...product, quantity: 1 }];
+
+      queryClient.setQueryData(key, optimistic);
+      return { previous };
+    },
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(
+        ["cart", user?.id || "guest"],
+        context?.previous,
+      );
+      dialog.toast({ message: "Failed to add to cart", variant: "danger" });
+    },
+    onSettled: () => {
+      // Re-fetch to confirm server state
+      if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+      else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+      dialog.toast({ message: "Added to cart!", variant: "success" });
+    },
+  });
 
   const addToCart = (product: Product) => {
-    // Store previous state for potential rollback
-    const previousItems = [...items];
+    addMutation.mutate(product);
+  };
 
-    // OPTIMISTIC UPDATE: Update UI immediately
-    setItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
+  // 3. MUTATION: Remove
+  const removeMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      if (!user) {
+        const current =
+          queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
+        const newItems = current.filter((i) => i.id !== productId);
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      await fetch(getApiUrl(`/cart/${productId}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    },
+    onMutate: async (productId) => {
+      const key = ["cart", user?.id || "guest"];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CartItem[]>(key) || [];
+      queryClient.setQueryData(
+        key,
+        previous.filter((i) => i.id !== productId),
+      );
+      return { previous };
+    },
+    onError: (err, productId, context) => {
+      queryClient.setQueryData(
+        ["cart", user?.id || "guest"],
+        context?.previous,
+      );
+      dialog.toast({ message: "Failed to remove item", variant: "danger" });
+    },
+    onSettled: () => {
+      if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+      else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+    },
+  });
+
+  const removeFromCart = (productId: string) =>
+    removeMutation.mutate(productId);
+
+  // 4. MUTATION: Update Quantity
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
+      if (!user) {
+        const current =
+          queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
+        const newItems = current.map((i) =>
+          i.id === id ? { ...i, quantity } : i,
         );
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
+        return;
       }
-      return [...prev, { ...product, quantity: 1 }];
-    });
 
-    // BACKGROUND SYNC with ROLLBACK on failure
-    if (user) {
       const token = localStorage.getItem("token");
-      if (token) {
-        // Create the promise
-        const addPromise = fetch(getApiUrl("/cart"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId: product.id, quantity: 1 }),
-        })
-          .then((res) => {
-            if (!res.ok) {
-              throw new Error("Server rejected cart update");
-            }
-            // Success toast
-            dialog.toast({ message: "Added to cart!", variant: "success" });
-          })
-          .catch((error) => {
-            console.error("Cart sync failed, rolling back:", error);
-            // ROLLBACK: Revert to previous state
-            setItems(previousItems);
-            // Error toast
-            dialog.toast({
-              message: "Failed to add to cart",
-              variant: "danger",
-            });
-          })
-          .finally(() => {
-            // Cleanup pending promise
-            delete pendingAdds.current[product.id];
-          });
-
-        // Store the promise
-        pendingAdds.current[product.id] = addPromise;
-      }
-    }
-  };
-
-  const removeFromCart = (productId: string) => {
-    if (!productId) return;
-
-    // 1. Store previous state for rollback
-    const previousItems = [...items];
-
-    // 2. OPTIMISTIC UPDATE: Remove immediately
-    setItems((prev) => prev.filter((item) => item.id !== productId));
-
-    // 3. BACKGROUND SYNC
-    if (user) {
-      const token = localStorage.getItem("token");
-      if (token) {
-        fetch(getApiUrl(`/cart/${productId}`), {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("Remove failed");
-          })
-          .catch((error) => {
-            console.error("Remove failed, rolling back", error);
-            setItems(previousItems); // Rollback
-            dialog.toast({
-              message: "Failed to remove item",
-              variant: "danger",
-            });
-          });
-      }
-    }
-  };
-
-  // Debounce Ref
-  const updateTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+      await fetch(getApiUrl("/cart"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: id, quantity }),
+      });
+    },
+    onMutate: async ({ id, quantity }) => {
+      const key = ["cart", user?.id || "guest"];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CartItem[]>(key) || [];
+      queryClient.setQueryData(
+        key,
+        previous.map((i) => (i.id === id ? { ...i, quantity } : i)),
+      );
+      return { previous };
+    },
+    onError: (err, vars, context) => {
+      queryClient.setQueryData(
+        ["cart", user?.id || "guest"],
+        context?.previous,
+      );
+      dialog.toast({ message: "Failed to update quantity", variant: "danger" });
+    },
+    onSettled: () => {
+      if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+      else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+    },
+  });
 
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(productId);
       return;
     }
+    updateMutation.mutate({ id: productId, quantity });
+  };
 
-    // Clear existing timeout
-    if (updateTimeouts.current[productId]) {
-      clearTimeout(updateTimeouts.current[productId]);
-    }
-
-    // Capture state for rollback
-    const previousItems = [...items];
-
-    // OPTIMISTIC UPDATE
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item,
-      ),
-    );
-
-    // DEBOUNCED SYNC
-    if (user) {
-      updateTimeouts.current[productId] = setTimeout(async () => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        try {
-          const res = await fetch(getApiUrl("/cart"), {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ productId, quantity }),
-          });
-
-          if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.message || "Failed to update quantity");
-          }
-
-          // Success - cart is already updated optimistically
-        } catch (error) {
-          console.error("Update failed, rolling back", error);
-          // Rollback
-          setItems((currentItems) => {
-            const originalItem = previousItems.find((i) => i.id === productId);
-            if (!originalItem) return currentItems;
-            return currentItems.map((item) =>
-              item.id === productId ? originalItem : item,
-            );
-          });
-
-          // Show error toast
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : "Failed to update quantity";
-          dialog.toast({ message: errorMessage, variant: "danger" });
-        } finally {
-          delete updateTimeouts.current[productId];
-        }
-      }, 1000); // 1 second debounce for smoother UX
+  const clearCart = () => {
+    // Basic clear impl
+    if (!user) {
+      localStorage.removeItem("rokomferi-cart");
+      queryClient.setQueryData(["cart", "guest"], []);
+    } else {
+      // If backend has clear endpoint, call it. Otherwise local state reset + maybe loop delete?
+      // Assuming for now just cleaning state primarily or logout scenario
+      queryClient.setQueryData(["cart", user.id], []);
     }
   };
 
   const toggleCart = () => setIsOpen((prev) => !prev);
 
-  const clearCart = () => {
-    setItems([]);
-    localStorage.removeItem("rokomferi-cart");
-  };
-
   const total = items.reduce((sum, item) => {
     const price = item.salePrice || item.basePrice;
     return sum + price * item.quantity;
   }, 0);
+
+  // 5. MERGE LOGIC (Effect)
+  useEffect(() => {
+    if (user) {
+      const guestCartRaw = localStorage.getItem("rokomferi-cart");
+      if (guestCartRaw) {
+        const guestItems: CartItem[] = JSON.parse(guestCartRaw);
+        if (guestItems.length > 0) {
+          // Perform Merge
+          const token = localStorage.getItem("token");
+          Promise.all(
+            guestItems.map((item) =>
+              fetch(getApiUrl("/cart"), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  productId: item.id,
+                  quantity: item.quantity,
+                }),
+              }),
+            ),
+          )
+            .then(() => {
+              // Clear guest cart
+              localStorage.removeItem("rokomferi-cart");
+              // Invalidate to fetch merged server state
+              queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+              dialog.toast({
+                message: "Cart merged from previous session",
+                variant: "info",
+              });
+            })
+            .catch(console.error);
+        }
+      }
+    }
+  }, [user, queryClient, dialog]);
 
   return (
     <CartContext.Provider
@@ -324,3 +321,4 @@ export function useCart() {
   }
   return context;
 }
+export type { CartItem };
