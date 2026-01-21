@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { getApiUrl } from "@/lib/utils";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface AnnouncementData {
   message: string;
@@ -15,30 +13,19 @@ interface AnnouncementData {
 }
 
 /**
- * AnnouncementBar - Site-wide promotional banner
- * L9: Renders above header, dismissible, respects server-side scheduling
+ * AnnouncementTicker - News channel style scrolling text bar
+ * L9: Renders below hero section, text scrolls continuously, pauses on hover
  */
-export function AnnouncementBar() {
-  const [announcement, setAnnouncement] = useState<AnnouncementData | null>(
-    null,
-  );
-  const [isDismissed, setIsDismissed] = useState(false);
+export function AnnouncementTicker() {
+  const [announcement, setAnnouncement] = useState<AnnouncementData | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    // Check if already dismissed in this session
-    const dismissed = sessionStorage.getItem("announcement_dismissed");
-    if (dismissed === "true") {
-      setIsDismissed(true);
-      return;
-    }
-
-    // Fetch active announcement
     const fetchAnnouncement = async () => {
       try {
         const res = await fetch(getApiUrl("/content/announcement_bar"));
         if (res.ok) {
           const data = await res.json();
-          // Only show if isActive is true (server-side check already done)
           if (data.isActive && data.content?.message) {
             setAnnouncement({
               message: data.content.message,
@@ -50,7 +37,6 @@ export function AnnouncementBar() {
           }
         }
       } catch (err) {
-        // Fail silently - announcement is non-critical
         console.debug("Failed to fetch announcement:", err);
       }
     };
@@ -58,55 +44,62 @@ export function AnnouncementBar() {
     fetchAnnouncement();
   }, []);
 
-  const handleDismiss = () => {
-    setIsDismissed(true);
-    sessionStorage.setItem("announcement_dismissed", "true");
-  };
+  if (!announcement) return null;
 
-  // Don't render if dismissed or no announcement
-  if (isDismissed || !announcement) return null;
-
+  // Create repeated text for seamless scrolling
+  const tickerContent = `${announcement.message} ${announcement.linkText ? `— ${announcement.linkText}` : ""} ★ `;
+  
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: "auto", opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="relative"
+    <div
+      className="relative overflow-hidden py-2.5"
+      style={{
+        backgroundColor: announcement.backgroundColor,
+        color: announcement.textColor,
+      }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* L9: Marquee effect using CSS animation */}
+      <div
+        className={`flex whitespace-nowrap ${isPaused ? "animate-pause" : "animate-marquee"}`}
         style={{
-          backgroundColor: announcement.backgroundColor,
-          color: announcement.textColor,
+          animation: isPaused ? "none" : "marquee 30s linear infinite",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center">
-          <p className="text-sm font-medium text-center pr-8">
-            {announcement.message}
+        {/* Repeat content multiple times for seamless loop */}
+        {[...Array(10)].map((_, i) => (
+          <span key={i} className="inline-flex items-center gap-4 mx-4">
+            <span className="text-sm font-medium tracking-wide">
+              {announcement.message}
+            </span>
             {announcement.linkText && announcement.linkUrl && (
-              <>
-                {" "}
-                <Link
-                  href={announcement.linkUrl}
-                  className="underline hover:no-underline font-semibold ml-1 transition-colors"
-                  style={{ color: announcement.textColor }}
-                >
-                  {announcement.linkText}
-                </Link>
-              </>
+              <Link
+                href={announcement.linkUrl}
+                className="text-sm font-semibold underline hover:no-underline transition-colors"
+                style={{ color: announcement.textColor }}
+              >
+                {announcement.linkText}
+              </Link>
             )}
-          </p>
+            <span className="text-xs opacity-50">★</span>
+          </span>
+        ))}
+      </div>
 
-          {/* Dismiss Button */}
-          <button
-            onClick={handleDismiss}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-white/10 transition-colors"
-            aria-label="Dismiss announcement"
-            style={{ color: announcement.textColor }}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      {/* CSS for marquee animation */}
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+        }
+      `}</style>
+    </div>
   );
 }

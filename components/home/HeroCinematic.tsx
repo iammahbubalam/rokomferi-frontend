@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { HeroSlide } from "@/lib/data";
 import { useIntro } from "@/context/IntroContext";
+import { AnnouncementTicker } from "@/components/layout/AnnouncementBar";
 
 interface HeroCinematicProps {
   slides: HeroSlide[];
@@ -38,7 +39,8 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
   if (!slides || slides.length === 0) return null;
 
   return (
-    <section className="relative h-[100dvh] w-full overflow-hidden bg-primary">
+    // L9: Hero fits viewport exactly, accounting for navbar offset in main
+    <section className="relative h-[calc(100dvh-88px)] md:h-[calc(100dvh-104px)] w-full overflow-hidden bg-primary">
       {/* Background Images with Ken Burns Effect */}
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -127,7 +129,7 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
       </div>
 
       {/* Footer Navigation */}
-      <div className="absolute bottom-10 left-0 right-0 z-20 px-10 flex justify-between items-end">
+      <div className="absolute bottom-16 left-0 right-0 z-20 px-10 flex justify-between items-end">
         {/* Progress Bar Indicators */}
         <div className="flex gap-4">
           {slides.map((_, idx) => (
@@ -155,6 +157,11 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
             Scroll
           </span>
         </div>
+      </div>
+
+      {/* L9: News Ticker at bottom of hero - overlaid */}
+      <div className="absolute bottom-0 left-0 right-0 z-30">
+        <AnnouncementTicker />
       </div>
     </section>
   );

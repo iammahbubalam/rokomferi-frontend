@@ -23,7 +23,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
-      {/* SECTION 1: Hero Slider */}
+      {/* SECTION 1: Hero Slider (includes announcement ticker) */}
       <HeroCinematic slides={slides} />
 
       {/* SECTION 2: Shop by Category */}
