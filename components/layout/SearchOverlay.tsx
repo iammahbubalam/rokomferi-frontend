@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Loader2 } from "lucide-react";
-import { searchProducts } from "@/lib/data";
-import { Product } from "@/types";
+import { searchAPI, SearchProduct } from "@/lib/api/search";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -16,7 +15,7 @@ export function SearchOverlay({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Product[]>([]);
+  const [results, setResults] = useState<SearchProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +38,8 @@ export function SearchOverlay({
       if (query.trim().length > 1) {
         setIsLoading(true);
         try {
-          const data = await searchProducts(query);
-          setResults(data);
+          const response = await searchAPI.search(query);
+          setResults(response.data);
         } catch (error) {
           console.error("Search failed", error);
         } finally {
@@ -150,8 +149,7 @@ export function SearchOverlay({
                                   {product.name}
                                 </h4>
                                 <p className="text-sm text-primary/50 truncate">
-                                  {product.categories?.[0]?.name ||
-                                    "Collection"}
+                                  Product
                                 </p>
                               </div>
 
