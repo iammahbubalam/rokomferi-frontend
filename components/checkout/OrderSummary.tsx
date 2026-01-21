@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/Button";
 import { CartItem } from "@/context/CartContext";
 import { Minus, Plus, ShieldCheck, Truck } from "lucide-react";
 import Image from "next/image";
+import { CouponInput } from "@/components/cart/CouponInput";
 
 interface OrderSummaryProps {
   items: CartItem[];
-  total: number;
+  subtotal: number;
+  discountAmount: number;
+  couponCode: string | null;
+  grandTotal: number;
   deliveryLocation: string;
   shippingCost: number;
   onCheckout?: () => void;
@@ -18,7 +22,10 @@ interface OrderSummaryProps {
 
 export function OrderSummary({
   items,
-  total,
+  subtotal,
+  discountAmount,
+  couponCode,
+  grandTotal,
   deliveryLocation,
   shippingCost,
   onCheckout,
@@ -26,7 +33,8 @@ export function OrderSummary({
   isFormValid = false,
   onUpdateQuantity,
 }: OrderSummaryProps) {
-  const grandTotal = total + shippingCost;
+  // L9: Final total includes shipping
+  const finalTotal = grandTotal + shippingCost;
 
   return (
     <div className="bg-white p-8 lg:p-10 shadow-xl border border-primary/5 transition-all hover:shadow-2xl">
@@ -53,8 +61,6 @@ export function OrderSummary({
                 <h4 className="font-serif text-base leading-tight">
                   {item.name}
                 </h4>
-                {/* Optional: Add Variant here if available */}
-                {/* <p className="text-xs text-secondary mt-1">Size: M</p> */}
               </div>
 
               <div className="flex justify-between items-end mt-2">
@@ -90,12 +96,26 @@ export function OrderSummary({
         ))}
       </div>
 
+      {/* L9: COUPON INPUT */}
+      <div className="mb-6 pb-6 border-b border-primary/10">
+        <CouponInput />
+      </div>
+
       {/* PRICE BREAKDOWN */}
       <div className="space-y-4 py-6 border-t border-primary/10 text-sm">
         <div className="flex justify-between text-secondary">
           <span>Subtotal</span>
-          <span>৳{total.toLocaleString()}</span>
+          <span>৳{subtotal.toLocaleString()}</span>
         </div>
+
+        {/* L9: Discount line (conditional) */}
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-green-700 font-medium">
+            <span>Discount {couponCode && `(${couponCode})`}</span>
+            <span>-৳{discountAmount.toLocaleString()}</span>
+          </div>
+        )}
+
         <div className="flex justify-between text-secondary items-center">
           <span>Shipping</span>
           <span className="text-xs text-secondary/60">
@@ -112,7 +132,7 @@ export function OrderSummary({
         <span className="font-bold text-primary">Total</span>
         <div className="text-right">
           <span className="block font-bold text-lg md:text-xl">
-            ৳{grandTotal.toLocaleString()}
+            ৳{finalTotal.toLocaleString()}
           </span>
           <span className="text-[10px] text-secondary/70 font-sans font-normal block mt-1">
             Including VAT

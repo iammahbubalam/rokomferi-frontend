@@ -17,6 +17,7 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+// L9: Extended interface for coupon support
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
@@ -25,7 +26,15 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
-  total: number;
+  // Pricing
+  subtotal: number;
+  discountAmount: number;
+  couponCode: string | null;
+  grandTotal: number;
+  // Coupon actions
+  applyCoupon: (code: string) => Promise<boolean>;
+  removeCoupon: () => void;
+  isCouponLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,6 +44,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const dialog = useDialog();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+
+  // L9: Coupon state management
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
 
   // 1. QUERY: Fetch Cart (Guest from LS, User from API)
   const { data: items = [] } = useQuery({
@@ -68,14 +82,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [];
     },
-    // Guest cart doesn't change from outside, User cart might
     staleTime: user ? 1000 * 60 : Infinity,
   });
 
   // 2. MUTATION: Add to Cart
   const addMutation = useMutation({
     mutationFn: async (product: Product) => {
-      // GUEST
       if (!user) {
         const current =
           queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
@@ -92,7 +104,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return newItems;
       }
 
-      // USER
       const token = localStorage.getItem("token");
       const res = await fetch(getApiUrl("/cart"), {
         method: "POST",
@@ -106,7 +117,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return null;
     },
     onMutate: async (product) => {
-      // Optimistic Update
       const key = ["cart", user?.id || "guest"];
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<CartItem[]>(key) || [];
@@ -129,7 +139,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       dialog.toast({ message: "Failed to add to cart", variant: "danger" });
     },
     onSettled: () => {
-      // Re-fetch to confirm server state
       if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
       dialog.toast({ message: "Added to cart!", variant: "success" });
@@ -238,23 +247,93 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const clearCart = () => {
-    // Basic clear impl
+    // L9: Reset coupon state on cart clear
+    setCouponCode(null);
+    setDiscountAmount(0);
     if (!user) {
       localStorage.removeItem("rokomferi-cart");
       queryClient.setQueryData(["cart", "guest"], []);
     } else {
-      // If backend has clear endpoint, call it. Otherwise local state reset + maybe loop delete?
-      // Assuming for now just cleaning state primarily or logout scenario
       queryClient.setQueryData(["cart", user.id], []);
     }
   };
 
   const toggleCart = () => setIsOpen((prev) => !prev);
 
-  const total = items.reduce((sum, item) => {
+  // L9: Calculate subtotal
+  const subtotal = items.reduce((sum, item) => {
     const price = item.salePrice || item.basePrice;
     return sum + price * item.quantity;
   }, 0);
+
+  // L9: Calculate grandTotal with discount capping
+  let grandTotal = subtotal - discountAmount;
+  if (grandTotal < 0) grandTotal = 0;
+
+  // L9: Coupon application with backend validation
+  const applyCoupon = async (code: string): Promise<boolean> => {
+    if (!user) {
+      dialog.toast({ message: "Please login to use coupons", variant: "info" });
+      return false;
+    }
+
+    if (!code.trim()) {
+      dialog.toast({
+        message: "Please enter a coupon code",
+        variant: "danger",
+      });
+      return false;
+    }
+
+    setIsCouponLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl("/cart/coupon"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ couponCode: code }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.valid) {
+        dialog.toast({
+          message: data.message || "Invalid coupon",
+          variant: "danger",
+        });
+        setCouponCode(null);
+        setDiscountAmount(0);
+        return false;
+      }
+
+      setCouponCode(code);
+      setDiscountAmount(data.discountAmount);
+      dialog.toast({ message: "Coupon applied!", variant: "success" });
+      return true;
+    } catch (error) {
+      console.error("Coupon apply error:", error);
+      dialog.toast({ message: "Failed to apply coupon", variant: "danger" });
+      return false;
+    } finally {
+      setIsCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode(null);
+    setDiscountAmount(0);
+    dialog.toast({ message: "Coupon removed", variant: "info" });
+  };
+
+  // L9: Cap discount if subtotal decreases below discount amount
+  useEffect(() => {
+    if (discountAmount > subtotal && discountAmount > 0) {
+      setDiscountAmount(subtotal);
+    }
+  }, [subtotal, discountAmount]);
 
   // 5. MERGE LOGIC (Effect)
   useEffect(() => {
@@ -263,7 +342,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (guestCartRaw) {
         const guestItems: CartItem[] = JSON.parse(guestCartRaw);
         if (guestItems.length > 0) {
-          // Perform Merge
           const token = localStorage.getItem("token");
           Promise.all(
             guestItems.map((item) =>
@@ -281,9 +359,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             ),
           )
             .then(() => {
-              // Clear guest cart
               localStorage.removeItem("rokomferi-cart");
-              // Invalidate to fetch merged server state
               queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
               dialog.toast({
                 message: "Cart merged from previous session",
@@ -306,7 +382,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         clearCart,
         toggleCart,
-        total,
+        subtotal,
+        discountAmount,
+        couponCode,
+        grandTotal,
+        applyCoupon,
+        removeCoupon,
+        isCouponLoading,
       }}
     >
       {children}

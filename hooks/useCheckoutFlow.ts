@@ -36,7 +36,8 @@ export function useCheckoutFlow(
   initialQuantity: number = 1,
 ): UseCheckoutFlowResult {
   const searchParams = useSearchParams();
-  const { items: cartItems, total: cartTotal, clearCart } = useCart();
+  // L9: Use subtotal for checkout flow calculations
+  const { items: cartItems, subtotal: cartSubtotal, clearCart } = useCart();
 
   // Initial State Derivation
   // Use searchParams to determine mode, but prefer payload if present
@@ -173,7 +174,7 @@ export function useCheckoutFlow(
           mode: "cart",
           isDirectLoading: false,
           items: cartItems,
-          total: cartTotal,
+          total: cartSubtotal,
           error: undefined, // Clear any previous errors
         }));
       }
@@ -184,7 +185,7 @@ export function useCheckoutFlow(
     return () => {
       isMounted = false;
     };
-  }, [isDirect, searchParams, cartItems, cartTotal, hasInitialData]);
+  }, [isDirect, searchParams, cartItems, cartSubtotal, hasInitialData]);
 
   const refresh = () => {
     // Logic to re-trigger initialization if needed

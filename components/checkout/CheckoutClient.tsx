@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
@@ -24,6 +25,8 @@ export function CheckoutClient({
   initialQuantity = 1,
 }: CheckoutClientProps) {
   const { user, isLoading: isAuthLoading } = useAuth();
+  // L9: Get coupon data from cart context
+  const { subtotal, discountAmount, couponCode, grandTotal } = useCart();
   const router = useRouter();
 
   // 1. DATA FLOW (State Machine)
@@ -141,6 +144,7 @@ export function CheckoutClient({
       // 2. Place Order
       const payload = {
         paymentMethod: "cod",
+        couponCode: couponCode || undefined, // L9: Include coupon in order
         address: {
           firstName: selectedAddress.firstName,
           lastName: selectedAddress.lastName,
@@ -358,7 +362,10 @@ export function CheckoutClient({
           <div className="w-full lg:w-2/5 relative h-fit lg:sticky lg:top-24">
             <OrderSummary
               items={items}
-              total={total}
+              subtotal={subtotal}
+              discountAmount={discountAmount}
+              couponCode={couponCode}
+              grandTotal={grandTotal}
               deliveryLocation={deliveryLocation}
               shippingCost={shippingCost}
               onCheckout={handleCheckout}

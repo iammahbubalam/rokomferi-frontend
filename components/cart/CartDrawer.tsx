@@ -9,13 +9,24 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
+import { CouponInput } from "./CouponInput";
+
 export function CartDrawer() {
-  const { items, isOpen, toggleCart, removeFromCart, updateQuantity, total } =
-    useCart();
+  const {
+    items,
+    isOpen,
+    toggleCart,
+    removeFromCart,
+    updateQuantity,
+    subtotal,
+    discountAmount,
+    grandTotal,
+    couponCode,
+  } = useCart();
   const [shippingThreshold] = useState(15000); // Free shipping threshold
 
-  const progress = Math.min((total / shippingThreshold) * 100, 100);
-  const remaining = shippingThreshold - total;
+  const progress = Math.min((subtotal / shippingThreshold) * 100, 100);
+  const remaining = shippingThreshold - subtotal;
 
   return (
     <AnimatePresence>
@@ -212,11 +223,22 @@ export function CartDrawer() {
             {/* Footer */}
             {items.length > 0 && (
               <div className="p-6 border-t border-gray-100 bg-gray-50/50 space-y-4">
+                {/* Coupon Input */}
+                <div className="mb-4">
+                  <CouponInput />
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm text-secondary">
                     <span>Subtotal</span>
-                    <span>৳{total.toLocaleString()}</span>
+                    <span>৳{subtotal.toLocaleString()}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex items-center justify-between text-sm text-green-700 font-medium">
+                      <span>Discount ({couponCode})</span>
+                      <span>-৳{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-sm text-secondary">
                     <span>Shipping</span>
                     <span className="text-primary">
@@ -227,7 +249,7 @@ export function CartDrawer() {
 
                 <div className="flex items-center justify-between text-lg font-serif text-primary pt-4 border-t border-gray-200">
                   <span>Total</span>
-                  <span>৳{total.toLocaleString()}</span>
+                  <span>৳{grandTotal.toLocaleString()}</span>
                 </div>
 
                 {/* Checkout Button with Logic */}
