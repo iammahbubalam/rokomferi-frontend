@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getApiUrl } from "@/lib/utils";
+import { useDialog } from "@/context/DialogContext";
 
 interface FooterEditorProps {
   onClose: () => void;
 }
 
 export function FooterEditor({ onClose }: FooterEditorProps) {
+  const dialog = useDialog();
   const [sections, setSections] = useState<FooterSection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,7 +72,7 @@ export function FooterEditor({ onClose }: FooterEditorProps) {
   const handleRemoveLink = (sectionIdx: number, linkIdx: number) => {
     const newSections = [...sections];
     newSections[sectionIdx].links = newSections[sectionIdx].links.filter(
-      (_, i) => i !== linkIdx
+      (_, i) => i !== linkIdx,
     );
     setSections(newSections);
   };
@@ -79,7 +81,7 @@ export function FooterEditor({ onClose }: FooterEditorProps) {
     sectionIdx: number,
     linkIdx: number,
     field: keyof FooterLink,
-    value: string
+    value: string,
   ) => {
     const newSections = [...sections];
     (newSections[sectionIdx].links[linkIdx] as any)[field] = value;
@@ -99,13 +101,17 @@ export function FooterEditor({ onClose }: FooterEditorProps) {
       });
 
       if (res.ok) {
+        dialog.toast({
+          message: "Footer saved successfully",
+          variant: "success",
+        });
         onClose();
       } else {
-        alert("Failed to save");
+        dialog.toast({ message: "Failed to save", variant: "danger" });
       }
     } catch (error) {
       console.error("Save failed", error);
-      alert("Save failed");
+      dialog.toast({ message: "Save failed", variant: "danger" });
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +205,7 @@ export function FooterEditor({ onClose }: FooterEditorProps) {
                                       sIdx,
                                       lIdx,
                                       "label",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   placeholder="Label"
@@ -221,7 +227,7 @@ export function FooterEditor({ onClose }: FooterEditorProps) {
                                       sIdx,
                                       lIdx,
                                       "href",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   placeholder="/path"

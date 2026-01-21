@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { getApiUrl } from "@/lib/utils";
+import { useDialog } from "@/context/DialogContext";
 
 interface ImageUploaderProps {
   value?: string;
@@ -24,6 +25,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialog = useDialog();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,7 +55,10 @@ export function ImageUploader({
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload image. Please try again.");
+      dialog.toast({
+        message: "Failed to upload image. Please try again.",
+        variant: "danger",
+      });
     } finally {
       setIsUploading(false);
       // Reset input so same file can be selected again if needed

@@ -22,6 +22,7 @@ import Link from "next/link";
 import { Product, Category } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/utils";
+import { useDialog } from "@/context/DialogContext";
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -38,6 +39,7 @@ export function ProductForm({
   const [activeTab, setActiveTab] = useState("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const dialog = useDialog();
 
   // Initial State Setup
   const [formData, setFormData] = useState({
@@ -100,7 +102,10 @@ export function ProductForm({
       }));
     } catch (err) {
       console.error(err);
-      alert("One or more uploads failed");
+      dialog.toast({
+        message: "One or more uploads failed",
+        variant: "danger",
+      });
     } finally {
       setIsUploading(false);
       // Reset input value to allow re-uploading same files if needed
@@ -175,7 +180,7 @@ export function ProductForm({
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Failed to save product");
+      dialog.toast({ message: "Failed to save product", variant: "danger" });
     } finally {
       setIsSubmitting(false);
     }
@@ -184,14 +189,14 @@ export function ProductForm({
   // Flatten Categories Helper
   const flattenCategories = (
     cats: Category[],
-    prefix = ""
+    prefix = "",
   ): { id: string; name: string }[] => {
     let result: { id: string; name: string }[] = [];
     for (const cat of cats) {
       result.push({ id: cat.id, name: prefix + cat.name });
       if (cat.children && cat.children.length > 0) {
         result = result.concat(
-          flattenCategories(cat.children, prefix + cat.name + " > ")
+          flattenCategories(cat.children, prefix + cat.name + " > "),
         );
       }
     }
@@ -320,7 +325,7 @@ export function ProductForm({
                             setFormData((prev) => ({
                               ...prev,
                               categoryIds: prev.categoryIds.filter(
-                                (id) => id !== cat.id
+                                (id) => id !== cat.id,
                               ),
                             }));
                         }}
@@ -634,7 +639,7 @@ export function ProductForm({
                             updateVariant(
                               idx,
                               "stock",
-                              parseInt(e.target.value)
+                              parseInt(e.target.value),
                             )
                           }
                           className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm"

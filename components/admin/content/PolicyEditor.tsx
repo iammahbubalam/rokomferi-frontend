@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Plus, Save, Trash2, X, ChevronDown, ChevronUp } from "lucide-react";
 import { PolicyPage, PolicySection } from "@/lib/content-types";
 import { getApiUrl } from "@/lib/utils";
+import { useDialog } from "@/context/DialogContext";
 
 interface PolicyEditorProps {
   policyKey: "policy_shipping" | "policy_return";
@@ -13,6 +14,7 @@ interface PolicyEditorProps {
 }
 
 export function PolicyEditor({ policyKey, title, onClose }: PolicyEditorProps) {
+  const dialog = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<PolicyPage>({
@@ -61,11 +63,14 @@ export function PolicyEditor({ policyKey, title, onClose }: PolicyEditorProps) {
 
       // Refresh local state to show new timestamp
       setData(updatedData);
-      alert("Policy updated successfully!");
+      dialog.toast({
+        message: "Policy updated successfully!",
+        variant: "success",
+      });
       onClose();
     } catch (e) {
       console.error(e);
-      alert("Failed to save changes.");
+      dialog.toast({ message: "Failed to save changes.", variant: "danger" });
     } finally {
       setSaving(false);
     }
@@ -79,8 +84,14 @@ export function PolicyEditor({ policyKey, title, onClose }: PolicyEditorProps) {
     setExpandedIdx(data.sections.length);
   };
 
-  const removeSection = (idx: number) => {
-    if (!confirm("Delete this section?")) return;
+  const removeSection = async (idx: number) => {
+    const confirmed = await dialog.confirm({
+      title: "Delete Section",
+      message: "Delete this section?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setData((prev) => ({
       ...prev,
       sections: prev.sections.filter((_, i) => i !== idx),
@@ -91,7 +102,7 @@ export function PolicyEditor({ policyKey, title, onClose }: PolicyEditorProps) {
   const updateSection = (
     idx: number,
     field: keyof PolicySection,
-    value: any
+    value: any,
   ) => {
     const newSections = [...data.sections];
     newSections[idx] = { ...newSections[idx], [field]: value };

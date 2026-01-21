@@ -11,6 +11,7 @@ import {
 import { Product } from "@/types";
 import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "./AuthContext";
+import { useDialog } from "./DialogContext";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -31,6 +32,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const dialog = useDialog();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -160,14 +162,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
               throw new Error("Server rejected cart update");
             }
             // Success toast
-            alert("✅ Added to cart!"); // TODO: Replace with proper toast library
+            dialog.toast({ message: "Added to cart!", variant: "success" });
           })
           .catch((error) => {
             console.error("Cart sync failed, rolling back:", error);
             // ROLLBACK: Revert to previous state
             setItems(previousItems);
             // Error toast
-            alert("❌ Failed to add to cart"); // TODO: Replace with proper toast library
+            dialog.toast({
+              message: "Failed to add to cart",
+              variant: "danger",
+            });
           })
           .finally(() => {
             // Cleanup pending promise
@@ -203,7 +208,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           .catch((error) => {
             console.error("Remove failed, rolling back", error);
             setItems(previousItems); // Rollback
-            // TODO: Toast error
+            dialog.toast({
+              message: "Failed to remove item",
+              variant: "danger",
+            });
           });
       }
     }
@@ -271,7 +279,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             error instanceof Error
               ? error.message
               : "Failed to update quantity";
-          alert(`❌ ${errorMessage}`); // TODO: Replace with proper toast library
+          dialog.toast({ message: errorMessage, variant: "danger" });
         } finally {
           delete updateTimeouts.current[productId];
         }

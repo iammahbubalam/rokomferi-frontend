@@ -63,6 +63,7 @@ import { GoogleAuthProvider } from "@/components/auth/AuthProvider";
 import { AuthContextProvider } from "@/context/AuthContext";
 
 import { WishlistProvider } from "@/context/WishlistContext";
+import { DialogProvider } from "@/context/DialogContext";
 
 export default async function RootLayout({
   children,
@@ -85,27 +86,29 @@ export default async function RootLayout({
       >
         <AuthContextProvider>
           <GoogleAuthProvider>
-            <IntroProvider>
-              <IntroOverlay />
-              <CartProvider>
-                <WishlistProvider>
-                  <Navbar
-                    categories={categories}
-                    collections={collections}
-                    siteConfig={siteConfig}
-                  />
-                  <main className="flex-grow pt-[88px] md:pt-[104px]">
-                    {/* pt to offset fixed header height approx */}
-                    {children}
-                  </main>
-                  <Footer
-                    siteConfig={siteConfig}
-                    footerSections={footerSections}
-                  />
-                  <CartDrawer />
-                </WishlistProvider>
-              </CartProvider>
-            </IntroProvider>
+            <DialogProvider>
+              <IntroProvider>
+                <IntroOverlay />
+                <CartProvider>
+                  <WishlistProvider>
+                    <Navbar
+                      categories={categories}
+                      collections={collections}
+                      siteConfig={siteConfig}
+                    />
+                    <main className="flex-grow pt-[88px] md:pt-[104px]">
+                      {/* pt to offset fixed header height approx */}
+                      {children}
+                    </main>
+                    <Footer
+                      siteConfig={siteConfig}
+                      footerSections={footerSections}
+                    />
+                    <CartDrawer />
+                  </WishlistProvider>
+                </CartProvider>
+              </IntroProvider>
+            </DialogProvider>
           </GoogleAuthProvider>
         </AuthContextProvider>
       </body>

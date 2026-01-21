@@ -16,12 +16,14 @@ import {
 import { AboutPage, AboutBlock } from "@/lib/content-types";
 import { getApiUrl } from "@/lib/utils";
 import { ImageUploader } from "@/components/admin/ui/ImageUploader";
+import { useDialog } from "@/context/DialogContext";
 
 interface AboutEditorProps {
   onClose: () => void;
 }
 
 export function AboutEditor({ onClose }: AboutEditorProps) {
+  const dialog = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<AboutPage>({
@@ -62,11 +64,14 @@ export function AboutEditor({ onClose }: AboutEditorProps) {
       });
 
       if (!res.ok) throw new Error("Failed to save");
-      alert("About Page updated successfully!");
+      dialog.toast({
+        message: "About Page updated successfully!",
+        variant: "success",
+      });
       onClose();
     } catch (e) {
       console.error(e);
-      alert("Failed to save changes.");
+      dialog.toast({ message: "Failed to save changes.", variant: "danger" });
     } finally {
       setSaving(false);
     }
@@ -85,8 +90,14 @@ export function AboutEditor({ onClose }: AboutEditorProps) {
     setExpandedIdx(data.blocks.length);
   };
 
-  const removeBlock = (idx: number) => {
-    if (!confirm("Delete this block?")) return;
+  const removeBlock = async (idx: number) => {
+    const confirmed = await dialog.confirm({
+      title: "Delete Block",
+      message: "Delete this block?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setData((prev) => ({
       ...prev,
       blocks: prev.blocks.filter((_, i) => i !== idx),
@@ -104,7 +115,7 @@ export function AboutEditor({ onClose }: AboutEditorProps) {
     blockIdx: number,
     statIdx: number,
     field: "label" | "value",
-    val: string
+    val: string,
   ) => {
     const newBlocks = [...data.blocks];
     const items = [...(newBlocks[blockIdx].items || [])];
@@ -125,7 +136,7 @@ export function AboutEditor({ onClose }: AboutEditorProps) {
   const removeStatItem = (blockIdx: number, statIdx: number) => {
     const newBlocks = [...data.blocks];
     newBlocks[blockIdx].items = (newBlocks[blockIdx].items || []).filter(
-      (_, i) => i !== statIdx
+      (_, i) => i !== statIdx,
     );
     setData((prev) => ({ ...prev, blocks: newBlocks }));
   };

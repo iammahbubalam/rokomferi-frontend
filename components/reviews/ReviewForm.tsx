@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star, Loader2 } from "lucide-react";
 import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useDialog } from "@/context/DialogContext";
 
 interface ReviewFormProps {
   productId: string;
@@ -12,6 +13,7 @@ interface ReviewFormProps {
 
 export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   const { user } = useAuth();
+  const dialog = useDialog();
   const isAuthenticated = !!user;
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -34,7 +36,10 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) return alert("Please select a rating");
+    if (rating === 0) {
+      dialog.toast({ message: "Please select a rating", variant: "warning" });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -55,7 +60,7 @@ export default function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
       onSuccess?.();
     } catch (error) {
       console.error(error);
-      alert("Error submitting review");
+      dialog.toast({ message: "Error submitting review", variant: "danger" });
     } finally {
       setIsSubmitting(false);
     }

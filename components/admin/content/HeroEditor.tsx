@@ -21,12 +21,14 @@ import { getApiUrl } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { ImageUploader } from "@/components/admin/ui/ImageUploader";
+import { useDialog } from "@/context/DialogContext";
 
 interface HeroEditorProps {
   onClose: () => void;
 }
 
 export function HeroEditor({ onClose }: HeroEditorProps) {
+  const dialog = useDialog();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [selectedSlideId, setSelectedSlideId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,10 +79,10 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
   const handleUpdateSlide = (
     id: number,
     field: keyof HeroSlide,
-    value: any
+    value: any,
   ) => {
     setSlides((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
+      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
     );
   };
 
@@ -110,8 +112,6 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
     setSlides(newSlides);
   };
 
-
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -124,13 +124,14 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
         body: JSON.stringify({ slides }),
       });
       if (res.ok) {
+        dialog.toast({ message: "Hero section saved", variant: "success" });
         onClose();
       } else {
-        alert("Failed to save");
+        dialog.toast({ message: "Failed to save", variant: "danger" });
       }
     } catch (error) {
       console.error("Save failed", error);
-      alert("Save failed");
+      dialog.toast({ message: "Save failed", variant: "danger" });
     } finally {
       setIsSaving(false);
     }
@@ -274,7 +275,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "title",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium"
@@ -290,7 +291,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "subtitle",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none text-sm"
@@ -306,7 +307,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "description",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               rows={3}
@@ -349,7 +350,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "textColor",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -370,7 +371,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "alignment",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -397,7 +398,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                               handleUpdateSlide(
                                 selectedSlide.id,
                                 "overlayOpacity",
-                                Number(e.target.value)
+                                Number(e.target.value),
                               )
                             }
                             className="w-full mt-2 accent-primary"
@@ -425,7 +426,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                   handleUpdateSlide(
                                     selectedSlide.id,
                                     "buttonText",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none text-sm"
@@ -441,7 +442,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                   handleUpdateSlide(
                                     selectedSlide.id,
                                     "buttonStyle",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className="w-full mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
@@ -462,7 +463,7 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                 handleUpdateSlide(
                                   selectedSlide.id,
                                   "buttonLink",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               placeholder="/category/..."
@@ -517,8 +518,8 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                             selectedSlide.alignment === "left"
                               ? "items-start text-left"
                               : selectedSlide.alignment === "right"
-                              ? "items-end text-right"
-                              : "items-center text-center"
+                                ? "items-end text-right"
+                                : "items-center text-center"
                           }`}
                         >
                           <span
@@ -567,9 +568,9 @@ export function HeroEditor({ onClose }: HeroEditorProps) {
                                           "outline"
                                             ? "bg-transparent border-2 border-white text-white"
                                             : selectedSlide.buttonStyle ===
-                                              "white"
-                                            ? "bg-white text-gray-900 border-2 border-white"
-                                            : "bg-primary text-secondary border-2 border-primary"
+                                                "white"
+                                              ? "bg-white text-gray-900 border-2 border-white"
+                                              : "bg-primary text-secondary border-2 border-primary"
                                         }
                                     `}
                               >

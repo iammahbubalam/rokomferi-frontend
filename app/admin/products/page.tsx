@@ -8,9 +8,11 @@ import { getApiUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { ProductTable } from "@/components/admin/products/ProductTable";
 import { useRouter } from "next/navigation";
+import { useDialog } from "@/context/DialogContext";
 
 export default function AdminProductsPage() {
   const router = useRouter();
+  const dialog = useDialog();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [total, setTotal] = useState(0);
@@ -53,7 +55,7 @@ export default function AdminProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!res.ok) throw new Error("Failed to fetch products");
@@ -82,7 +84,7 @@ export default function AdminProductsPage() {
   // Handlers
   const handleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -96,12 +98,13 @@ export default function AdminProductsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (
-      !confirm(
-        `Are you sure you want to delete ${selectedIds.length} products?`
-      )
-    )
-      return;
+    const confirmed = await dialog.confirm({
+      title: "Confirm Bulk Delete",
+      message: `Are you sure you want to delete ${selectedIds.length} products?`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsLoading(true);
     try {
@@ -112,14 +115,17 @@ export default function AdminProductsPage() {
           fetch(getApiUrl(`/admin/products/${id}`), {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
-          })
-        )
+          }),
+        ),
       );
       fetchProducts(); // Refresh
       setSelectedIds([]);
     } catch (error) {
       console.error("Bulk delete failed", error);
-      alert("Some delete operations failed.");
+      dialog.toast({
+        message: "Some delete operations failed.",
+        variant: "danger",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +136,8 @@ export default function AdminProductsPage() {
     // Optimistic Bulk Update
     setProducts((prev) =>
       prev.map((p) =>
-        selectedIds.includes(p.id) ? { ...p, isActive: false } : p
-      )
+        selectedIds.includes(p.id) ? { ...p, isActive: false } : p,
+      ),
     );
 
     try {
@@ -146,14 +152,14 @@ export default function AdminProductsPage() {
             },
             body: JSON.stringify({ isActive: false }),
           });
-        })
+        }),
       );
 
       setSelectedIds([]);
       // No fetchProducts needed for success path
     } catch (error) {
       console.error("Bulk deactivate failed", error);
-      alert("Bulk update failed");
+      dialog.toast({ message: "Bulk update failed", variant: "danger" });
       fetchProducts(); // Revert/Refresh on error
     } finally {
       setIsLoading(false);
@@ -207,7 +213,7 @@ export default function AdminProductsPage() {
     // Optimistic Update
     const newStatus = !currentStatus;
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, isActive: newStatus } : p))
+      prev.map((p) => (p.id === id ? { ...p, isActive: newStatus } : p)),
     );
 
     try {
@@ -228,16 +234,22 @@ export default function AdminProductsPage() {
       // No refetch needed
     } catch (error) {
       console.error("Failed to toggle status", error);
-      alert("Failed to update status");
+      dialog.toast({ message: "Failed to update status", variant: "danger" });
       // Revert on failure
       setProducts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, isActive: currentStatus } : p))
+        prev.map((p) => (p.id === id ? { ...p, isActive: currentStatus } : p)),
       );
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    const confirmed = await dialog.confirm({
+      title: "Delete Product",
+      message: "Are you sure you want to delete this product?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -252,7 +264,7 @@ export default function AdminProductsPage() {
       fetchProducts();
     } catch (error) {
       console.error(error);
-      alert("Failed to delete product");
+      dialog.toast({ message: "Failed to delete product", variant: "danger" });
     }
   };
 

@@ -6,6 +6,7 @@ import { Save, X, Globe, Mail, Share2, Search } from "lucide-react";
 import { GlobalSettings } from "@/lib/content-types";
 import { getApiUrl } from "@/lib/utils";
 import { ImageUploader } from "@/components/admin/ui/ImageUploader";
+import { useDialog } from "@/context/DialogContext";
 
 interface GlobalSettingsEditorProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ export function GlobalSettingsEditor({
   onClose,
   isEmbedded = false,
 }: GlobalSettingsEditorProps) {
+  const dialog = useDialog();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<GlobalSettings>({
@@ -84,12 +86,15 @@ export function GlobalSettingsEditor({
       });
 
       if (!res.ok) throw new Error("Failed to save");
-      alert("Global Settings updated successfully!");
+      dialog.toast({
+        message: "Global Settings updated successfully!",
+        variant: "success",
+      });
       // Force reload to update site config in layout (optional, or rely on next nav)
       window.location.reload();
     } catch (e) {
       console.error(e);
-      alert("Failed to save changes.");
+      dialog.toast({ message: "Failed to save changes.", variant: "danger" });
     } finally {
       setSaving(false);
     }
@@ -97,7 +102,7 @@ export function GlobalSettingsEditor({
 
   const updateBranding = (
     field: keyof GlobalSettings["branding"],
-    val: string
+    val: string,
   ) =>
     setData((prev) => ({
       ...prev,
@@ -112,7 +117,7 @@ export function GlobalSettingsEditor({
 
   const updateAddress = (
     field: keyof GlobalSettings["contact"]["address"],
-    val: string
+    val: string,
   ) =>
     setData((prev) => ({
       ...prev,
@@ -370,7 +375,7 @@ export function GlobalSettingsEditor({
                         placeholder={`https://${platform}.com/...`}
                       />
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
