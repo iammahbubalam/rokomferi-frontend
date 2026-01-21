@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Product } from "@/types";
 import { getApiUrl } from "@/lib/utils";
 import { Plus, X, Loader2, Search } from "lucide-react";
+import { useDialog } from "@/context/DialogContext";
 import Image from "next/image";
 
 interface CollectionProductManagerProps {
@@ -13,6 +14,7 @@ interface CollectionProductManagerProps {
 export function CollectionProductManager({
   collectionId,
 }: CollectionProductManagerProps) {
+  const dialog = useDialog();
   const [collectionProducts, setCollectionProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +78,7 @@ export function CollectionProductManager({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ productId, action: "add" }),
-        }
+        },
       );
       if (res.ok) {
         await fetchCollectionProducts();
@@ -89,7 +91,13 @@ export function CollectionProductManager({
   };
 
   const handleRemoveProduct = async (productId: string) => {
-    if (!confirm("Remove this product from the collection?")) return;
+    const confirmed = await dialog.confirm({
+      title: "Remove Product",
+      message: "Remove this product from the collection?",
+      confirmText: "Remove",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     try {
       const token = localStorage.getItem("token");
       await fetch(getApiUrl(`/admin/collections/${collectionId}/products`), {
@@ -110,7 +118,7 @@ export function CollectionProductManager({
   const availableProducts = allProducts.filter(
     (p) =>
       !collectionProductIds.has(p.id) &&
-      (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
+      (search === "" || p.name.toLowerCase().includes(search.toLowerCase())),
   );
 
   if (isLoading) {
