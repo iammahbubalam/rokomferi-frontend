@@ -5,6 +5,7 @@ import { getProductBySlug, getProductReviews } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, ShoppingBag, Ruler, Info } from "lucide-react";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { WishlistButton } from "@/components/common/WishlistButton";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import ReviewList from "@/components/reviews/ReviewList";
 import ReviewForm from "@/components/reviews/ReviewForm";
@@ -88,8 +89,24 @@ export default async function ProductPage({
             </div>
           )}
           {/* Actions */}
+          {/* Actions */}
           <div className="space-y-6">
-            <AddToCartButton product={product} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <AddToCartButton
+                  product={product}
+                  disabled={
+                    product.stock <= 0 || product.stockStatus === "out_of_stock"
+                  }
+                />
+              </div>
+              <WishlistButton
+                product={product}
+                variant="icon"
+                className="w-14 h-auto rounded-none border border-primary text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-all bg-transparent"
+              />
+            </div>
+
             <div className="flex justify-center gap-8 text-xs uppercase tracking-widest text-secondary underline-offset-4 decoration-primary/30">
               <button className="hover:underline flex items-center gap-2">
                 <Ruler className="w-3 h-3" /> Size Guide

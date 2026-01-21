@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Search, Menu, X, User, Shield } from "lucide-react";
+import {
+  ShoppingBag,
+  Search,
+  Menu,
+  X,
+  User,
+  Shield,
+  Heart,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
@@ -14,6 +22,7 @@ import { SearchOverlay } from "./SearchOverlay";
 import { useIntro } from "@/context/IntroContext";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import clsx from "clsx";
 import { Collection } from "@/types";
 
@@ -28,6 +37,7 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { items, toggleCart } = useCart();
+  const { items: wishlistItems } = useWishlist();
   const { user } = useAuth();
   const { isIntroComplete, isLoading } = useIntro();
 
@@ -102,6 +112,20 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
                     <Shield className="w-[18px] h-[18px]" strokeWidth={1.5} />
                   </Link>
                 )}
+
+                {/* Wishlist */}
+                <Link
+                  href="/wishlist"
+                  className="text-primary/80 hover:text-accent-gold transition-all duration-200 hover:scale-105 cursor-pointer flex items-center relative"
+                  title="Wishlist"
+                >
+                  <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                  {wishlistItems.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-semibold">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                </Link>
 
                 {/* Cart */}
                 <button

@@ -62,6 +62,8 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { GoogleAuthProvider } from "@/components/auth/AuthProvider";
 import { AuthContextProvider } from "@/context/AuthContext";
 
+import { WishlistProvider } from "@/context/WishlistContext";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -86,20 +88,22 @@ export default async function RootLayout({
             <IntroProvider>
               <IntroOverlay />
               <CartProvider>
-                <Navbar
-                  categories={categories}
-                  collections={collections}
-                  siteConfig={siteConfig}
-                />
-                <main className="flex-grow pt-[88px] md:pt-[104px]">
-                  {/* pt to offset fixed header height approx */}
-                  {children}
-                </main>
-                <Footer
-                  siteConfig={siteConfig}
-                  footerSections={footerSections}
-                />
-                <CartDrawer />
+                <WishlistProvider>
+                  <Navbar
+                    categories={categories}
+                    collections={collections}
+                    siteConfig={siteConfig}
+                  />
+                  <main className="flex-grow pt-[88px] md:pt-[104px]">
+                    {/* pt to offset fixed header height approx */}
+                    {children}
+                  </main>
+                  <Footer
+                    siteConfig={siteConfig}
+                    footerSections={footerSections}
+                  />
+                  <CartDrawer />
+                </WishlistProvider>
               </CartProvider>
             </IntroProvider>
           </GoogleAuthProvider>

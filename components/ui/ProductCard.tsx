@@ -7,6 +7,7 @@ import { Product } from "@/types";
 import { ShoppingBag, CreditCard } from "lucide-react";
 import clsx from "clsx";
 import { useCart } from "@/context/CartContext";
+import { WishlistButton } from "@/components/common/WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -74,17 +75,31 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
         {/* Badges - Minimalist */}
         <div className="absolute top-0 left-0 p-3 flex flex-col gap-2 pointer-events-none z-10">
-          {discountPercentage > 0 && (
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
-              -{discountPercentage}%
+          {isOutOfStock ? (
+            <span className="bg-neutral-900 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+              Sold Out
             </span>
-          )}
-          {product.isNew && (
-            <span className="bg-white text-black text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
-              New
-            </span>
+          ) : (
+            <>
+              {discountPercentage > 0 && (
+                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                  -{discountPercentage}%
+                </span>
+              )}
+              {product.isNew && (
+                <span className="bg-white text-black text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                  New
+                </span>
+              )}
+            </>
           )}
         </div>
+
+        {/* Wishlist Button */}
+        <WishlistButton
+          product={product}
+          className="absolute top-3 right-3 z-20 bg-white/80 hover:bg-white backdrop-blur-sm shadow-sm"
+        />
 
         {/* Buttons - Block Style with tactile feedback */}
         {!isOutOfStock && (
@@ -105,15 +120,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               <CreditCard size={14} />
               <span>Buy Now</span>
             </button>
-          </div>
-        )}
-
-        {/* Out of Stock Overlay */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[2px] z-30 pointer-events-auto cursor-not-allowed">
-            <span className="bg-black text-white px-4 py-2 text-xs uppercase tracking-widest font-bold">
-              Sold Out
-            </span>
           </div>
         )}
       </div>
