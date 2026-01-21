@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { Product } from "@/types";
@@ -120,6 +121,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Pending Adds Ref (to prevent race conditions)
+  const pendingAdds = useRef<Record<string, Promise<void>>>({});
+
   const addToCart = (product: Product) => {
     // Store previous state for potential rollback
     const previousItems = [...items];
@@ -141,7 +145,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (user) {
       const token = localStorage.getItem("token");
       if (token) {
-        fetch(getApiUrl("/cart"), {
+        // Create the promise
+        const addPromise = fetch(getApiUrl("/cart"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -153,13 +158,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (!res.ok) {
               throw new Error("Server rejected cart update");
             }
+            // Success toast
+            alert("✅ Added to cart!"); // TODO: Replace with proper toast library
           })
           .catch((error) => {
             console.error("Cart sync failed, rolling back:", error);
             // ROLLBACK: Revert to previous state
             setItems(previousItems);
-            // TODO: Show toast notification to user
+            // Error toast
+            alert("❌ Failed to add to cart"); // TODO: Replace with proper toast library
+          })
+          .finally(() => {
+            // Cleanup pending promise
+            delete pendingAdds.current[product.id];
           });
+
+        // Store the promise
+        pendingAdds.current[product.id] = addPromise;
       }
     }
   };
@@ -193,53 +208,73 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Debounce Ref
+  const updateTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(productId);
       return;
     }
 
-    // 1. Store previous
+    // Clear existing timeout
+    if (updateTimeouts.current[productId]) {
+      clearTimeout(updateTimeouts.current[productId]);
+    }
+
+    // Capture state for rollback
     const previousItems = [...items];
 
-    // 2. OPTIMISTIC UPDATE
+    // OPTIMISTIC UPDATE
     setItems((prev) =>
       prev.map((item) =>
         item.id === productId ? { ...item, quantity } : item,
       ),
     );
 
-    // 3. BACKGROUND SYNC
+    // DEBOUNCED SYNC
     if (user) {
-      const token = localStorage.getItem("token");
-      if (token) {
-        // Debouncing could be good here, but for now direct sync implies "Save"
-        // Actually, for quantity, usually we send the DELTA or the NEW TOTAL.
-        // The backend /cart POST adds to existing? Or sets?
-        // Usually POST /cart adds. We might need a PUT /cart/items/{id} or similar to set absolute quantity.
-        // Looking at addToCart logic: it sends { productId, quantity: 1 } via POST.
-        // If backend only supports ADD, we might have trouble setting exact quantity if we decrease.
-        // Let's assume for now we don't have a specific "Update Quantity" endpoint verified?
-        // Wait, looking at lines 85-94 in original file:
-        /*
-          body: JSON.stringify({
-            productId: item.id,
-            quantity: item.quantity,
-          }),
-        */
-        // This was for merging.
-        // Let's try to assume POST /cart adds, so we might need a specific PUT endpoint?
-        // Or if the backend implementation logic (which I don't see) handles "set".
-        // Use standard convention: If I can't verify backend, I'll stick to local state for quantity for now
-        // BUT user asked for "blazingly fast remove". I fixed remove.
-        // Update Quantity was just missing. I will leave updateQuantity local-only
-        // for safety unless I confirm backend supports it, TO AVOID BREAKING IT.
-        // Wait, if I don't sync quantity, it reverts on refresh.
-        // I will add a TODO or try a likely endpoint strictly for the "Remove" task requested.
-        // Actually, stick to the USER REQUEST: "when i click remove it took too muh time".
-        // I will ONLY fix removeFromCart to be optimistic.
-        // I will leave updateQuantity as is to avoid scope creep/bugs.
-      }
+      updateTimeouts.current[productId] = setTimeout(async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+          const res = await fetch(getApiUrl("/cart"), {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId, quantity }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.message || "Failed to update quantity");
+          }
+
+          // Success - cart is already updated optimistically
+        } catch (error) {
+          console.error("Update failed, rolling back", error);
+          // Rollback
+          setItems((currentItems) => {
+            const originalItem = previousItems.find((i) => i.id === productId);
+            if (!originalItem) return currentItems;
+            return currentItems.map((item) =>
+              item.id === productId ? originalItem : item,
+            );
+          });
+
+          // Show error toast
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to update quantity";
+          alert(`❌ ${errorMessage}`); // TODO: Replace with proper toast library
+        } finally {
+          delete updateTimeouts.current[productId];
+        }
+      }, 1000); // 1 second debounce for smoother UX
     }
   };
 

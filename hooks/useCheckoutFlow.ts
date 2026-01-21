@@ -27,6 +27,7 @@ export interface UseCheckoutFlowResult {
   state: CheckoutState;
   setState: React.Dispatch<React.SetStateAction<CheckoutState>>;
   refresh: () => void;
+  updateQuantity: (productId: string, quantity: number) => void;
 }
 
 export function useCheckoutFlow(): UseCheckoutFlowResult {
@@ -154,11 +155,48 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
 
   const refresh = () => {
     // Logic to re-trigger initialization if needed
-    // For cart mode, it auto-syncs via dependency array.
-    // For direct mode, this is less relevant unless retrying a failed fetch.
     const currentUrl = new URL(window.location.href);
-    window.location.href = currentUrl.toString(); // Hard refresh for simple retry
+    window.location.href = currentUrl.toString();
   };
 
-  return { state, setState, refresh };
+  const { updateQuantity: cartUpdateQuantity } = useCart();
+
+  const updateQuantity = (productId: string, quantity: number) => {
+    if (state.mode === "cart") {
+      cartUpdateQuantity(productId, quantity);
+    } else {
+      // DIRECT MODE: Local State + URL Persistence
+
+      // 1. Validation (Local State)
+      // We already fetched the product in initializing, so we check *that* stock.
+      const currentItem = state.items.find((i) => i.id === productId);
+
+      if (currentItem && quantity > currentItem.stock) {
+        // Optional: Set specific error, or just clamp?
+        // Let's just return to avoid invalid state. The UI should disable the button ideally.
+        return;
+      }
+      if (quantity < 1) return; // Minimum 1 for direct buy
+
+      // 2. Update Local State
+      setState((prev) => ({
+        ...prev,
+        items: prev.items.map((item) =>
+          item.id === productId ? { ...item, quantity } : item,
+        ),
+        total: prev.items.reduce((sum, item) => {
+          const price = item.salePrice || item.basePrice;
+          const qty = item.id === productId ? quantity : item.quantity;
+          return sum + price * qty;
+        }, 0),
+      }));
+
+      // 3. Persist to URL (so refresh works)
+      const url = new URL(window.location.href);
+      url.searchParams.set("quantity", quantity.toString());
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
+  return { state, setState, refresh, updateQuantity };
 }

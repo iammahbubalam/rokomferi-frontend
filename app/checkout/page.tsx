@@ -11,13 +11,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
 import { AddressManager, Address } from "@/components/checkout/AddressManager";
+import { OrderSummary } from "@/components/checkout/OrderSummary";
 
 export default function CheckoutPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   // 1. DATA FLOW (State Machine)
-  const { state } = useCheckoutFlow();
+  const { state, updateQuantity } = useCheckoutFlow();
   const { status, items, total, error, isDirectLoading } = state;
 
   const [isSuccess, setIsSuccess] = useState(false);
@@ -341,78 +342,16 @@ export default function CheckoutPage() {
 
           {/* RIGHT: Order Summary (Sticky) */}
           <div className="w-full lg:w-2/5 relative h-fit lg:sticky lg:top-24">
-            <div className="bg-white p-8 lg:p-12 shadow-xl border border-primary/5">
-              <h2 className="font-serif text-2xl mb-8">Order Summary</h2>
-
-              <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="relative w-16 h-20 bg-bg-secondary flex-shrink-0">
-                      {item.images?.[0] && (
-                        <Image
-                          src={item.images[0]}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      )}
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full">
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex-grow">
-                      <h4 className="font-serif text-sm">{item.name}</h4>
-                      <p className="font-medium text-sm mt-1">
-                        ৳
-                        {(
-                          (item.salePrice || item.basePrice || 0) *
-                          item.quantity
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-3 py-6 border-t border-primary/10 text-sm">
-                <div className="flex justify-between text-secondary">
-                  <span>Subtotal</span>
-                  <span>৳{total.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-secondary">
-                  <span>
-                    Shipping (
-                    {deliveryLocation === "outside_dhaka"
-                      ? "Outside Dhaka"
-                      : "Inside Dhaka"}
-                    )
-                  </span>
-                  <span>৳{shippingCost.toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className="flex justify-between text-xl font-serif py-6 border-t border-primary/10 mb-8">
-                <span>Total</span>
-                {/* Calculate final total with shipping dynamically based on effectiveTotal */}
-                <span>৳{(total + shippingCost).toLocaleString()}</span>
-              </div>
-
-              <Button
-                onClick={handleCheckout}
-                disabled={!isFormValid || isSubmitting}
-                className="w-full"
-              >
-                {isSubmitting
-                  ? "Processing..."
-                  : isFormValid
-                    ? "Place Order"
-                    : "Fill Details to Order"}
-              </Button>
-
-              <p className="text-center text-[10px] text-secondary/60 mt-4 uppercase tracking-widest">
-                Secure Checkout • Cash on Delivery Available
-              </p>
-            </div>
+            <OrderSummary
+              items={items}
+              total={total}
+              deliveryLocation={deliveryLocation}
+              shippingCost={shippingCost}
+              onCheckout={handleCheckout}
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid || false}
+              onUpdateQuantity={updateQuantity}
+            />
           </div>
         </div>
       </Container>
