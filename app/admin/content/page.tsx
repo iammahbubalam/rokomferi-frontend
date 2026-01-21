@@ -10,12 +10,14 @@ import {
   Clock,
   ArrowRight,
   Settings,
+  Bell,
 } from "lucide-react";
 import { HeroEditor } from "@/components/admin/content/HeroEditor";
 import { FooterEditor } from "@/components/admin/content/FooterEditor";
 import { AboutEditor } from "@/components/admin/content/AboutEditor";
 import { PolicyEditor } from "@/components/admin/content/PolicyEditor";
 import { GlobalSettingsEditor } from "@/components/admin/content/GlobalSettingsEditor";
+import { AnnouncementEditor } from "@/components/admin/content/AnnouncementEditor";
 import { getApiUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -26,6 +28,7 @@ type ContentType =
   | "shipping"
   | "return"
   | "global"
+  | "announcement"
   | null;
 
 interface ContentMeta {
@@ -160,6 +163,17 @@ export default function ContentPage() {
       metaKey: "return",
       color: "bg-rose-50 text-rose-600",
     },
+    {
+      id: "announcement",
+      title: "Announcement Bar",
+      subtitle: "Site-wide Banner",
+      description:
+        "Configure the promotional banner that appears at the top of every page.",
+      icon: Bell,
+      path: "/admin/content/announcement",
+      metaKey: "announcement",
+      color: "bg-orange-50 text-orange-600",
+    },
   ];
 
   return (
@@ -288,6 +302,10 @@ export default function ContentPage() {
           policyKey="policy_return"
           onClose={() => setActiveEditor(null)}
         />
+      )}
+
+      {activeEditor === "announcement" && (
+        <AnnouncementEditor onClose={() => setActiveEditor(null)} />
       )}
     </div>
   );

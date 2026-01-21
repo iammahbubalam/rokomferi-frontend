@@ -66,6 +66,8 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { DialogProvider } from "@/context/DialogContext";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
+import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -93,6 +95,7 @@ export default async function RootLayout({
                   <IntroOverlay />
                   <CartProvider>
                     <WishlistProvider>
+                      <AnnouncementBar />
                       <Navbar
                         categories={categories}
                         collections={collections}
