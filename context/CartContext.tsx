@@ -22,6 +22,7 @@ interface CartContextType {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
   toggleCart: () => void;
   total: number;
 }
@@ -280,6 +281,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const toggleCart = () => setIsOpen((prev) => !prev);
 
+  const clearCart = () => {
+    setItems([]);
+    localStorage.removeItem("rokomferi-cart");
+  };
+
   const total = items.reduce((sum, item) => {
     const price = item.salePrice || item.basePrice;
     return sum + price * item.quantity;
@@ -293,6 +299,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addToCart,
         removeFromCart,
         updateQuantity,
+        clearCart,
         toggleCart,
         total,
       }}

@@ -28,11 +28,12 @@ export interface UseCheckoutFlowResult {
   setState: React.Dispatch<React.SetStateAction<CheckoutState>>;
   refresh: () => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
 }
 
 export function useCheckoutFlow(): UseCheckoutFlowResult {
   const searchParams = useSearchParams();
-  const { items: cartItems, total: cartTotal } = useCart();
+  const { items: cartItems, total: cartTotal, clearCart } = useCart();
 
   // Initial State Derivation
   const isDirect = searchParams.get("type") === "direct";
@@ -198,5 +199,5 @@ export function useCheckoutFlow(): UseCheckoutFlowResult {
     }
   };
 
-  return { state, setState, refresh, updateQuantity };
+  return { state, setState, refresh, updateQuantity, clearCart };
 }

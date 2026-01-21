@@ -18,7 +18,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   // 1. DATA FLOW (State Machine)
-  const { state, updateQuantity } = useCheckoutFlow();
+  const { state, updateQuantity, clearCart } = useCheckoutFlow();
   const { status, items, total, error, isDirectLoading } = state;
 
   const [isSuccess, setIsSuccess] = useState(false);
@@ -161,6 +161,8 @@ export default function CheckoutPage() {
         throw new Error(errData.message || "Checkout failed");
       }
 
+      // Success! Clear cart on frontend
+      clearCart(); // Clear state and localStorage
       setIsSuccess(true);
     } catch (error: any) {
       console.error(error);
