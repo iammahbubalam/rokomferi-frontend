@@ -2,14 +2,15 @@ import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { getAllCategoriesFlat } from "@/lib/api/categories";
 import { getShopProducts, ShopParams } from "@/lib/api/shop";
-import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Pagination } from "@/components/ui/Pagination";
 import { LookbookGrid } from "@/components/shop/LookbookGrid";
+import { ShopToolbar } from "@/components/shop/ShopToolbar";
+import Link from "next/link";
 
 export const metadata = {
   title: "Shop All | Rokomferi",
-  description: "Explore the latest collection of premium ethnic wear.",
+  description: "Explore our complete collection of heritage craftsmanship.",
 };
 
 interface ShopPageProps {
@@ -27,7 +28,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const isLookbookView = params.view === "lookbook";
 
   return (
-    <div className="min-h-screen bg-[#faf9f7]">
+    <div className="min-h-screen bg-white">
       {/* Hero with Left-Aligned Content */}
       <section className="relative h-[35vh] min-h-[280px] max-h-[400px] overflow-hidden">
         {/* Background Image */}
@@ -58,20 +59,37 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </div>
       </section>
 
-      <Container className="py-12 md:py-16">
-        {/* Floating Filter Bar (replaces sidebar) */}
-        <FilterSidebar categories={categories} />
+      <ShopToolbar categories={categories} totalProducts={pagination.total} />
 
+      <Container className="py-12 md:py-16">
         {/* Product Grid or Lookbook Grid */}
         <Suspense
           fallback={
-            <div className="h-96 animate-pulse bg-gray-100 rounded-lg" />
+            <div className="h-96 animate-pulse bg-gray-50 rounded-lg" />
           }
         >
-          {isLookbookView ? (
-            <LookbookGrid products={products} />
+          {products.length > 0 ? (
+            isLookbookView ? (
+              <LookbookGrid products={products} />
+            ) : (
+              <ProductGrid products={products} />
+            )
           ) : (
-            <ProductGrid products={products} />
+            <div className="flex flex-col items-center justify-center py-32 text-center">
+              <div className="w-16 h-[1px] bg-black/10 mb-8" />
+              <p className="text-secondary text-sm tracking-[0.2em] uppercase mb-4">
+                No Products Found
+              </p>
+              <p className="text-secondary/60 text-sm max-w-md font-light leading-relaxed">
+                Try adjusting your filters or check back later for new arrivals.
+              </p>
+              <Link
+                href="/shop"
+                className="mt-8 text-xs uppercase tracking-widest border-b border-primary pb-1 hover:border-accent-gold hover:text-accent-gold transition-all"
+              >
+                Clear Filters
+              </Link>
+            </div>
           )}
         </Suspense>
 
