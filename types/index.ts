@@ -46,11 +46,11 @@ export interface TopSellingProduct {
   id: string;
   name: string;
   slug: string;
-  basePrice: number;
-  salePrice?: number;
+  base_price: number;
+  sale_price?: number;
   media?: any;
-  totalSold: number;
-  totalRevenue: number;
+  total_sold: number;
+  total_revenue: number;
 }
 
 export interface TopCustomer {
@@ -58,7 +58,7 @@ export interface TopCustomer {
   first_name: string;
   last_name: string;
   email: string;
-  order_count: number;
+  total_orders: number;
   lifetime_value: number;
 }
 

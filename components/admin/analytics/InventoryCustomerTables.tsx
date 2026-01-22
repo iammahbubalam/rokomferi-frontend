@@ -196,7 +196,7 @@ export function InventoryCustomerTables({
                             {customer.first_name} {customer.last_name}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {Number(customer.order_count)} orders
+                            {Number(customer.total_orders)} orders
                           </p>
                         </div>
                       </div>
