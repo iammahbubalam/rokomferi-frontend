@@ -100,6 +100,14 @@ export interface Collection {
   ogImage?: string;
 }
 
+export interface Variant {
+  id: string;
+  productId: string;
+  name: string;
+  stock: number;
+  sku: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -122,6 +130,7 @@ export interface Product {
   metaDescription?: string;
   keywords?: string;
   ogImage?: string;
+  variants?: Variant[];
   // AI/SEO Optimization fields
   specs?: ProductSpecs;
   faqs?: ProductFAQ[];

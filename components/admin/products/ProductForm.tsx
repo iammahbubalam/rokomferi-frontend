@@ -20,10 +20,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Product, Category } from "@/types";
-import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/utils";
 import { useDialog } from "@/context/DialogContext";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { Button } from "@/components/ui/Button";
+import { Product, Category, Variant } from "@/types";
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -56,13 +57,7 @@ export function ProductForm({
     isFeatured: initialData?.isFeatured || false,
     categoryIds: initialData?.categories?.map((c) => c.id) || ([] as string[]),
     images: initialData?.images || ([] as string[]),
-    // Variants - We need to cast or manage them. initialData might have variants from backend
-    // But our frontend Product type MIGHT NOT have variants property fully Typed in `types/index.ts`?
-    // Step 3881 interface Product does NOT have variants.
-    // Backend HAS variants.
-    // I need to add variants to Frontend Type if I want to use it here safe.
-    // For now I will cast as any or local interface.
-    variants: (initialData as any)?.variants || ([] as any[]),
+    variants: (initialData?.variants as Variant[]) || ([] as Variant[]),
     metaTitle: initialData?.metaTitle || "",
     metaDescription: initialData?.metaDescription || "",
     keywords: initialData?.keywords || "",
@@ -131,12 +126,12 @@ export function ProductForm({
       ...prev,
       variants: [
         ...prev.variants,
-        { id: "", name: "", stock: 0, sku: "" }, // New variant
+        { id: crypto.randomUUID(), productId: "", name: "", stock: 0, sku: "" },
       ],
     }));
   };
 
-  const updateVariant = (index: number, field: string, value: any) => {
+  const updateVariant = (index: number, field: keyof Variant, value: any) => {
     const newVariants = [...formData.variants];
     newVariants[index] = { ...newVariants[index], [field]: value };
     setFormData((prev) => ({ ...prev, variants: newVariants }));
@@ -145,7 +140,7 @@ export function ProductForm({
   const removeVariant = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      variants: prev.variants.filter((_: any, i: number) => i !== index),
+      variants: prev.variants.filter((_, i) => i !== index),
     }));
   };
 
@@ -293,18 +288,12 @@ export function ProductForm({
                 <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
                   Description
                 </label>
-                <textarea
-                  rows={6}
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                  onChange={(val) =>
+                    setFormData({ ...formData, description: val })
                   }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary focus:border-primary transition-all text-sm leading-relaxed"
-                  placeholder="Describe the product..."
                 />
-                <p className="text-xs text-gray-400 mt-1 text-right">
-                  Markdown supported
-                </p>
               </div>
 
               <div>
@@ -585,8 +574,7 @@ export function ProductForm({
                   size="sm"
                   onClick={addVariant}
                   type="button"
-                  variant="outline-white"
-                  className="border-gray-300 text-gray-700"
+                  variant="outline"
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add Variant
                 </Button>
@@ -598,7 +586,7 @@ export function ProductForm({
                     No variants added. This product uses global settings.
                   </div>
                 )}
-                {formData.variants.map((variant: any, idx: number) => (
+                {formData.variants.map((variant, idx) => (
                   <div
                     key={idx}
                     className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/30"
