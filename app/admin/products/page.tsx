@@ -98,6 +98,8 @@ async function SafeAdminProductsPage({ searchParams }: { searchParams: any }) {
     query.append("search", searchParams.search as string);
   if (searchParams.category)
     query.append("category", searchParams.category as string);
+  if (searchParams.isActive)
+    query.append("isActive", searchParams.isActive as string);
 
   // Parallel Fetch
   try {

@@ -23,6 +23,7 @@ interface ProductTableProps {
   onSearch: (term: string) => void;
   onSort: (field: string) => void;
   onFilterCategory: (categoryId: string) => void;
+  onFilterStatus: (status: string) => void;
   categories: Category[];
   onToggleStatus: (id: string, currentStatus: boolean) => void;
   onDelete: (id: string) => void;
@@ -39,6 +40,7 @@ export function ProductTable({
   onSearch,
   onSort,
   onFilterCategory,
+  onFilterStatus,
   categories,
   onToggleStatus,
   onDelete,
@@ -52,16 +54,14 @@ export function ProductTable({
   const isIndeterminate =
     selectedIds.length > 0 && selectedIds.length < products.length;
 
-  // Flatten categories for dropdown
-  const flatten = (
-    cats: Category[],
-    prefix = ""
-  ): { id: string; name: string }[] => {
+  // Flatten categories for dropdown - simple flat list
+  const flatten = (cats: Category[]): { id: string; name: string }[] => {
     let res: { id: string; name: string }[] = [];
     cats.forEach((c) => {
-      res.push({ id: c.id, name: prefix + c.name });
-      if (c.children)
-        res = res.concat(flatten(c.children, prefix + "-" + c.name + " > "));
+      res.push({ id: c.id, name: c.name });
+      if (c.children) {
+        res = res.concat(flatten(c.children));
+      }
     });
     return res;
   };
@@ -83,7 +83,17 @@ export function ProductTable({
 
         <div className="flex gap-2 w-full sm:w-auto">
           <select
-            className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+            className="h-9 px-3 py-1 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white min-w-[120px]"
+            onChange={(e) => onFilterStatus(e.target.value)}
+            defaultValue=""
+          >
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
+          <select
+            className="h-9 px-3 py-1 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-white min-w-[160px]"
             onChange={(e) => onFilterCategory(e.target.value)}
             defaultValue=""
           >

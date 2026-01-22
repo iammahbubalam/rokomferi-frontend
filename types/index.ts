@@ -127,6 +127,7 @@ export interface Product {
   stockStatus: "in_stock" | "out_of_stock" | "pre_order";
   images: string[];
   categories: Category[];
+  collections?: Collection[];
   sku: string;
   isActive: boolean;
   isFeatured?: boolean;

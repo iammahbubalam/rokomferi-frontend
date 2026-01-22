@@ -113,8 +113,16 @@ export function ProductClient({
     router.push(pathname + "?" + params.toString());
   };
 
-  // Actions (Mutations)
-  // We use fetch + router.refresh()
+  const handleFilterStatus = (status: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (status && status !== "all") {
+      params.set("isActive", status); // "true" or "false"
+      params.set("page", "1");
+    } else {
+      params.delete("isActive");
+    }
+    router.push(pathname + "?" + params.toString());
+  };
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
@@ -290,6 +298,7 @@ export function ProductClient({
         onSearch={handleSearch}
         onSort={handleSort}
         onFilterCategory={handleFilterCategory}
+        onFilterStatus={handleFilterStatus}
         categories={categories}
         onToggleStatus={handleToggleStatus}
         onDelete={handleDelete}

@@ -25,17 +25,33 @@ import { getApiUrl } from "@/lib/utils";
 import { useDialog } from "@/context/DialogContext";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { Button } from "@/components/ui/Button";
-import { Product, Category, Variant } from "@/types";
+import { Product, Category, Variant, Collection } from "@/types";
+import { FancyMultiSelect } from "@/components/ui/FancyMultiSelect";
 
 interface ProductFormProps {
   initialData?: Product | null;
   categories: Category[];
+  collections: Collection[];
   isEditing?: boolean;
 }
+
+const getCategoryOptions = (
+  cats: Category[],
+): { value: string; label: string }[] => {
+  let options: { value: string; label: string }[] = [];
+  cats.forEach((c) => {
+    options.push({ value: c.id, label: c.name });
+    if (c.children) {
+      options = options.concat(getCategoryOptions(c.children));
+    }
+  });
+  return options;
+};
 
 export function ProductForm({
   initialData,
   categories,
+  collections,
   isEditing = false,
 }: ProductFormProps) {
   const router = useRouter();
@@ -61,6 +77,8 @@ export function ProductForm({
     isActive: initialData?.isActive ?? true, // Default true for new
     isFeatured: initialData?.isFeatured || false,
     categoryIds: initialData?.categories?.map((c) => c.id) || ([] as string[]),
+    collectionIds:
+      initialData?.collections?.map((c) => c.id) || ([] as string[]),
     images: initialData?.images || ([] as string[]),
     variants: (initialData?.variants as Variant[]) || ([] as Variant[]),
     metaTitle: initialData?.metaTitle || "",
@@ -282,23 +300,6 @@ export function ProductForm({
     }
   };
 
-  // Flatten Categories Helper
-  const flattenCategories = (
-    cats: Category[],
-    prefix = "",
-  ): { id: string; name: string }[] => {
-    let result: { id: string; name: string }[] = [];
-    for (const cat of cats) {
-      result.push({ id: cat.id, name: prefix + cat.name });
-      if (cat.children && cat.children.length > 0) {
-        result = result.concat(
-          flattenCategories(cat.children, prefix + cat.name + " > "),
-        );
-      }
-    }
-    return result;
-  };
-
   return (
     <form onSubmit={handleSubmit} className="max-w-6xl mx-auto pb-20">
       {/* Sticky Header */}
@@ -362,170 +363,190 @@ export function ProductForm({
         {/* Main Content Area */}
         <div className="lg:col-span-3 space-y-6">
           {/* General Tab */}
+          {/* General Tab */}
           {activeTab === "general" && (
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                  Product Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary focus:border-primary transition-all text-lg font-serif"
-                  placeholder="e.g. Royal Blue Katan Silk"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                  Slugs (URL Friendly Name)
-                </label>
-                <div className="flex gap-2">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+              {/* Basic Info Card */}
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                    Product Name
+                  </label>
                   <input
                     required
                     type="text"
-                    value={formData.slug}
+                    value={formData.name}
                     onChange={(e) =>
-                      setFormData({ ...formData, slug: e.target.value })
+                      setFormData({ ...formData, name: e.target.value })
                     }
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary font-mono text-sm text-gray-600"
-                    placeholder="royal-blue-katan-silk"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary focus:border-primary transition-all text-lg font-serif"
+                    placeholder="e.g. Royal Blue Katan Silk"
                   />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      const generated = formData.name
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "-")
-                        .replace(/^-+|-+$/g, "");
-                      setFormData({ ...formData, slug: generated });
-                    }}
-                  >
-                    Generate
-                  </Button>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                    Brand (Optional)
+                    Slugs (URL Friendly Name)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
-                    placeholder="e.g. Aarong, Richman"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                    Tags (Comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.tags.join(", ")}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tags: e.target.value.split(",").map((t) => t.trim()),
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
-                    placeholder="Summer, Sale, New Arrival"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                  Description
-                </label>
-                <RichTextEditor
-                  value={formData.description}
-                  onChange={(val) =>
-                    setFormData({ ...formData, description: val })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-500 mb-2">
-                  Categories
-                </label>
-                <div className="border border-gray-200 rounded-md p-4 max-h-60 overflow-y-auto space-y-2 bg-gray-50/50">
-                  {flattenCategories(categories).map((cat) => (
-                    <label
-                      key={cat.id}
-                      className="flex items-center gap-3 text-sm cursor-pointer hover:bg-white p-2 rounded transition-colors"
+                  <div className="flex gap-2">
+                    <input
+                      required
+                      type="text"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        setFormData({ ...formData, slug: e.target.value })
+                      }
+                      className="flex-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary font-mono text-sm text-gray-600"
+                      placeholder="royal-blue-katan-silk"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        const generated = formData.name
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")
+                          .replace(/^-+|-+$/g, "");
+                        setFormData({ ...formData, slug: generated });
+                      }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={formData.categoryIds.includes(cat.id)}
-                        onChange={(e) => {
-                          if (e.target.checked)
-                            setFormData((prev) => ({
-                              ...prev,
-                              categoryIds: [...prev.categoryIds, cat.id],
-                            }));
-                          else
-                            setFormData((prev) => ({
-                              ...prev,
-                              categoryIds: prev.categoryIds.filter(
-                                (id) => id !== cat.id,
-                              ),
-                            }));
-                        }}
-                        className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
-                      />
-                      <span
-                        className={
-                          formData.categoryIds.includes(cat.id)
-                            ? "font-medium text-gray-900"
-                            : "text-gray-600"
-                        }
-                      >
-                        {cat.name}
-                      </span>
+                      Generate
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                      Brand (Optional)
                     </label>
-                  ))}
+                    <input
+                      type="text"
+                      value={formData.brand}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
+                      placeholder="e.g. Aarong, Richman"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                      Tags (Comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.tags.join(", ")}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          tags: e.target.value.split(",").map((t) => t.trim()),
+                        })
+                      }
+                      className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
+                      placeholder="Summer, Sale, New Arrival"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                    Description
+                  </label>
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={(val) =>
+                      setFormData({ ...formData, description: val })
+                    }
+                  />
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 py-4 border-t border-gray-100">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isActive: e.target.checked })
-                    }
-                    className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
-                  />
-                  <span className="text-sm font-medium">
-                    Active (Visible to customers)
+              {/* Organization Card */}
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                  Organization
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Categories */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categories
+                    </label>
+                    <FancyMultiSelect
+                      options={getCategoryOptions(categories)}
+                      selected={formData.categoryIds}
+                      onChange={(ids) =>
+                        setFormData({ ...formData, categoryIds: ids })
+                      }
+                      placeholder="Select categories..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Hierarchical selection supported.
+                    </p>
+                  </div>
+
+                  {/* Collections */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Collections
+                    </label>
+                    <FancyMultiSelect
+                      options={collections.map((c) => ({
+                        value: c.id,
+                        label: c.title,
+                      }))}
+                      selected={formData.collectionIds}
+                      onChange={(ids) =>
+                        setFormData({ ...formData, collectionIds: ids })
+                      }
+                      placeholder="Select collections..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Add to marketing collections.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visibility Card */}
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-900">
+                    Visibility Status
                   </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isFeatured: e.target.checked })
-                    }
-                    className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
-                  />
-                  <span className="text-sm font-medium">Featured Product</span>
-                </label>
+                  <span className="text-sm text-gray-500">
+                    Control product availability
+                  </span>
+                </div>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isActive: e.target.checked })
+                      }
+                      className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">Active</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isFeatured}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isFeatured: e.target.checked,
+                        })
+                      }
+                      className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">Featured</span>
+                  </label>
+                </div>
               </div>
             </div>
           )}

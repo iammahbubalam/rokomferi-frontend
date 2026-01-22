@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Category, Product } from "@/types";
+import { Category, Product, Collection } from "@/types";
 import { getApiUrl } from "@/lib/utils";
 import { ProductForm } from "@/components/admin/products/ProductForm";
 import { Loader2 } from "lucide-react";
@@ -13,6 +13,7 @@ export default function EditProductPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,18 +26,21 @@ export default function EditProductPage() {
         const headers = { Authorization: `Bearer ${token}` };
 
         // Parallel fetch
-        const [prodRes, catsRes] = await Promise.all([
+        const [prodRes, catsRes, colsRes] = await Promise.all([
           fetch(getApiUrl(`/admin/products/${id}`), { headers }),
           fetch(getApiUrl("/categories/tree")),
+          fetch(getApiUrl("/admin/collections"), { headers }),
         ]);
 
         if (!prodRes.ok) throw new Error("Product not found");
 
         const prodData = await prodRes.json();
         const catsData = await catsRes.json();
+        const colsData = await colsRes.json();
 
         setProduct(prodData);
         setCategories(catsData || []);
+        setCollections(colsData || []);
       } catch (err) {
         console.error(err);
         setError("Failed to load product");
@@ -70,6 +74,7 @@ export default function EditProductPage() {
     <ProductForm
       initialData={product}
       categories={categories}
+      collections={collections}
       isEditing={true}
     />
   );
