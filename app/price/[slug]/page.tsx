@@ -175,12 +175,7 @@ export default async function PricePage({ params }: PricePageProps) {
             </div>
 
             {/* CTA */}
-            {product.stock > 0 && (
-              <AddToCartButton
-                productId={product.id}
-                productName={product.name}
-              />
-            )}
+            {product.stock > 0 && <AddToCartButton product={product} />}
 
             <Link href={`/product/${product.slug}`}>
               <Button variant="outline" className="w-full mt-3">
