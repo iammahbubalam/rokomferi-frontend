@@ -1,3 +1,20 @@
+// AI/SEO Optimization Types
+export interface ProductSpecs {
+  [key: string]: string; // e.g., { "RAM": "8GB", "Storage": "128GB", "Battery": "5000mAh" }
+}
+
+export interface ProductFAQ {
+  question: string;
+  answer: string;
+}
+
+export interface ProductVerdict {
+  summary: string; // Main verdict statement
+  pros: string[]; // List of advantages
+  cons: string[]; // List of disadvantages
+  rating?: number; // Optional 1-5 rating
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -53,6 +70,10 @@ export interface Product {
   metaDescription?: string;
   keywords?: string;
   ogImage?: string;
+  // AI/SEO Optimization fields
+  specs?: ProductSpecs;
+  faqs?: ProductFAQ[];
+  verdict?: ProductVerdict;
 }
 
 export interface InventoryLog {
