@@ -182,12 +182,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
                   {product.stock > 0 ? "In Stock" : "Out of Stock"}
                 </div>
               </div>
-              {product.stock > 0 && (
-                <AddToCartButton
-                  productId={product.id}
-                  productName={product.name}
-                />
-              )}
+              {product.stock > 0 && <AddToCartButton product={product} />}
               <Link href={`/product/${product.slug}`}>
                 <Button variant="outline" className="w-full mt-2">
                   View Details
