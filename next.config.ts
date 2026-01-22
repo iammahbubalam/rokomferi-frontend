@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap.xml",
+        destination: `${process.env.BACKEND_URL || "http://localhost:8080"}/sitemap.xml`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

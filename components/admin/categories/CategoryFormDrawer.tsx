@@ -452,6 +452,22 @@ export function CategoryFormDrawer({
                         }
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                        Keywords
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 text-sm outline-none transition-all"
+                        placeholder="comma, separated, keywords"
+                        value={formData.keywords}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            keywords: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                   </div>
                 </section>
               </div>

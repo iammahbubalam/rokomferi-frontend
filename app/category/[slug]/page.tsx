@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { CategoryHero } from "@/components/category/CategoryHero";
 import { ChevronDown, Filter, LayoutGrid, LayoutList } from "lucide-react";
 import Link from "next/link";
+import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -25,7 +26,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: category.name,
+    title: category.metaTitle || category.name,
     description:
       category.metaDescription ||
       `Shop the latest ${category.name} collection.`,
@@ -48,8 +49,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
+  const breadcrumbs = [
+    { name: "Home", url: "/" },
+    { name: category.name, url: `/category/${category.slug}` },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
+      <BreadcrumbSchema items={breadcrumbs} />
       <CategoryHero category={category} productCount={products.length} />
 
       {/* Toolbar - Sticky */}

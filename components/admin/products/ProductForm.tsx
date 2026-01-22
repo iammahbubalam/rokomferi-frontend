@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
   Settings,
   Trash2,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -62,6 +63,9 @@ export function ProductForm({
     // I need to add variants to Frontend Type if I want to use it here safe.
     // For now I will cast as any or local interface.
     variants: (initialData as any)?.variants || ([] as any[]),
+    metaTitle: initialData?.metaTitle || "",
+    metaDescription: initialData?.metaDescription || "",
+    keywords: initialData?.keywords || "",
   });
 
   const tabs = [
@@ -70,6 +74,7 @@ export function ProductForm({
     { id: "pricing", label: "Pricing", icon: DollarSign },
     { id: "inventory", label: "Inventory", icon: Package },
     { id: "variants", label: "Variants", icon: Layers },
+    { id: "seo", label: "SEO", icon: Search },
   ];
 
   // --- Media Handlers ---
@@ -655,6 +660,86 @@ export function ProductForm({
                     </button>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* SEO Tab */}
+          {activeTab === "seo" && (
+            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-3">
+                Search Engine Optimization
+              </h3>
+
+              <div className="grid gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Meta Title</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-black/10 rounded-lg focus:outline-none focus:border-black transition-colors"
+                    value={formData.metaTitle}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metaTitle: e.target.value })
+                    }
+                    placeholder="e.g. Luxurious Silk Saree | Rokomferi"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Title tag shown in Google search results.</span>
+                    <span
+                      className={
+                        formData.metaTitle.length > 60 ? "text-red-500" : ""
+                      }
+                    >
+                      {formData.metaTitle.length}/60
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Meta Description
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-black/10 rounded-lg focus:outline-none focus:border-black transition-colors min-h-[100px]"
+                    value={formData.metaDescription}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        metaDescription: e.target.value,
+                      })
+                    }
+                    placeholder="A brief summary of the page content..."
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>
+                      Meta description shown in Google search results.
+                    </span>
+                    <span
+                      className={
+                        formData.metaDescription.length > 160
+                          ? "text-red-500"
+                          : ""
+                      }
+                    >
+                      {formData.metaDescription.length}/160
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Keywords (Comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-black/10 rounded-lg focus:outline-none focus:border-black transition-colors"
+                    value={formData.keywords}
+                    onChange={(e) =>
+                      setFormData({ ...formData, keywords: e.target.value })
+                    }
+                    placeholder="e.g. saree, silk, bangladesh fashion"
+                  />
+                </div>
               </div>
             </div>
           )}

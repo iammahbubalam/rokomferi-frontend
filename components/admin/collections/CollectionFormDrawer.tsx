@@ -298,6 +298,68 @@ export function CollectionFormDrawer({
                   </div>
                 </section>
 
+                {/* SEO */}
+                <section className="space-y-6">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-green-500 rounded-full"></span>
+                    SEO Settings
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Meta Title
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        value={formData.metaTitle || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            metaTitle: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. Best Eid Collection 2026"
+                      />
+                      <div className="text-right text-xs text-gray-400 mt-1">
+                        {(formData.metaTitle || "").length}/60
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Meta Description
+                      </label>
+                      <textarea
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        rows={3}
+                        value={formData.metaDescription || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            metaDescription: e.target.value,
+                          })
+                        }
+                        placeholder="SEO description..."
+                      />
+                      <div className="text-right text-xs text-gray-400 mt-1">
+                        {(formData.metaDescription || "").length}/160
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Keywords
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        value={formData.keywords || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, keywords: e.target.value })
+                        }
+                        placeholder="comma, separated, keywords"
+                      />
+                    </div>
+                  </div>
+                </section>
+
                 {/* Status */}
                 <section className="space-y-6">
                   <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">

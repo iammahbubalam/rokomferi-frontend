@@ -25,6 +25,10 @@ export interface Collection {
   story: string;
   isActive: boolean;
   products?: Product[];
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+  ogImage?: string;
 }
 
 export interface Product {
@@ -45,6 +49,10 @@ export interface Product {
   lowStockThreshold: number;
   createdAt?: string;
   updatedAt?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+  ogImage?: string;
 }
 
 export interface InventoryLog {
