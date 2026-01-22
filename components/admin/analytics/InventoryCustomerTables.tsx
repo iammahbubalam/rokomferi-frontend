@@ -51,12 +51,12 @@ export function InventoryCustomerTables({
     ? [
         {
           name: "New Customers",
-          value: Number(retention.newCustomers),
+          value: Number(retention.new_customers),
           color: "#3b82f6",
         },
         {
           name: "Returning",
-          value: Number(retention.returningCustomers),
+          value: Number(retention.returning_customers),
           color: "#10b981",
         },
       ]
@@ -147,13 +147,13 @@ export function InventoryCustomerTables({
                             {product.name}
                           </Link>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {Number(product.totalSold)} sold
+                            {Number(product.total_sold)} sold
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
-                      ৳{Number(product.totalRevenue).toLocaleString()}
+                      ৳{Number(product.total_revenue).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -193,16 +193,16 @@ export function InventoryCustomerTables({
                         </span>
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {customer.firstName} {customer.lastName}
+                            {customer.first_name} {customer.last_name}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {Number(customer.orderCount)} orders
+                            {Number(customer.order_count)} orders
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
-                      ৳{Number(customer.lifetimeValue).toLocaleString()}
+                      ৳{Number(customer.lifetime_value).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -224,8 +224,8 @@ export function InventoryCustomerTables({
         </div>
         <div className="p-6">
           {!retention ||
-          (retention.newCustomers === 0 &&
-            retention.returningCustomers === 0) ? (
+          (retention.new_customers === 0 &&
+            retention.returning_customers === 0) ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-8">
               No retention data available
             </p>
@@ -258,12 +258,12 @@ export function InventoryCustomerTables({
             </ResponsiveContainer>
           )}
           {retention &&
-            (retention.newCustomers > 0 ||
-              retention.returningCustomers > 0) && (
+            (retention.new_customers > 0 ||
+              retention.returning_customers > 0) && (
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {Number(retention.newCustomers)}
+                    {Number(retention.new_customers)}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     New
@@ -271,7 +271,7 @@ export function InventoryCustomerTables({
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {Number(retention.returningCustomers)}
+                    {Number(retention.returning_customers)}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     Returning

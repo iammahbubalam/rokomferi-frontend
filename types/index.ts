@@ -18,16 +18,16 @@ export interface ProductVerdict {
 // Analytics/Stats Types
 export interface DailySalesStat {
   date: string;
-  orderCount: number;
-  totalRevenue: number;
-  avgOrderValue: number;
+  order_count: number;
+  total_revenue: number;
+  avg_order_value: number;
 }
 
 export interface RevenueKPIs {
-  totalOrders: number;
-  totalRevenue: number;
-  avgOrderValue: number;
-  uniqueCustomers: number;
+  total_orders: number;
+  total_revenue: number;
+  avg_order_value: number;
+  unique_customers: number;
 }
 
 export interface LowStockProduct {
@@ -35,11 +35,11 @@ export interface LowStockProduct {
   name: string;
   slug: string;
   stock: number;
-  basePrice: number;
-  salePrice?: number;
+  base_price: number;
+  sale_price?: number;
   sku: string;
   media?: any;
-  stockStatus: string;
+  stock_status: string;
 }
 
 export interface TopSellingProduct {
@@ -55,16 +55,16 @@ export interface TopSellingProduct {
 
 export interface TopCustomer {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  orderCount: number;
-  lifetimeValue: number;
+  order_count: number;
+  lifetime_value: number;
 }
 
 export interface CustomerRetention {
-  newCustomers: number;
-  returningCustomers: number;
+  new_customers: number;
+  returning_customers: number;
 }
 
 export interface Category {

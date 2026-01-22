@@ -29,28 +29,30 @@ export function KPICards({ kpis, loading }: KPICardsProps) {
   const cards = [
     {
       title: "Total Revenue",
-      value: `৳${Number(kpis.totalRevenue).toLocaleString()}`,
+      value: `৳${Number(kpis.total_revenue).toLocaleString()}`,
       icon: DollarSign,
       color: "text-green-600 dark:text-green-400",
       bg: "bg-green-100 dark:bg-green-900/20",
     },
     {
       title: "Total Orders",
-      value: kpis.totalOrders.toLocaleString(),
+      value: Number(kpis.total_orders).toLocaleString(),
       icon: ShoppingCart,
       color: "text-blue-600 dark:text-blue-400",
       bg: "bg-blue-100 dark:bg-blue-900/20",
     },
     {
       title: "Avg Order Value",
-      value: `৳${Number(kpis.avgOrderValue).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      value: `৳${Number(kpis.avg_order_value).toLocaleString(undefined, {
+        maximumFractionDigits: 0,
+      })}`,
       icon: TrendingUp,
       color: "text-purple-600 dark:text-purple-400",
       bg: "bg-purple-100 dark:bg-purple-900/20",
     },
     {
       title: "Unique Customers",
-      value: kpis.uniqueCustomers.toLocaleString(),
+      value: Number(kpis.unique_customers).toLocaleString(),
       icon: Users,
       color: "text-orange-600 dark:text-orange-400",
       bg: "bg-orange-100 dark:bg-orange-900/20",

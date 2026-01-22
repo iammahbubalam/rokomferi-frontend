@@ -1,17 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { KPICards } from "@/components/admin/analytics/KPICards";
 import { RevenueChart } from "@/components/admin/analytics/RevenueChart";
 import { InventoryCustomerTables } from "@/components/admin/analytics/InventoryCustomerTables";
-import {
-  DailySalesStat,
-  RevenueKPIs,
-  LowStockProduct,
-  TopSellingProduct,
-  TopCustomer,
-  CustomerRetention,
-} from "@/types";
+import { useAdminStats } from "@/hooks/admin/useAdminStats";
 import { subDays, format } from "date-fns";
 
 export default function AnalyticsPage() {
@@ -20,83 +13,18 @@ export default function AnalyticsPage() {
     end: format(new Date(), "yyyy-MM-dd"),
   });
 
-  const [kpis, setKpis] = useState<RevenueKPIs | null>(null);
-  const [salesData, setSalesData] = useState<DailySalesStat[]>([]);
-  const [lowStock, setLowStock] = useState<LowStockProduct[]>([]);
-  const [topProducts, setTopProducts] = useState<TopSellingProduct[]>([]);
-  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
-  const [retention, setRetention] = useState<CustomerRetention | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchAnalytics();
-  }, [dateRange]);
-
-  const fetchAnalytics = async () => {
-    setLoading(true);
-    try {
-      // Fetch all analytics endpoints in parallel
-      const [
-        kpisRes,
-        salesRes,
-        lowStockRes,
-        topProductsRes,
-        topCustomersRes,
-        retentionRes,
-      ] = await Promise.all([
-        fetch(
-          `/api/v1/admin/stats/kpis?start=${dateRange.start}&end=${dateRange.end}`,
-          { credentials: "include" },
-        ),
-        fetch(
-          `/api/v1/admin/stats/revenue?start=${dateRange.start}&end=${dateRange.end}`,
-          { credentials: "include" },
-        ),
-        fetch(`/api/v1/admin/stats/inventory/low-stock?threshold=5&limit=10`, {
-          credentials: "include",
-        }),
-        fetch(
-          `/api/v1/admin/stats/products/top-selling?start=${dateRange.start}&end=${dateRange.end}&limit=10`,
-          { credentials: "include" },
-        ),
-        fetch(
-          `/api/v1/admin/stats/customers/top?start=${dateRange.start}&end=${dateRange.end}&limit=10`,
-          { credentials: "include" },
-        ),
-        fetch(
-          `/api/v1/admin/stats/customers/retention?start=${dateRange.start}&end=${dateRange.end}`,
-          { credentials: "include" },
-        ),
-      ]);
-
-      const [
-        kpisData,
-        salesData,
-        lowStockData,
-        topProductsData,
-        topCustomersData,
-        retentionData,
-      ] = await Promise.all([
-        kpisRes.json(),
-        salesRes.json(),
-        lowStockRes.json(),
-        topProductsRes.json(),
-        topCustomersRes.json(),
-        retentionRes.json(),
-      ]);
-
-      setKpis(kpisData);
-      setSalesData(salesData || []);
-      setLowStock(lowStockData || []);
-      setTopProducts(topProductsData || []);
-      setTopCustomers(topCustomersData || []);
-      setRetention(retentionData);
-    } catch (error) {
-      console.error("Failed to fetch analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    kpis,
+    salesData,
+    lowStock,
+    topProducts,
+    topCustomers,
+    retention,
+    isLoading,
+  } = useAdminStats({
+    startDate: dateRange.start,
+    endDate: dateRange.end,
+  });
 
   const handleDateRangeChange = (preset: string) => {
     const end = format(new Date(), "yyyy-MM-dd");
@@ -150,10 +78,10 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI Cards */}
-      <KPICards kpis={kpis} loading={loading} />
+      <KPICards kpis={kpis} loading={isLoading} />
 
       {/* Revenue Chart */}
-      <RevenueChart data={salesData} loading={loading} />
+      <RevenueChart data={salesData} loading={isLoading} />
 
       {/* Inventory & Customer Analytics */}
       <InventoryCustomerTables
@@ -161,7 +89,7 @@ export default function AnalyticsPage() {
         topProducts={topProducts}
         topCustomers={topCustomers}
         retention={retention}
-        loading={loading}
+        loading={isLoading}
       />
     </div>
   );

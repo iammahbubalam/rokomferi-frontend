@@ -40,9 +40,9 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
   // Format data for recharts
   const chartData = data.map((item) => ({
     date: format(parseISO(item.date), "MMM dd"),
-    revenue: Number(item.totalRevenue),
-    orders: item.orderCount,
-    aov: Number(item.avgOrderValue),
+    revenue: Number(item.total_revenue),
+    orders: item.order_count,
+    aov: Number(item.avg_order_value),
   }));
 
   return (
