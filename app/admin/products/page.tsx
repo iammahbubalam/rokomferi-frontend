@@ -127,7 +127,16 @@ async function SafeAdminProductsPage({ searchParams }: { searchParams: any }) {
     }
 
     const productsData = await productsRes.json();
-    const categoriesData = await categoriesRes.json();
+
+    // Handle categories - gracefully fallback to empty array if failed
+    let categoriesData: Category[] = [];
+    if (categoriesRes.ok) {
+      try {
+        categoriesData = await categoriesRes.json();
+      } catch {
+        console.error("Failed to parse categories response");
+      }
+    }
 
     return (
       <ProductClient

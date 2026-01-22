@@ -25,10 +25,10 @@ export default function EditProductPage() {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Parallel fetch
+        // Parallel fetch - use flat categories endpoint
         const [prodRes, catsRes, colsRes] = await Promise.all([
           fetch(getApiUrl(`/admin/products/${id}`), { headers }),
-          fetch(getApiUrl("/categories/tree")),
+          fetch(getApiUrl("/admin/categories"), { headers }),
           fetch(getApiUrl("/admin/collections"), { headers }),
         ]);
 

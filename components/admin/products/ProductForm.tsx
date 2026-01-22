@@ -35,17 +35,13 @@ interface ProductFormProps {
   isEditing?: boolean;
 }
 
+// Convert flat categories array to options format
 const getCategoryOptions = (
   cats: Category[],
 ): { value: string; label: string }[] => {
-  let options: { value: string; label: string }[] = [];
-  cats.forEach((c) => {
-    options.push({ value: c.id, label: c.name });
-    if (c.children) {
-      options = options.concat(getCategoryOptions(c.children));
-    }
-  });
-  return options;
+  return cats
+    .filter((c) => c.id && c.name) // Filter out invalid entries
+    .map((c) => ({ value: c.id, label: c.name }));
 };
 
 export function ProductForm({

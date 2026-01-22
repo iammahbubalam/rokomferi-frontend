@@ -67,6 +67,15 @@ export interface CustomerRetention {
   returning_customers: number;
 }
 
+export interface ProductStats {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  outOfStock: number;
+  lowStock: number;
+  totalInventoryValue: number;
+}
+
 export interface Category {
   id: string;
   name: string;

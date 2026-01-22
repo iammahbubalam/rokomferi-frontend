@@ -8,21 +8,43 @@ import { ProductForm } from "@/components/admin/products/ProductForm";
 export default function NewProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Parallel fetch
+    const token = localStorage.getItem("token");
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    // Parallel fetch - use flat categories endpoint for product forms
     Promise.all([
-      fetch(getApiUrl("/categories/tree")),
-      fetch(getApiUrl("/admin/collections")),
+      fetch(getApiUrl("/admin/categories"), { headers }),
+      fetch(getApiUrl("/admin/collections"), { headers }),
     ])
       .then(async ([catRes, colRes]) => {
-        const cats = await catRes.json();
-        const cols = await colRes.json();
-        setCategories(cats || []);
-        setCollections(cols || []);
+        if (catRes.ok) {
+          const cats = await catRes.json();
+          setCategories(cats || []);
+        }
+        if (colRes.ok) {
+          const cols = await colRes.json();
+          setCollections(cols || []);
+        }
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return <ProductForm categories={categories} collections={collections} />;
 }

@@ -10,6 +10,8 @@ import { ProductTable } from "@/components/admin/products/ProductTable";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useDialog } from "@/context/DialogContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { ProductStats as ProductStatsType } from "@/types";
+import { ProductStats } from "@/components/admin/products/ProductStats";
 
 interface ProductClientProps {
   initialProducts: Product[];
@@ -34,6 +36,29 @@ export function ProductClient({
   // We don't need isLoading state for initial load anymore!
   // But we might want it for transition.
   const [isPending, setIsPending] = useState(false);
+  const [stats, setStats] = useState<ProductStatsType | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl("/admin/products/stats"), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch product stats:", error);
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   // Sync selection reset when data changes?
   useEffect(() => {
@@ -142,7 +167,21 @@ export function ProductClient({
 
       if (!res.ok) throw new Error("Failed to update status");
 
+      // Optimistic Update for KPIs
+      if (stats) {
+        setStats({
+          ...stats,
+          activeProducts: newStatus
+            ? stats.activeProducts + 1
+            : stats.activeProducts - 1,
+          inactiveProducts: newStatus
+            ? stats.inactiveProducts - 1
+            : stats.inactiveProducts + 1,
+        });
+      }
+
       dialog.toast({ message: "Status updated", variant: "success" });
+      fetchStats();
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -168,7 +207,17 @@ export function ProductClient({
 
       if (!res.ok) throw new Error("Delete failed");
 
+      // Optimistic Update for KPIs (we don't know the status/stock easily here, so we refresh)
+      // Actually, for single delete, we can decrement total at least.
+      if (stats) {
+        setStats({
+          ...stats,
+          totalProducts: stats.totalProducts - 1,
+        });
+      }
+
       dialog.toast({ message: "Product deleted", variant: "success" });
+      fetchStats();
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -196,8 +245,18 @@ export function ProductClient({
           }),
         ),
       );
+
+      // Optimistic Update for KPIs
+      if (stats) {
+        setStats({
+          ...stats,
+          totalProducts: stats.totalProducts - selectedIds.length,
+        });
+      }
+
       dialog.toast({ message: "Bulk delete successful", variant: "success" });
       setSelectedIds([]);
+      fetchStats();
       router.refresh();
     } catch (error) {
       dialog.toast({
@@ -261,6 +320,8 @@ export function ProductClient({
           </Button>
         </Link>
       </div>
+
+      <ProductStats stats={stats} isLoading={isStatsLoading} />
 
       {/* Bulk Actions */}
       {selectedIds.length > 0 && (

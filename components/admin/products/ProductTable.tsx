@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -49,6 +49,22 @@ export function ProductTable({
   onSelectAll,
 }: ProductTableProps) {
   const [selectedDetail, setSelectedDetail] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const isFirstRender = useRef(true);
+
+  // Debounce search - wait 400ms after user stops typing
+  // Skip initial render to avoid empty search on mount
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const allSelected =
     products.length > 0 && selectedIds.length === products.length;
   const isIndeterminate =
@@ -76,8 +92,9 @@ export function ProductTable({
           <input
             type="text"
             placeholder="Search by name, SKU..."
+            value={searchTerm}
             className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-            onChange={(e) => onSearch(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
