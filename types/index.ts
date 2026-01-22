@@ -106,6 +106,14 @@ export interface Variant {
   name: string;
   stock: number;
   sku: string;
+  // L9 Fields
+  attributes: Record<string, string>; // e.g., { Color: "Red", Size: "XL" }
+  price?: number; // Override base price
+  salePrice?: number;
+  images: string[];
+  weight?: number;
+  dimensions?: { l: number; w: number; h: number };
+  barcode?: string;
 }
 
 export interface Product {
@@ -135,6 +143,10 @@ export interface Product {
   specs?: ProductSpecs;
   faqs?: ProductFAQ[];
   verdict?: ProductVerdict;
+  // L9 Fields
+  brand?: string;
+  tags?: string[];
+  warrantyInfo?: any;
 }
 
 export interface InventoryLog {

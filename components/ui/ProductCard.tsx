@@ -27,7 +27,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       ? Math.round(
           ((product.basePrice - product.salePrice!) / product.basePrice) * 100,
         )
-      : 0;
+      : 0; // End Discount Logic
 
   const isOutOfStock =
     product.stock <= 0 || product.stockStatus === "out_of_stock";

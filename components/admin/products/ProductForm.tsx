@@ -17,6 +17,7 @@ import {
   Settings,
   Trash2,
   Search,
+  Check,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,8 +45,12 @@ export function ProductForm({
   const dialog = useDialog();
 
   // Initial State Setup
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [activeVariantIdx, setActiveVariantIdx] = useState<number | null>(null);
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
+    slug: initialData?.slug || "",
     sku: initialData?.sku || "",
     description: initialData?.description || "",
     basePrice: initialData?.basePrice || 0,
@@ -61,6 +66,8 @@ export function ProductForm({
     metaTitle: initialData?.metaTitle || "",
     metaDescription: initialData?.metaDescription || "",
     keywords: initialData?.keywords || "",
+    brand: initialData?.brand || "",
+    tags: initialData?.tags || ([] as string[]),
   });
 
   const tabs = [
@@ -126,9 +133,34 @@ export function ProductForm({
       ...prev,
       variants: [
         ...prev.variants,
-        { id: crypto.randomUUID(), productId: "", name: "", stock: 0, sku: "" },
+        {
+          id: crypto.randomUUID(),
+          productId: "",
+          name: "",
+          stock: 0,
+          sku: "",
+          attributes: {},
+          images: [],
+        },
       ],
     }));
+  };
+
+  const toggleVariantImage = (imgUrl: string) => {
+    if (activeVariantIdx === null) return;
+
+    const variant = formData.variants[activeVariantIdx];
+    const currentImages = variant.images || [];
+    const isSelected = currentImages.includes(imgUrl);
+
+    let newImages;
+    if (isSelected) {
+      newImages = currentImages.filter((img) => img !== imgUrl);
+    } else {
+      newImages = [...currentImages, imgUrl];
+    }
+
+    updateVariant(activeVariantIdx, "images", newImages);
   };
 
   const updateVariant = (index: number, field: keyof Variant, value: any) => {
@@ -142,6 +174,70 @@ export function ProductForm({
       ...prev,
       variants: prev.variants.filter((_, i) => i !== index),
     }));
+  };
+
+  // --- Variant Generator Logic ---
+  const [generatorInput, setGeneratorInput] = useState("");
+
+  const generateVariants = () => {
+    if (!generatorInput.trim()) return;
+
+    // Parse input: "Color: Red, Blue; Size: S, M"
+    const options: Record<string, string[]> = {};
+    const parts = generatorInput.split(";");
+
+    for (const part of parts) {
+      const [key, values] = part.split(":");
+      if (key && values) {
+        options[key.trim()] = values
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean);
+      }
+    }
+
+    if (Object.keys(options).length === 0) return;
+
+    // Generate Cartesian Product
+    const keys = Object.keys(options);
+    const cartesian = (...a: any[][]) =>
+      a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())));
+
+    // @ts-ignore - complex array reducing
+    const combinations = cartesian(...keys.map((k) => options[k]));
+
+    const newVariants: Variant[] = combinations.map(
+      (combo: string | string[]) => {
+        const comboArray = Array.isArray(combo) ? combo : [combo];
+        const attrs: Record<string, string> = {};
+        let nameParts: string[] = [];
+
+        keys.forEach((key, idx) => {
+          attrs[key] = comboArray[idx];
+          nameParts.push(comboArray[idx]);
+        });
+
+        return {
+          id: crypto.randomUUID(),
+          productId: "",
+          name: nameParts.join(" / "),
+          stock: 0,
+          sku: "",
+          attributes: attrs,
+          images: [],
+        };
+      },
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      variants: [...prev.variants, ...newVariants],
+    }));
+    setGeneratorInput("");
+    dialog.toast({
+      message: `Generated ${newVariants.length} variants`,
+      variant: "success",
+    });
   };
 
   // --- Submission ---
@@ -282,6 +378,72 @@ export function ProductForm({
                   className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary focus:border-primary transition-all text-lg font-serif"
                   placeholder="e.g. Royal Blue Katan Silk"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                  Slugs (URL Friendly Name)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    required
+                    type="text"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData({ ...formData, slug: e.target.value })
+                    }
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary font-mono text-sm text-gray-600"
+                    placeholder="royal-blue-katan-silk"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const generated = formData.name
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, "-")
+                        .replace(/^-+|-+$/g, "");
+                      setFormData({ ...formData, slug: generated });
+                    }}
+                  >
+                    Generate
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                    Brand (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.brand}
+                    onChange={(e) =>
+                      setFormData({ ...formData, brand: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
+                    placeholder="e.g. Aarong, Richman"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                    Tags (Comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags.join(", ")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tags: e.target.value.split(",").map((t) => t.trim()),
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
+                    placeholder="Summer, Sale, New Arrival"
+                  />
+                </div>
               </div>
 
               <div>
@@ -560,92 +722,223 @@ export function ProductForm({
             </div>
           )}
 
-          {/* Variants Tab */}
+          {/* Variants Tab - L9 Command Center */}
           {activeTab === "variants" && (
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-4">
                 <div>
-                  <h3 className="font-bold text-gray-900">Product Variants</h3>
+                  <h3 className="font-bold text-gray-900">
+                    Variant Command Center
+                  </h3>
                   <p className="text-xs text-gray-500">
-                    Manage size, color, or material options.
+                    Manage complex options (Size, Color) and specific inventory.
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={addVariant}
-                  type="button"
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Add Variant
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      // Simple One-Click Generator Mockup
+                      // In reality, we'd open a dialog to ask for Attributes
+                      // For now, let's keep the manual add button + a "Smart Generate" placeholder
+                      addVariant();
+                    }}
+                    type="button"
+                    variant="outline"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add Manual Variant
+                  </Button>
+                </div>
               </div>
 
-              <div className="space-y-3">
+              {/* L9: Smart Generator Input (Concept) */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">
+                  Smart Generator
+                </h4>
+                <p className="text-xs text-gray-600 mb-3">
+                  Add options like "Color: Red, Blue" and "Size: S, M" to
+                  auto-generate variants.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded text-sm"
+                    placeholder="e.g. Color: Red, Blue; Size: S, M"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => alert("Generator UI coming in next step!")}
+                  >
+                    Generate
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
                 {formData.variants.length === 0 && (
-                  <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm">
-                    No variants added. This product uses global settings.
+                  <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-lg text-gray-400 text-sm">
+                    No variants added. Product uses base price & stock.
                   </div>
                 )}
+
                 {formData.variants.map((variant, idx) => (
                   <div
                     key={idx}
-                    className="flex gap-4 items-start p-4 border border-gray-200 rounded-lg bg-gray-50/30"
+                    className="group border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex-1 grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-[10px] uppercase text-gray-400 font-bold">
-                          Variant Name
-                        </label>
+                    {/* Header Row */}
+                    <div className="flex items-center gap-4 p-4 bg-gray-50/50 border-b border-gray-100">
+                      <div className="flex-1">
                         <input
                           type="text"
-                          placeholder="e.g. Size M, Red"
+                          placeholder="Variant Name (e.g. Red / XL)"
                           value={variant.name}
                           onChange={(e) =>
                             updateVariant(idx, "name", e.target.value)
                           }
-                          className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm"
+                          className="w-full bg-transparent font-medium focus:outline-none"
                         />
                       </div>
-                      <div>
-                        <label className="text-[10px] uppercase text-gray-400 font-bold">
-                          SKU
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(idx)}
+                        className="text-gray-400 hover:text-red-600 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Editor Body */}
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Column 1: Core Info */}
+                      <div className="space-y-3">
+                        <label className="text-[10px] uppercase font-bold text-gray-400">
+                          SKU & Stock
                         </label>
                         <input
                           type="text"
-                          placeholder="SKU-VAR-01"
+                          placeholder="Auto-generated if empty"
                           value={variant.sku}
                           onChange={(e) =>
                             updateVariant(idx, "sku", e.target.value)
                           }
-                          className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm font-mono"
+                          className="w-full px-3 py-2 border border-black/10 rounded text-sm font-mono mb-2"
                         />
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Stock:</span>
+                          <input
+                            type="number"
+                            value={variant.stock}
+                            onChange={(e) =>
+                              updateVariant(
+                                idx,
+                                "stock",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
+                            className="w-24 px-3 py-1 border border-black/10 rounded text-sm"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[10px] uppercase text-gray-400 font-bold">
-                          Stock
+
+                      {/* Column 2: Pricing Logic */}
+                      <div className="space-y-3 border-l border-gray-100 pl-4">
+                        <label className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-2">
+                          <DollarSign className="w-3 h-3" /> Pricing Override
                         </label>
-                        <input
-                          type="number"
-                          placeholder="0"
-                          value={variant.stock}
-                          onChange={(e) =>
-                            updateVariant(
-                              idx,
-                              "stock",
-                              parseInt(e.target.value),
-                            )
-                          }
-                          className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm"
-                        />
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-[10px] text-gray-400">
+                              Price
+                            </span>
+                            <input
+                              type="number"
+                              placeholder="Base"
+                              value={variant.price || ""}
+                              onChange={(e) =>
+                                updateVariant(
+                                  idx,
+                                  "price",
+                                  parseFloat(e.target.value) || undefined,
+                                )
+                              }
+                              className="w-full px-2 py-1 border border-black/10 rounded text-sm"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-gray-400">
+                              Sale
+                            </span>
+                            <input
+                              type="number"
+                              placeholder="None"
+                              value={variant.salePrice || ""}
+                              onChange={(e) =>
+                                updateVariant(
+                                  idx,
+                                  "salePrice",
+                                  parseFloat(e.target.value) || undefined,
+                                )
+                              }
+                              className="w-full px-2 py-1 border border-black/10 rounded text-sm text-red-500"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-gray-400">
+                          Leave empty to use base product price.
+                        </p>
+                      </div>
+
+                      {/* Column 3: Rich Media (JSONB) */}
+                      <div className="space-y-3 border-l border-gray-100 pl-4">
+                        <label className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-2">
+                          <ImageIcon className="w-3 h-3" /> Variant Image
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {/* Selected Images */}
+                          {(variant.images || []).map((img, imgIdx) => (
+                            <div
+                              key={imgIdx}
+                              className="relative h-16 w-16 rounded overflow-hidden border border-gray-200 group/img"
+                            >
+                              <Image
+                                src={img}
+                                alt="Variant"
+                                fill
+                                className="object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newImages = variant.images.filter(
+                                    (i) => i !== img,
+                                  );
+                                  updateVariant(idx, "images", newImages);
+                                }}
+                                className="absolute top-0 right-0 bg-red-500 text-white p-0.5 opacity-0 group-hover/img:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+
+                          {/* Add Button */}
+                          <div
+                            onClick={() => {
+                              setActiveVariantIdx(idx);
+                              setImagePickerOpen(true);
+                            }}
+                            className="h-16 w-16 bg-gray-50 rounded flex flex-col items-center justify-center text-[10px] text-gray-500 cursor-pointer hover:bg-gray-100 border border-dashed border-gray-300 transition-colors"
+                          >
+                            <Plus className="w-4 h-4 mb-1" />
+                            Select
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeVariant(idx)}
-                      className="mt-5 text-gray-400 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 ))}
               </div>
@@ -733,6 +1026,72 @@ export function ProductForm({
           )}
         </div>
       </div>
+      {/* Image Picker Modal */}
+      {imagePickerOpen && activeVariantIdx !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-bold text-lg">Select Variant Images</h3>
+              <button
+                onClick={() => setImagePickerOpen(false)}
+                className="text-gray-500 hover:text-gray-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto flex-1">
+              {formData.images.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p>No product images uploaded yet.</p>
+                  <p className="text-xs">
+                    Go to "Media" tab to upload images first.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                  {formData.images.map((img, idx) => {
+                    const isSelected =
+                      activeVariantIdx !== null &&
+                      (
+                        formData.variants[activeVariantIdx]?.images || []
+                      ).includes(img);
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => toggleVariantImage(img)}
+                        className={`
+                          relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all
+                          ${isSelected ? "border-primary ring-2 ring-primary ring-offset-1" : "border-transparent hover:border-gray-300"}
+                        `}
+                      >
+                        <Image
+                          src={img}
+                          alt="Product option"
+                          fill
+                          className="object-cover"
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <div className="bg-primary text-white rounded-full p-1">
+                              <Check className="w-4 h-4" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end">
+              <Button onClick={() => setImagePickerOpen(false)}>Done</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

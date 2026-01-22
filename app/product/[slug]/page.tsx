@@ -108,6 +108,7 @@ export default async function ProductPage({
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-primary leading-[0.9]">
               {product.name}
             </h1>
+
             <div className="flex items-center justify-between pt-2">
               <div className="flex flex-col">
                 <span className="text-2xl font-light text-primary">
