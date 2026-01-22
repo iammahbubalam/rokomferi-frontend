@@ -15,6 +15,58 @@ export interface ProductVerdict {
   rating?: number; // Optional 1-5 rating
 }
 
+// Analytics/Stats Types
+export interface DailySalesStat {
+  date: string;
+  orderCount: number;
+  totalRevenue: number;
+  avgOrderValue: number;
+}
+
+export interface RevenueKPIs {
+  totalOrders: number;
+  totalRevenue: number;
+  avgOrderValue: number;
+  uniqueCustomers: number;
+}
+
+export interface LowStockProduct {
+  id: string;
+  name: string;
+  slug: string;
+  stock: number;
+  basePrice: number;
+  salePrice?: number;
+  sku: string;
+  media?: any;
+  stockStatus: string;
+}
+
+export interface TopSellingProduct {
+  id: string;
+  name: string;
+  slug: string;
+  basePrice: number;
+  salePrice?: number;
+  media?: any;
+  totalSold: number;
+  totalRevenue: number;
+}
+
+export interface TopCustomer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  orderCount: number;
+  lifetimeValue: number;
+}
+
+export interface CustomerRetention {
+  newCustomers: number;
+  returningCustomers: number;
+}
+
 export interface Category {
   id: string;
   name: string;

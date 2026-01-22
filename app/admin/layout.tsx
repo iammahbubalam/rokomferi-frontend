@@ -19,6 +19,7 @@ import {
   FileText,
   ExternalLink,
   TicketPercent,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export default function AdminLayout({
 
   const navItems = [
     { label: "Overview", icon: LayoutDashboard, href: "/admin" },
+    { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
     { label: "Products", icon: Package, href: "/admin/products" },
     { label: "Inventory", icon: ClipboardList, href: "/admin/inventory" },
     { label: "Categories", icon: FolderTree, href: "/admin/categories" },
