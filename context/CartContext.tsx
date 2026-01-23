@@ -21,7 +21,7 @@ interface CartItem extends Product {
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, variantId?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -87,7 +87,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // 2. MUTATION: Add to Cart
   const addMutation = useMutation({
-    mutationFn: async (product: Product) => {
+    mutationFn: async ({
+      product,
+      variantId,
+    }: {
+      product: Product;
+      variantId?: string;
+    }) => {
+      // Resolve variant ID (default to first if not provided)
+      const finalVariantId = variantId || product.variants?.[0]?.id;
+      if (!finalVariantId) throw new Error("Product variant is required");
+
       if (!user) {
         const current =
           queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
@@ -111,12 +121,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+        body: JSON.stringify({
+          productId: product.id,
+          variantId: finalVariantId,
+          quantity: 1,
+        }),
       });
       if (!res.ok) throw new Error("Failed to add");
       return null;
     },
-    onMutate: async (product) => {
+    onMutate: async ({ product }) => {
       const key = ["cart", user?.id || "guest"];
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<CartItem[]>(key) || [];
@@ -145,8 +159,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const addToCart = (product: Product) => {
-    addMutation.mutate(product);
+  const addToCart = (product: Product, variantId?: string) => {
+    addMutation.mutate({ product, variantId });
   };
 
   // 3. MUTATION: Remove

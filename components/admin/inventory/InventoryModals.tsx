@@ -11,13 +11,15 @@ import { Loader2, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 // --- Adjust Stock Modal ---
 
 interface AdjustStockModalProps {
-  product: Product;
+  productName: string;
+  variant: Variant;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export function AdjustStockModal({
-  product,
+  productName,
+  variant,
   onClose,
   onSuccess,
 }: AdjustStockModalProps) {
@@ -57,7 +59,7 @@ export function AdjustStockModal({
     const finalAmount = type === "add" ? parseInt(amount) : -parseInt(amount);
 
     await adjustMutation.mutateAsync({
-      productId: product.id,
+      variantId: variant.id,
       changeAmount: finalAmount,
       reason:
         reason || (type === "add" ? "Manual Restock" : "Manual Deduction"),
@@ -69,7 +71,12 @@ export function AdjustStockModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in zoom-in-95">
-        <h2 className="text-lg font-bold mb-4">Adjust Stock: {product.name}</h2>
+        <h2 className="text-lg font-bold mb-4">
+          Adjust Stock: {productName}
+          <span className="block text-xs font-normal text-gray-500 mt-1">
+            Variant: {variant.name} ({variant.sku})
+          </span>
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <button
@@ -141,18 +148,20 @@ export function AdjustStockModal({
 // --- History Modal ---
 
 export function HistoryModal({
-  product,
+  productName,
+  variant,
   onClose,
 }: {
-  product: Product;
+  productName: string;
+  variant: Variant;
   onClose: () => void;
 }) {
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ["inventory_logs", product.id],
+    queryKey: ["inventory_logs", variant.id],
     queryFn: async () => {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        getApiUrl(`/admin/inventory/logs?productId=${product.id}&limit=20`),
+        getApiUrl(`/admin/inventory/logs?variantId=${variant.id}&limit=20`),
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -168,7 +177,12 @@ export function HistoryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 h-[600px] flex flex-col animate-in zoom-in-95">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold">Stock History: {product.name}</h2>
+          <div>
+            <h2 className="text-lg font-bold">Stock History: {productName}</h2>
+            <p className="text-xs text-gray-500">
+              Variant: {variant.name} ({variant.sku})
+            </p>
+          </div>
           <Button variant="secondary" size="sm" onClick={onClose}>
             Close
           </Button>

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Product } from "@/types";
+import { Variant, Product } from "@/types";
 import { Button } from "@/components/ui/Button";
 
-import { History, Search } from "lucide-react";
+import { History, Search, Package } from "lucide-react";
 import {
   AdjustStockModal,
   HistoryModal,
@@ -16,15 +16,30 @@ interface InventoryClientProps {
   initialSearch?: string;
 }
 
+interface InventoryRow {
+  productId: string;
+  productName: string;
+  variant: Variant;
+}
+
 export default function InventoryClient({
   initialProducts,
   initialSearch = "",
 }: InventoryClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState(initialSearch);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedRow, setSelectedRow] = useState<InventoryRow | null>(null);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+  // Flatten products into variants for the unified list
+  const rows: InventoryRow[] = initialProducts.flatMap((p) =>
+    (p.variants || []).map((v) => ({
+      productId: p.id,
+      productName: p.name,
+      variant: v,
+    })),
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +48,13 @@ export default function InventoryClient({
     router.push(`/admin/inventory?${params.toString()}`);
   };
 
-  const openAdjust = (p: Product) => {
-    setSelectedProduct(p);
+  const openAdjust = (row: InventoryRow) => {
+    setSelectedRow(row);
     setShowAdjustModal(true);
   };
 
-  const openHistory = (p: Product) => {
-    setSelectedProduct(p);
+  const openHistory = (row: InventoryRow) => {
+    setSelectedRow(row);
     setShowHistoryModal(true);
   };
 
@@ -54,9 +69,12 @@ export default function InventoryClient({
           <h1 className="text-3xl font-serif font-bold text-gray-900">
             Inventory Management
           </h1>
-          <p className="text-gray-500 mt-1">
-            Track stock levels and view audit trails.
-          </p>
+          <div className="flex items-center gap-2 text-primary bg-primary/5 px-2 py-1 rounded w-fit mt-2">
+            <Package className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              SKU-Centric (L9 Standard)
+            </span>
+          </div>
         </div>
         <form onSubmit={handleSearch} className="relative w-64">
           <Button
@@ -81,46 +99,57 @@ export default function InventoryClient({
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold">
             <tr>
-              <th className="px-6 py-4">Product / SKU</th>
+              <th className="px-6 py-4">Product / Variant</th>
+              <th className="px-6 py-4">SKU</th>
               <th className="px-6 py-4 text-center">Stock Level</th>
               <th className="px-6 py-4 text-center">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {initialProducts.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400">
-                  No products found.
+                <td colSpan={5} className="p-8 text-center text-gray-400">
+                  No inventory items found.
                 </td>
               </tr>
             ) : (
-              initialProducts.map((product) => (
+              rows.map((row) => (
                 <tr
-                  key={product.id}
+                  key={row.variant.id}
                   className="hover:bg-gray-50/50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">
-                      {product.name}
+                      {row.productName}
                     </div>
-                    <div className="text-xs text-gray-500 font-mono">
-                      {product.sku}
-                    </div>
+                    {row.variant.name !== "Default" && (
+                      <div className="text-[10px] text-primary font-bold uppercase mt-0.5">
+                        {row.variant.name}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <code className="text-xs text-gray-500 font-mono bg-gray-50 px-1.5 py-0.5 rounded">
+                      {row.variant.sku}
+                    </code>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span
-                      className={`text-lg font-bold ${product.stock <= (product.lowStockThreshold || 5) ? "text-red-600" : "text-gray-700"}`}
+                      className={`text-lg font-bold ${row.variant.stock <= row.variant.lowStockThreshold ? "text-red-600" : "text-gray-700"}`}
                     >
-                      {product.stock}
+                      {row.variant.stock}
                     </span>
+                    <div className="text-[10px] text-gray-400">
+                      Threshold: {row.variant.lowStockThreshold}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {product.stock <= 0 ? (
+                    {row.variant.stock <= 0 ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         Out of Stock
                       </span>
-                    ) : product.stock <= (product.lowStockThreshold || 5) ? (
+                    ) : row.variant.stock <= row.variant.lowStockThreshold ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                         Low Stock
                       </span>
@@ -134,7 +163,7 @@ export default function InventoryClient({
                     <Button
                       size="sm"
                       variant="outline-white"
-                      onClick={() => openHistory(product)}
+                      onClick={() => openHistory(row)}
                       title="View Logs"
                     >
                       <History className="w-4 h-4 text-gray-500" />
@@ -142,7 +171,7 @@ export default function InventoryClient({
                     <Button
                       size="sm"
                       variant="primary"
-                      onClick={() => openAdjust(product)}
+                      onClick={() => openAdjust(row)}
                     >
                       Adjust
                     </Button>
@@ -155,9 +184,10 @@ export default function InventoryClient({
       </div>
 
       {/* Modals */}
-      {showAdjustModal && selectedProduct && (
+      {showAdjustModal && selectedRow && (
         <AdjustStockModal
-          product={selectedProduct}
+          productName={selectedRow.productName}
+          variant={selectedRow.variant}
           onClose={() => setShowAdjustModal(false)}
           onSuccess={() => {
             setShowAdjustModal(false);
@@ -166,9 +196,10 @@ export default function InventoryClient({
         />
       )}
 
-      {showHistoryModal && selectedProduct && (
+      {showHistoryModal && selectedRow && (
         <HistoryModal
-          product={selectedProduct}
+          productName={selectedRow.productName}
+          variant={selectedRow.variant}
           onClose={() => setShowHistoryModal(false)}
         />
       )}

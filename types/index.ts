@@ -123,6 +123,7 @@ export interface Variant {
   weight?: number;
   dimensions?: { l: number; w: number; h: number };
   barcode?: string;
+  lowStockThreshold: number;
 }
 
 export interface Product {
@@ -132,16 +133,13 @@ export interface Product {
   description: string;
   basePrice: number;
   salePrice?: number;
-  stock: number;
   stockStatus: "in_stock" | "out_of_stock" | "pre_order";
   images: string[];
   categories: Category[];
   collections?: Collection[];
-  sku: string;
   isActive: boolean;
   isFeatured?: boolean;
   isNew?: boolean;
-  lowStockThreshold: number;
   createdAt?: string;
   updatedAt?: string;
   metaTitle?: string;

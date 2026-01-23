@@ -19,7 +19,8 @@ export function AddToCartButton({ product, disabled }: AddToCartButtonProps) {
   const handleAddToCart = async () => {
     setIsAdding(true);
     try {
-      await addToCart(product);
+      // Auto-select first/default variant if no selector logic here (Quick Add)
+      await addToCart(product, product.variants?.[0]?.id);
     } finally {
       setTimeout(() => setIsAdding(false), 500);
     }
@@ -29,11 +30,11 @@ export function AddToCartButton({ product, disabled }: AddToCartButtonProps) {
     <Button
       onClick={handleAddToCart}
       disabled={disabled || isAdding}
-      variant="primary" 
+      variant="primary"
       className={clsx(
         "w-full py-6 uppercase tracking-[0.2em] text-xs font-bold transition-all duration-300",
         "bg-primary text-white hover:bg-accent-gold hover:text-white border border-transparent",
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary",
       )}
     >
       {isAdding ? (

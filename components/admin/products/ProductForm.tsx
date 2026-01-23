@@ -63,13 +63,10 @@ export function ProductForm({
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     slug: initialData?.slug || "",
-    sku: initialData?.sku || "",
     description: initialData?.description || "",
     basePrice: initialData?.basePrice || 0,
     salePrice: initialData?.salePrice || 0,
-    stock: initialData?.stock || 0,
     stockStatus: initialData?.stockStatus || "in_stock",
-    lowStockThreshold: initialData?.lowStockThreshold || 5,
     isActive: initialData?.isActive ?? true, // Default true for new
     isFeatured: initialData?.isFeatured || false,
     categoryIds: initialData?.categories?.map((c) => c.id) || ([] as string[]),
@@ -148,13 +145,14 @@ export function ProductForm({
       variants: [
         ...prev.variants,
         {
-          id: crypto.randomUUID(),
+          id: "", // Empty ID = Backend will CREATE this variant
           productId: "",
           name: "",
           stock: 0,
           sku: "",
           attributes: {},
           images: [],
+          lowStockThreshold: 5,
         },
       ],
     }));
@@ -232,13 +230,14 @@ export function ProductForm({
         });
 
         return {
-          id: crypto.randomUUID(),
+          id: "", // Empty ID = Backend will CREATE this variant
           productId: "",
           name: nameParts.join(" / "),
           stock: 0,
           sku: "",
           attributes: attrs,
           images: [],
+          lowStockThreshold: 5,
         };
       },
     );
@@ -270,9 +269,8 @@ export function ProductForm({
         ...formData,
         // Ensure number types
         basePrice: Number(formData.basePrice),
-        salePrice: Number(formData.salePrice),
-        stock: Number(formData.stock),
-        lowStockThreshold: Number(formData.lowStockThreshold),
+        // salePrice must be NULL or > 0 (DB constraint), so send null if 0 or empty
+        salePrice: formData.salePrice ? Number(formData.salePrice) : null,
       };
 
       const res = await fetch(url, {
@@ -665,56 +663,6 @@ export function ProductForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                    SKU (Stock Keeping Unit)
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    value={formData.sku}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sku: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                    Global Stock Quantity
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stock: e.target.value as any })
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary font-medium"
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    Total stock if not using variants. If variants used, this
-                    usually sums them up.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
-                    Low Stock Threshold
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.lowStockThreshold}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        lowStockThreshold: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
                     Stock Status
                   </label>
                   <select
@@ -734,6 +682,20 @@ export function ProductForm({
                     <option value="out_of_stock">Out of Stock</option>
                     <option value="pre_order">Pre Order</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-md flex items-start gap-3">
+                <Package className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-bold text-blue-900">
+                    SKU-Centric Inventory
+                  </h4>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Stock and SKUs are now managed at the Variant level. Please
+                    go to the <b>Variants</b> tab to manage inventory for each
+                    SKU.
+                  </p>
                 </div>
               </div>
             </div>
@@ -852,6 +814,23 @@ export function ProductForm({
                               updateVariant(
                                 idx,
                                 "stock",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
+                            className="w-24 px-3 py-1 border border-black/10 rounded text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            Threshold:
+                          </span>
+                          <input
+                            type="number"
+                            value={variant.lowStockThreshold}
+                            onChange={(e) =>
+                              updateVariant(
+                                idx,
+                                "lowStockThreshold",
                                 parseInt(e.target.value) || 0,
                               )
                             }
