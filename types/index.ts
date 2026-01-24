@@ -15,6 +15,20 @@ export interface ProductVerdict {
   rating?: number; // Optional 1-5 rating
 }
 
+export interface Pagination {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface VariantWithProduct extends Variant {
+  productName: string;
+  productSlug: string;
+  productBasePrice: number;
+  productImage?: string;
+}
+
 // Analytics/Stats Types
 export interface DailySalesStat {
   date: string;
