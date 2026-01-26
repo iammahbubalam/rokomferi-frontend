@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope, Pinyon_Script } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { IntroProvider } from "@/context/IntroContext";
@@ -87,6 +88,7 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
       >
+        <OrganizationSchema siteConfig={siteConfig} />
         <QueryProvider>
           <AuthContextProvider>
             <GoogleAuthProvider>
@@ -95,12 +97,13 @@ export default async function RootLayout({
                   <IntroOverlay />
                   <CartProvider>
                     <WishlistProvider>
-                      <OrganizationSchema siteConfig={siteConfig} />
-                      <Navbar
-                        categories={categories}
-                        collections={collections}
-                        siteConfig={siteConfig}
-                      />
+                      <Suspense fallback={<div className="h-[88px] md:h-[104px] w-full" />}>
+                        <Navbar
+                          categories={categories}
+                          collections={collections}
+                          siteConfig={siteConfig}
+                        />
+                      </Suspense>
                       <main className="flex-grow pt-[88px] md:pt-[104px]">
                         {/* pt to offset fixed header height approx */}
                         {children}
