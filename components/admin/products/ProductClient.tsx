@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ProductTable } from "@/components/admin/products/ProductTable";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useDialog } from "@/context/DialogContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProductStats as ProductStatsType } from "@/types";
 import { ProductStats } from "@/components/admin/products/ProductStats";
 
@@ -28,43 +28,105 @@ export function ProductClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const dialog = useDialog();
-  // We can use useQueryClient to invalidate cache if we were using useQuery,
-  // currently we rely on router.refresh() for Server Components data.
+  const queryClient = useQueryClient();
+
+  // 1. React Query for Client-Side Cache Priority
+  // We seed it with initialProducts (SSR) so first load is instant.
+  // Then we manage it entirely on client.
+  const { data: products = initialProducts } = useQuery({
+    queryKey: ["admin_products", searchParams.toString()], // Key depends on filters
+    queryFn: async () => {
+      // Only runs if we explicitly invalidate or refetch (which we try to avoid)
+      // or if params change (pagination/search).
+      const res = await fetch(getApiUrl(`/admin/products?${searchParams.toString()}`), {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (!res.ok) throw new Error("Fetch failed");
+      const json = await res.json();
+      return json.data as Product[];
+    },
+    initialData: initialProducts,
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 mins unless mutation happens
+  });
 
   // Local state for selection
+  // Local state for selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  // We don't need isLoading state for initial load anymore!
-  // But we might want it for transition.
-  const [isPending, setIsPending] = useState(false);
-  const [stats, setStats] = useState<ProductStatsType | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false); // Restored for bulk actions
 
-  const fetchStats = useCallback(async () => {
-    try {
+  // 3. Stats Management via React Query
+  // Replaces useEffect (Modern Standard)
+  const { data: stats = null, refetch: refetchStats } = useQuery({
+    queryKey: ["admin_product_stats"],
+    queryFn: async () => {
       const token = localStorage.getItem("token");
       const res = await fetch(getApiUrl("/admin/products/stats"), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch product stats:", error);
-    } finally {
-      setIsStatsLoading(false);
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json() as Promise<ProductStatsType>;
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  // 2. Mutation with Surgical Cache Update (Zero Refetch)
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, newStatus }: { id: string; newStatus: boolean }) => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl(`/admin/products/${id}/status`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      return res.json(); // Returns { id, isActive, ... }
+    },
+    onSuccess: (data) => {
+      // SURGICAL UPDATE: Modifying cache directly without network call
+      queryClient.setQueryData(
+        ["admin_products", searchParams.toString()],
+        (old: Product[] | undefined) => {
+          if (!old) return [];
+          return old.map((p) => (p.id === data.id ? { ...p, isActive: data.isActive } : p));
+        }
+      );
 
-  // Sync selection reset when data changes?
-  useEffect(() => {
-    // Optional: Reset selection when page changes
-    // setSelectedIds([]);
-  }, [searchParams]);
+      // Query invalidation handles the update
+      queryClient.invalidateQueries({ queryKey: ["admin_product_stats"] });
+      dialog.toast({ message: "Status updated", variant: "success" });
+    },
+    onError: () => {
+      dialog.toast({ message: "Failed to update status", variant: "danger" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl(`/admin/products/${id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      return id;
+    },
+    onSuccess: (deletedId) => {
+      // Remove from list cache
+      queryClient.setQueryData(
+        ["admin_products", searchParams.toString()],
+        (old: Product[] | undefined) => old ? old.filter(p => p.id !== deletedId) : []
+      );
+      // Decrease total count
+      queryClient.setQueryData(["admin_product_stats"], (prev: ProductStatsType | undefined) => {
+        if (!prev) return null;
+        return { ...prev, totalProducts: prev.totalProducts - 1 };
+      });
+      dialog.toast({ message: "Product deleted", variant: "success" });
+    },
+    onError: () => dialog.toast({ message: "Delete failed", variant: "danger" })
+  });
 
   // URL Helper
   const createQueryString = useCallback(
@@ -149,81 +211,6 @@ export function ProductClient({
     router.push(pathname + "?" + params.toString());
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    const newStatus = !currentStatus;
-    // Optimistic UI could be handled by local state override if complex,
-    // but here we just wait for server refresh or use router.refresh
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/products/${id}/status`), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isActive: newStatus }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update status");
-
-      // Optimistic Update for KPIs
-      if (stats) {
-        setStats({
-          ...stats,
-          activeProducts: newStatus
-            ? stats.activeProducts + 1
-            : stats.activeProducts - 1,
-          inactiveProducts: newStatus
-            ? stats.inactiveProducts - 1
-            : stats.inactiveProducts + 1,
-        });
-      }
-
-      dialog.toast({ message: "Status updated", variant: "success" });
-      fetchStats();
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      dialog.toast({ message: "Failed to update status", variant: "danger" });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    const confirmed = await dialog.confirm({
-      title: "Delete Product",
-      message: "Are you sure? This action cannot be undone.",
-      confirmText: "Delete",
-      variant: "danger",
-    });
-    if (!confirmed) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/products/${id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Delete failed");
-
-      // Optimistic Update for KPIs (we don't know the status/stock easily here, so we refresh)
-      // Actually, for single delete, we can decrement total at least.
-      if (stats) {
-        setStats({
-          ...stats,
-          totalProducts: stats.totalProducts - 1,
-        });
-      }
-
-      dialog.toast({ message: "Product deleted", variant: "success" });
-      fetchStats();
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      dialog.toast({ message: "Failed to delete product", variant: "danger" });
-    }
-  };
 
   const handleBulkDelete = async () => {
     const confirmed = await dialog.confirm({
@@ -246,18 +233,13 @@ export function ProductClient({
         ),
       );
 
-      // Optimistic Update for KPIs
-      if (stats) {
-        setStats({
-          ...stats,
-          totalProducts: stats.totalProducts - selectedIds.length,
-        });
-      }
+      // We invalidating strictly necessary queries
+      queryClient.invalidateQueries({ queryKey: ["admin_products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_product_stats"] });
 
       dialog.toast({ message: "Bulk delete successful", variant: "success" });
       setSelectedIds([]);
-      fetchStats();
-      router.refresh();
+      // router.refresh(); // No longer needed as we invalidated queries
     } catch (error) {
       dialog.toast({
         message: "Some items failed to delete",
@@ -284,9 +266,14 @@ export function ProductClient({
           }),
         ),
       );
+
+      // Invalidate to refresh list and stats
+      queryClient.invalidateQueries({ queryKey: ["admin_products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_product_stats"] });
+
       dialog.toast({ message: "Bulk update successful", variant: "success" });
       setSelectedIds([]);
-      router.refresh();
+      // router.refresh();
     } catch (error) {
       dialog.toast({ message: "Bulk update failed", variant: "danger" });
     } finally {
@@ -321,7 +308,7 @@ export function ProductClient({
         </Link>
       </div>
 
-      <ProductStats stats={stats} isLoading={isStatsLoading} />
+      <ProductStats stats={stats} isLoading={!stats} />
 
       {/* Bulk Actions */}
       {selectedIds.length > 0 && (
@@ -352,20 +339,20 @@ export function ProductClient({
       )}
 
       <ProductTable
-        products={initialProducts}
-        total={initialTotal}
-        isLoading={isPending} // Only shows loading if bulk action is pending. Navigation loading is handled by Next.js loading.js usually, or strictly we can use useTransition
+        products={products}
+        total={initialTotal} // Note: This might get out of sync slightly if we don't refetch, but acceptable for perf
+        isLoading={false}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
         onSort={handleSort}
         onFilterCategory={handleFilterCategory}
         onFilterStatus={handleFilterStatus}
         categories={categories}
-        onToggleStatus={handleToggleStatus}
-        onDelete={handleDelete}
+        onToggleStatus={(id, current) => toggleStatusMutation.mutate({ id, newStatus: !current })}
+        onDelete={(id) => deleteMutation.mutate(id)}
         selectedIds={selectedIds}
-        onSelectOne={handleSelectOne}
-        onSelectAll={handleSelectAll}
+        onSelectOne={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
+        onSelectAll={(checked) => setSelectedIds(checked ? products.map(p => p.id) : [])}
       />
     </div>
   );

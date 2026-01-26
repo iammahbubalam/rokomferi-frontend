@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Order } from "@/types";
 import { useDialog } from "@/context/DialogContext";
 import { Loader2 } from "lucide-react";
 import { getApiUrl } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface OrdersClientProps {
   initialOrders: Order[];
@@ -14,8 +15,27 @@ interface OrdersClientProps {
 export default function OrdersClient({ initialOrders }: OrdersClientProps) {
   const router = useRouter();
   const dialog = useDialog();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "");
+
+  // L9: Client-Side Cache - Single Source of Truth
+  const { data: orders = initialOrders, isFetching } = useQuery({
+    queryKey: ["admin_orders", statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (statusFilter) params.set("status", statusFilter);
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl(`/admin/orders?${params.toString()}`), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      const json = await res.json();
+      return json.data || json; // Handle varied backend response structures
+    },
+    initialData: initialOrders
+  });
 
   const handleFilterChange = (newStatus: string) => {
     setStatusFilter(newStatus);
@@ -24,38 +44,35 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
     router.push(`/admin/orders?${params.toString()}`);
   };
 
-  const updateStatus = async (orderId: string, newStatus: string) => {
-    const confirmed = await dialog.confirm({
-      title: "Update Status",
-      message: `Update order status to ${newStatus}?`,
-      confirmText: "Update",
-    });
-    if (!confirmed) return;
-
-    setIsUpdating(true);
-    try {
-      const token = localStorage.getItem("token"); // Still need token for write
-      const res = await fetch(getApiUrl(`/admin/orders/${orderId}/status`), {
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(getApiUrl(`/admin/orders/${id}/status`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status }),
       });
-
-      if (res.ok) {
-        dialog.toast({ message: "Order status updated", variant: "success" });
-        router.refresh(); // Refresh Server Component
-      } else {
-        dialog.toast({ message: "Failed to update status", variant: "danger" });
-      }
-    } catch (error) {
-      console.error(error);
-      dialog.toast({ message: "Error updating status", variant: "danger" });
-    } finally {
-      setIsUpdating(false);
+      if (!res.ok) throw new Error("Failed");
+      return { id, status };
+    },
+    onSuccess: ({ id, status }) => {
+      // Surgical Cache Update
+      queryClient.setQueryData(["admin_orders", statusFilter], (old: Order[] | undefined) => {
+        if (!old) return [];
+        return old.map(o => o.id === id ? { ...o, status } : o);
+      });
+      dialog.toast({ message: "Order status updated", variant: "success" });
+    },
+    onError: () => {
+      dialog.toast({ message: "Failed to update status", variant: "danger" });
     }
+  });
+
+  const updateStatus = (orderId: string, newStatus: string) => {
+    statusMutation.mutate({ id: orderId, status: newStatus });
   };
 
   const statusColors = {
@@ -86,7 +103,7 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
-        {isUpdating && (
+        {(statusMutation.isPending || isFetching) && (
           <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
@@ -125,7 +142,7 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
                 </td>
               </tr>
             ) : (
-              initialOrders.map((order) => (
+              orders.map((order: Order) => (
                 <tr key={order.id} className="hover:bg-gray-50/50">
                   <td className="px-6 py-4 font-mono text-xs text-secondary">
                     #{order.id.slice(0, 8)}

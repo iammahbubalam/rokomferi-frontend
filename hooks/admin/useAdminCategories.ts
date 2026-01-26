@@ -24,7 +24,7 @@ export function useAdminCategories() {
     queryKey: ["admin_categories"],
     queryFn: async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl("/admin/categories"), {
+      const res = await fetch(getApiUrl("/admin/categories/tree"), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch categories");

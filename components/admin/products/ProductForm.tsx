@@ -27,6 +27,7 @@ import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { Button } from "@/components/ui/Button";
 import { Product, Category, Variant, Collection } from "@/types";
 import { FancyMultiSelect } from "@/components/ui/FancyMultiSelect";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -55,6 +56,7 @@ export function ProductForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const dialog = useDialog();
+  const queryClient = useQueryClient();
 
   // Initial State Setup
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
@@ -284,8 +286,11 @@ export function ProductForm({
 
       if (!res.ok) throw new Error("Failed to save product");
 
+      queryClient.invalidateQueries({ queryKey: ["admin_products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_product_stats"] });
+
       router.push("/admin/products");
-      router.refresh();
+      router.refresh(); // Still needed for server components, but query path is clear
     } catch (error) {
       console.error(error);
       dialog.toast({ message: "Failed to save product", variant: "danger" });
@@ -342,11 +347,10 @@ export function ProductForm({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-all ${
-                activeTab === tab.id
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-all ${activeTab === tab.id
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "text-gray-600 hover:bg-gray-50"
+                }`}
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}

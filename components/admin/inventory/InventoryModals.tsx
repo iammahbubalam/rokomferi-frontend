@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Product, InventoryLog } from "@/types";
 import { useDialog } from "@/context/DialogContext";
 import { Button } from "@/components/ui/Button";
+import { Variant } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getApiUrl } from "@/lib/utils";
 import { Loader2, ArrowUpRight, ArrowDownLeft } from "lucide-react";

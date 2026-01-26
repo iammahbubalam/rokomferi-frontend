@@ -10,7 +10,7 @@ import Image from "next/image";
 import { CollectionFormDrawer } from "@/components/admin/collections/CollectionFormDrawer";
 import Link from "next/link";
 import { getApiUrl } from "@/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface CollectionsClientProps {
   initialCollections: Collection[];
@@ -21,6 +21,18 @@ export default function CollectionsClient({
 }: CollectionsClientProps) {
   const router = useRouter();
   const dialog = useDialog();
+  const queryClient = useQueryClient();
+
+  // 1. React Query
+  const { data: collections = initialCollections } = useQuery({
+    queryKey: ["admin_collections"],
+    queryFn: async () => {
+      const res = await fetch(getApiUrl("/collections"), { cache: 'no-store' });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    initialData: initialCollections
+  });
 
   // Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -46,9 +58,12 @@ export default function CollectionsClient({
       });
       if (!res.ok) throw new Error("Failed to delete");
     },
-    onSuccess: () => {
+    onSuccess: (deletedId, variables) => {
+      // Surgical Delete
+      queryClient.setQueryData(["admin_collections"], (old: Collection[] | undefined) => {
+        return old ? old.filter(c => c.id !== variables) : [];
+      });
       dialog.toast({ message: "Collection deleted", variant: "success" });
-      router.refresh();
     },
     onError: () => {
       dialog.toast({ message: "Failed to delete", variant: "danger" });
@@ -74,9 +89,12 @@ export default function CollectionsClient({
       );
       if (!res.ok) throw new Error("Failed to update");
     },
-    onSuccess: () => {
-      // Optimistic update handled by router refresh mostly, but could be instant if we had local state
-      router.refresh();
+    onSuccess: (data, variables) => {
+      // Surgical Toggle
+      queryClient.setQueryData(["admin_collections"], (old: Collection[] | undefined) => {
+        if (!old) return [];
+        return old.map(c => c.id === variables.id ? { ...c, isActive: !c.isActive } : c);
+      });
       dialog.toast({ message: "Status updated", variant: "success" });
     },
     onError: () => {
@@ -112,7 +130,7 @@ export default function CollectionsClient({
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {initialCollections.map((collection) => (
+        {collections.map((collection: Collection) => (
           <div
             key={collection.id}
             className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
@@ -166,11 +184,10 @@ export default function CollectionsClient({
                     toggleMutation.mutate(collection);
                   }}
                   disabled={toggleMutation.isPending}
-                  className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full shadow-sm backdrop-blur transition-all duration-200 hover:scale-105 ${
-                    collection.isActive
-                      ? "bg-green-500/90 text-white hover:bg-green-600"
-                      : "bg-gray-500/90 text-white hover:bg-gray-600"
-                  } ${toggleMutation.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full shadow-sm backdrop-blur transition-all duration-200 hover:scale-105 ${collection.isActive
+                    ? "bg-green-500/90 text-white hover:bg-green-600"
+                    : "bg-gray-500/90 text-white hover:bg-gray-600"
+                    } ${toggleMutation.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {collection.isActive ? "Active" : "Draft"}
                 </button>

@@ -144,9 +144,12 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
+  sku: string; // Added for SEO/Schema
   description: string;
   basePrice: number;
   salePrice?: number;
+  stock: number; // Added for checkout validation
+  lowStockThreshold?: number;
   stockStatus: "in_stock" | "out_of_stock" | "pre_order";
   images: string[];
   categories: Category[];
@@ -197,12 +200,12 @@ export interface Review {
 export interface Order {
   id: string;
   status:
-    | "pending"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-    | "returned";
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "returned";
   totalAmount: number;
   paymentStatus: string;
   createdAt: string;

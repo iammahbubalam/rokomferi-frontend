@@ -210,9 +210,8 @@ export function ProductTable({
                 products.map((product) => (
                   <tr
                     key={product.id}
-                    className={`hover:bg-gray-50/50 transition-colors group ${
-                      selectedIds.includes(product.id) ? "bg-blue-50/30" : ""
-                    }`}
+                    className={`hover:bg-gray-50/50 transition-colors group ${selectedIds.includes(product.id) ? "bg-blue-50/30" : ""
+                      }`}
                   >
                     <td className="px-6 py-4">
                       <input
@@ -274,11 +273,10 @@ export function ProductTable({
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span
-                          className={`text-sm font-medium ${
-                            product.stock <= product.lowStockThreshold
+                          className={`text-sm font-medium ${product.stock <= (product.lowStockThreshold || 5)
                               ? "text-red-600"
                               : "text-gray-900"
-                          }`}
+                            }`}
                         >
                           {product.stock}
                         </span>
@@ -292,11 +290,10 @@ export function ProductTable({
                         onClick={() =>
                           onToggleStatus(product.id, product.isActive)
                         }
-                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-                          product.isActive
+                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${product.isActive
                             ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                             : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         {product.isActive ? "Active" : "Draft"}
                       </button>
