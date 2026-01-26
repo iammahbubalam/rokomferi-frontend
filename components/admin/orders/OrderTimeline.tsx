@@ -24,9 +24,10 @@ export function OrderTimeline({ history, isLoading }: TimelineProps) {
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h3 className="font-serif font-medium mb-6">Order History</h3>
-            <div className="space-y-8 pl-2 border-l-2 border-gray-100 ml-2">
-                {history.map((item) => (
-                    <div key={item.id} className="relative pl-6">
+            <div className="space-y-8 pl-0 ml-1"> {/* Adjusted container */}
+                {history.map((item, index) => (
+                    // L9: Continuous Line Logic
+                    <div key={item.id} className="relative pl-8 border-l-2 border-gray-200 last:border-l-0 pb-0">
                         {/* Status Icon Indicator */}
                         <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full ring-4 ring-white flex items-center justify-center
                             ${getStatusColor(item.newStatus)}

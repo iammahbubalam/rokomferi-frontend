@@ -84,20 +84,27 @@ export default function OrderDetail({ id }: OrderDetailProps) {
     // Filter Transitions Logic (Frontend Replica for UX)
     const getNextStatuses = (current: string) => {
         const fullList = config?.orderStatuses || [];
-        const map: Record<string, string[]> = {
-            "pending": ["processing", "cancelled", "fake"],
-            "pending_verification": ["processing", "cancelled", "fake"],
-            "processing": ["shipped", "cancelled", "fake"],
-            "shipped": ["delivered", "returned", "fake", "cancelled"],
-            "delivered": ["paid", "returned"],
-            "paid": ["returned", "refunded"],
-            "cancelled": ["pending"],
-            "returned": ["pending", "processing"],
-            "fake": ["pending"]
+        // L9: Weight-based Forward Only Logic
+        const weights: Record<string, number> = {
+            "pending": 10,
+            "pending_verification": 10,
+            "processing": 20,
+            "shipped": 30,
+            "delivered": 40,
+            "paid": 50,
+            "returned": 60,
+            "refunded": 70,
+            "cancelled": 80,
+            "fake": 90
         };
-        const allowed = map[current];
-        if (!allowed) return fullList; // Fallback to all if state unknown
-        return fullList.filter((s: string) => allowed.includes(s) || s === current);
+
+        const currentWeight = weights[current] || 0;
+
+        // Return only statuses with weight >= current
+        return fullList.filter((s: string) => {
+            const w = weights[s] || 0;
+            return w >= currentWeight;
+        });
     };
 
     const availableStatuses = getNextStatuses(order.status);
@@ -334,7 +341,14 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                                 <div className="text-sm text-gray-600">
                                     <p className="font-medium text-primary mb-1">Delivery Address</p>
                                     <p>{order.shippingAddress?.address}</p>
-                                    <p>{order.shippingAddress?.city}, {order.shippingAddress?.zone}</p>
+                                    <p>
+                                        {order.shippingAddress?.thana && `${order.shippingAddress.thana}, `}
+                                        {order.shippingAddress?.district && `${order.shippingAddress.district}`}
+                                        {order.shippingAddress?.zip && ` - ${order.shippingAddress.zip}`}
+                                    </p>
+                                    <p className="text-secondary text-xs mt-0.5">
+                                        {order.shippingAddress?.division && `${order.shippingAddress.division}`}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex gap-3 items-center">
