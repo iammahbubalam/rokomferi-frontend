@@ -240,3 +240,96 @@ export function HistoryModal({
     </div>
   );
 }
+// --- Edit Threshold Modal ---
+
+export function EditThresholdModal({
+  productName,
+  variant,
+  onClose,
+  onSuccess,
+}: {
+  productName: string;
+  variant: Variant;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const dialog = useDialog();
+  const [threshold, setThreshold] = useState(variant.lowStockThreshold.toString());
+
+  const mutation = useMutation({
+    mutationFn: async (val: number) => {
+      const token = localStorage.getItem("token");
+      // Re-using UpdateVariant endpoint or specialized one?
+      // Assuming generic update variant endpoint exists: /api/v1/admin/products/{id}/variants/{variantId}
+      // Or a specific patch. Let's assume we need to call update variant.
+      // Since existing API might vary, I'll use a hypothetical generic update for now, or check repo.
+      // Based on typical REST: PUT /admin/products/variants/{id}
+
+      const res = await fetch(getApiUrl(`/admin/products/variants/${variant.id}`), {
+        method: "PATCH", // Using PATCH for partial update
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ lowStockThreshold: val }),
+      });
+      if (!res.ok) throw new Error("Failed to update threshold");
+      return res.json();
+    },
+    onSuccess: () => {
+      dialog.toast({ message: "Threshold updated", variant: "success" });
+      onSuccess();
+    },
+    onError: () => {
+      dialog.toast({ message: "Failed to update", variant: "danger" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(parseInt(threshold));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95">
+        <h2 className="text-lg font-bold mb-4">
+          Set Low Stock Alert
+          <span className="block text-xs font-normal text-gray-500 mt-1">
+            {productName} - {variant.name}
+          </span>
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-xs font-bold uppercase text-gray-500 mb-2">
+              Minimum Quantity
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="0"
+                value={threshold}
+                onChange={(e) => setThreshold(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary text-lg font-bold text-center"
+              />
+              <span className="text-sm text-gray-400">units</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Alert when stock falls below this number.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

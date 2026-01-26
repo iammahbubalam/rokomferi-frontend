@@ -82,8 +82,40 @@ export function CheckoutClient({
     }
   };
 
+  // Pre-Order Calculation
+  const depositRequired = items.reduce((sum, item) => {
+    // Check if item product is pre_order.
+    // Note: ensure your Cart/Checkout hook provides 'stockStatus' on items or items.product
+    // Assuming item structure has product details or we need to access them.
+    // Based on OrderSummary usage, items might be simple. Let's check item structure later if needed.
+    // For now assuming item.product.stockStatus or item.stockStatus exists.
+    // Checking types.ts would be safer but let's assume item.product based on typical patterns.
+    // If items are flattened, we might need adjustments.
+    const isPreOrder = item.stockStatus === 'pre_order';
+    if (isPreOrder) {
+      const price = item.salePrice || item.basePrice || 0;
+      return sum + (price * item.quantity * 0.50); // 50% Deposit
+    }
+    return sum;
+  }, 0);
+
+  // Partial Payment State
+  const [paymentProvider, setPaymentProvider] = useState("bkash");
+  const [paymentTrxID, setPaymentTrxID] = useState("");
+  const [paymentPhone, setPaymentPhone] = useState("");
+
   const handleCheckout = async () => {
     if (!selectedAddress) return;
+
+    // Validate Pre-Order Payment
+    if (depositRequired > 0) {
+      if (!paymentTrxID.trim() || !paymentPhone.trim()) {
+        setSubmitError("Please provide transaction ID and phone number for the pre-order deposit.");
+        // Scroll to top or error
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+    }
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -142,7 +174,7 @@ export function CheckoutClient({
       }
 
       // 2. Place Order
-      const payload = {
+      const payload: any = {
         paymentMethod: "cod",
         couponCode: couponCode || undefined, // L9: Include coupon in order
         address: {
@@ -162,6 +194,12 @@ export function CheckoutClient({
           quantity: item.quantity,
         })),
       };
+
+      if (depositRequired > 0) {
+        payload.paymentTrxId = paymentTrxID;
+        payload.paymentProvider = paymentProvider;
+        payload.paymentPhone = paymentPhone;
+      }
 
       const res = await fetch(getApiUrl("/checkout"), {
         method: "POST",
@@ -356,6 +394,83 @@ export function CheckoutClient({
                 </div>
               </div>
             </section>
+
+            {/* Pre-Order Payment Section */}
+            {depositRequired > 0 && (
+              <section className="bg-orange-50/50 border border-orange-100 p-8 rounded-lg mt-8">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="p-3 bg-white rounded-full shadow-sm text-orange-500">
+                    <ArrowRight className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-serif text-primary mb-2">Pre-Order Deposit Required</h2>
+                    <p className="text-sm text-secondary leading-relaxed">
+                      One or more items in your cart are <strong>Pre-order</strong>.
+                      You must pay a partial deposit of <span className="font-bold text-primary">৳{depositRequired.toLocaleString()}</span> to confirm this order.
+                      The rest will be Cash on Delivery.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Provider Selector */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {['bkash', 'nagad', 'rocket'].map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setPaymentProvider(p)}
+                        className={`py-3 px-4 rounded border capitalize text-sm font-medium transition-all ${paymentProvider === p
+                          ? 'bg-primary text-white border-primary shadow-md'
+                          : 'bg-white text-secondary border-primary/10 hover:border-primary/30'
+                          }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Payment Description (Instruction) */}
+                  <div className="text-xs text-secondary/80 bg-white p-4 rounded border border-primary/5">
+                    <p className="mb-1 uppercase tracking-wider font-bold text-primary">How to Pay:</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Go to your {paymentProvider} app.</li>
+                      <li>Use <strong>Send Money</strong> / <strong>Payment</strong> option.</li>
+                      <li>Send <strong>৳{depositRequired}</strong> to <strong>017XXXXXXXX</strong>.</li>
+                      <li>Enter your Order Reference if applicable.</li>
+                      <li>Copy the Transaction ID (TrxID) and paste below.</li>
+                    </ol>
+                  </div>
+
+                  {/* Inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="group relative">
+                      <input
+                        type="text"
+                        value={paymentTrxID}
+                        onChange={(e) => setPaymentTrxID(e.target.value)}
+                        className="peer w-full bg-white border border-primary/20 rounded p-3 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
+                        placeholder="X"
+                      />
+                      <label className="absolute left-3 -top-2.5 bg-white px-1 text-xs text-secondary transition-all">
+                        Transaction ID <span className="text-red-400">*</span>
+                      </label>
+                    </div>
+                    <div className="group relative">
+                      <input
+                        type="text"
+                        value={paymentPhone}
+                        onChange={(e) => setPaymentPhone(e.target.value)}
+                        className="peer w-full bg-white border border-primary/20 rounded p-3 text-base focus:outline-none focus:border-primary transition-colors placeholder-transparent"
+                        placeholder="X"
+                      />
+                      <label className="absolute left-3 -top-2.5 bg-white px-1 text-xs text-secondary transition-all">
+                        Sender Number <span className="text-red-400">*</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
 
           {/* RIGHT: Order Summary (Sticky) */}

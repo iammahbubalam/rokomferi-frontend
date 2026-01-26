@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { VariantWithProduct, Pagination } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -11,11 +11,14 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Filter,
+  Settings,
 } from "lucide-react";
 import {
   AdjustStockModal,
   HistoryModal,
+  EditThresholdModal,
 } from "@/components/admin/inventory/InventoryModals";
 
 interface InventoryClientProps {
@@ -34,9 +37,31 @@ export default function InventoryClient({
     useState<VariantWithProduct | null>(null);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showThresholdModal, setShowThresholdModal] = useState(false);
+
+  // Local state for expanded rows
+  const [expandedProducts, setExpandedProducts] = useState<Record<string, boolean>>({});
 
   // Parse filters from URL
   const lowStockOnly = searchParams.get("lowStockOnly") === "true";
+
+  // Grouping Logic (L9 Modular Pattern)
+  const groupedInventory = initialData.reduce((acc, variance) => {
+    const pid = variance.productId;
+    if (!acc[pid]) {
+      acc[pid] = {
+        productId: pid,
+        productName: variance.productName,
+        totalStock: 0,
+        variants: [],
+      };
+    }
+    acc[pid].variants.push(variance);
+    acc[pid].totalStock += variance.stock;
+    return acc;
+  }, {} as Record<string, { productId: string; productName: string; totalStock: number; variants: VariantWithProduct[] }>);
+
+  const productGroups = Object.values(groupedInventory);
 
   const updateFilters = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -72,8 +97,20 @@ export default function InventoryClient({
     setShowHistoryModal(true);
   };
 
+  const openThreshold = (v: VariantWithProduct) => {
+    setSelectedVariant(v);
+    setShowThresholdModal(true);
+  };
+
   const refreshData = () => {
     router.refresh();
+  };
+
+  const toggleProduct = (productId: string) => {
+    setExpandedProducts(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
   };
 
   return (
@@ -86,7 +123,7 @@ export default function InventoryClient({
           <div className="flex items-center gap-2 text-primary bg-primary/5 px-2 py-1 rounded w-fit mt-2">
             <Package className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              SKU-Centric View
+              Product-Centric View
             </span>
           </div>
         </div>
@@ -131,15 +168,15 @@ export default function InventoryClient({
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-bold sticky top-0">
               <tr>
+                <th className="px-6 py-4 w-12 text-center"></th>
                 <th className="px-6 py-4">Product / Variant</th>
-                <th className="px-6 py-4">SKU</th>
-                <th className="px-6 py-4 text-center">Stock Level</th>
+                <th className="px-6 py-4 text-center">Total Stock</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {initialData.length === 0 ? (
+              {productGroups.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-16 text-center text-gray-400">
                     <div className="flex flex-col items-center gap-2">
@@ -158,70 +195,121 @@ export default function InventoryClient({
                   </td>
                 </tr>
               ) : (
-                initialData.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-gray-50/50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {row.productName}
-                      </div>
-                      {row.name !== "Default" && (
-                        <div className="text-[10px] text-primary font-bold uppercase mt-0.5">
-                          {row.name}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <code className="text-xs text-gray-500 font-mono bg-gray-50 px-1.5 py-0.5 rounded">
-                        {row.sku || "-"}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`text-lg font-bold ${row.stock <= row.lowStockThreshold ? "text-red-600" : "text-gray-700"}`}
+                productGroups.map((group) => {
+                  const isExpanded = expandedProducts[group.productId];
+                  return (
+                    <Fragment key={group.productId}>
+                      {/* Parent Row */}
+                      <tr
+                        className="bg-gray-50/50 hover:bg-gray-100/50 transition-colors cursor-pointer border-b border-gray-100"
+                        onClick={() => toggleProduct(group.productId)}
                       >
-                        {row.stock}
-                      </span>
-                      <div className="text-[10px] text-gray-400">
-                        Threshold: {row.lowStockThreshold}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {row.stock <= 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          Out of Stock
-                        </span>
-                      ) : row.stock <= row.lowStockThreshold ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Low Stock
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          In Stock
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline-white"
-                        onClick={() => openHistory(row)}
-                        title="View Logs"
-                      >
-                        <History className="w-4 h-4 text-gray-500" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => openAdjust(row)}
-                      >
-                        Adjust
-                      </Button>
-                    </td>
-                  </tr>
-                ))
+                        <td className="px-6 py-4 text-center">
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
+                          )}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-gray-900">
+                          {group.productName}
+                          <span className="ml-2 text-[10px] uppercase bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                            {group.variants.length} Variants
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center font-bold text-gray-700">
+                          {group.totalStock}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {/* Aggregate Status could be complex, omitting for clean parent row */}
+                        </td>
+                        <td className="px-6 py-4 text-right"></td>
+                      </tr>
+
+                      {/* Child Rows (Variants) */}
+                      {isExpanded &&
+                        group.variants.map((row) => (
+                          <tr
+                            key={row.id}
+                            className="hover:bg-gray-50 transition-colors bg-white animate-in slide-in-from-top-1 duration-200"
+                          >
+                            <td className="px-6 py-4"></td> {/* Indent */}
+                            <td className="px-6 py-4 pl-10 border-l-2 border-primary/10">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-700">
+                                  {row.name === "Default"
+                                    ? "Standard Variant"
+                                    : row.name}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono">
+                                  SKU: {row.sku || "-"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span
+                                className={`text-sm font-bold ${row.stock <= row.lowStockThreshold ? "text-red-600" : "text-gray-700"}`}
+                              >
+                                {row.stock}
+                              </span>
+                              <div className="text-[10px] text-gray-400">
+                                Min: {row.lowStockThreshold}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              {row.stock <= 0 ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Out of Stock
+                                </span>
+                              ) : row.stock <= row.lowStockThreshold ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Low Stock
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  In Stock
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openHistory(row);
+                                }}
+                                title="View Logs"
+                              >
+                                <History className="w-4 h-4 text-gray-500" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openThreshold(row);
+                                }}
+                                title="Set Low Stock Alert"
+                              >
+                                <Settings className="w-4 h-4 text-gray-500" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openAdjust(row);
+                                }}
+                              >
+                                Adjust
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                    </Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -287,6 +375,18 @@ export default function InventoryClient({
           productName={selectedVariant.productName}
           variant={selectedVariant}
           onClose={() => setShowHistoryModal(false)}
+        />
+      )}
+
+      {showThresholdModal && selectedVariant && (
+        <EditThresholdModal
+          productName={selectedVariant.productName}
+          variant={selectedVariant}
+          onClose={() => setShowThresholdModal(false)}
+          onSuccess={() => {
+            setShowThresholdModal(false);
+            refreshData();
+          }}
         />
       )}
     </div>
