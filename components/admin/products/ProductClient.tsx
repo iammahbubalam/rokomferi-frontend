@@ -353,6 +353,8 @@ export function ProductClient({
         selectedIds={selectedIds}
         onSelectOne={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
         onSelectAll={(checked) => setSelectedIds(checked ? products.map(p => p.id) : [])}
+        currentPage={Number(searchParams.get("page")) || 1}
+        limit={Number(searchParams.get("limit")) || 20}
       />
     </div>
   );

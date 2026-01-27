@@ -47,7 +47,9 @@ export function ProductTable({
   selectedIds,
   onSelectOne,
   onSelectAll,
-}: ProductTableProps) {
+  currentPage = 1,
+  limit = 20,
+}: ProductTableProps & { currentPage?: number; limit?: number }) {
   const [selectedDetail, setSelectedDetail] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const isFirstRender = useRef(true);
@@ -82,6 +84,11 @@ export function ProductTable({
     return res;
   };
   const flatCats = flatten(categories);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(total / limit);
+  const startItem = (currentPage - 1) * limit + 1;
+  const endItem = Math.min(currentPage * limit, total);
 
   return (
     <div className="space-y-4">
@@ -274,8 +281,8 @@ export function ProductTable({
                       <div className="flex flex-col">
                         <span
                           className={`text-sm font-medium ${product.stock <= (product.lowStockThreshold || 5)
-                              ? "text-red-600"
-                              : "text-gray-900"
+                            ? "text-red-600"
+                            : "text-gray-900"
                             }`}
                         >
                           {product.stock}
@@ -291,8 +298,8 @@ export function ProductTable({
                           onToggleStatus(product.id, product.isActive)
                         }
                         className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${product.isActive
-                            ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                          ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
                           }`}
                       >
                         {product.isActive ? "Active" : "Draft"}
@@ -324,14 +331,15 @@ export function ProductTable({
         {/* Pagination (Simple for now) */}
         <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50/50">
           <span className="text-xs text-gray-500">
-            Showing {products.length} of {total} products
+            Showing {products.length > 0 ? startItem : 0} to{" "}
+            {products.length > 0 ? endItem : 0} of {total} products
           </span>
           <div className="flex gap-2">
             <Button
               variant="outline-white"
               size="sm"
               onClick={() => onPageChange(-1)}
-              disabled={true}
+              disabled={currentPage <= 1}
             >
               Previous
             </Button>
@@ -339,6 +347,7 @@ export function ProductTable({
               variant="outline-white"
               size="sm"
               onClick={() => onPageChange(1)}
+              disabled={currentPage >= totalPages}
             >
               Next
             </Button>
