@@ -1,121 +1,174 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Category, Collection } from "@/types";
 import { clsx } from "clsx";
 
-export function NavMenu({ categories, collections }: { categories: Category[], collections: Collection[] }) {
+export function NavMenu({
+  categories,
+  collections,
+}: {
+  categories: Category[];
+  collections: Collection[];
+}) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const navCategories = categories.filter(c => c.showInNav !== false).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  const navCategories = categories
+    .filter((c) => c.showInNav !== false)
+    .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
   return (
-    <nav className="hidden lg:flex items-center gap-8" onMouseLeave={() => setActiveId(null)}>
+    <nav
+      className="hidden lg:flex items-center gap-10"
+      onMouseLeave={() => setActiveId(null)}
+    >
       {navCategories.map((category) => (
-        <div key={category.id} className="relative">
+        <div key={category.id} className="relative group">
           {/* Top Level Item */}
           <Link
             href={category.path || `/category/${category.slug}`}
-            className="text-sm uppercase tracking-[0.1em] text-primary hover:text-accent-gold transition-colors py-4 inline-block font-medium"
+            className={clsx(
+              "text-[11px] uppercase tracking-[0.25em] py-5 inline-block font-semibold transition-all duration-300",
+              activeId === category.id
+                ? "text-accent-gold"
+                : "text-primary/70 hover:text-primary"
+            )}
             onMouseEnter={() => setActiveId(category.id)}
           >
             {category.name}
+            {/* Subtle Animated Underline */}
+            <motion.div
+              className="absolute bottom-4 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: activeId === category.id ? 1 : 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
           </Link>
 
           {/* Mega Dropdown */}
           <AnimatePresence>
-            {activeId === category.id && category.children && category.children.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-full left-0 w-[600px] bg-white border border-primary/5 shadow-2xl p-8 z-50 grid grid-cols-3 gap-8"
-              >
-                 {category.children.map((child) => (
-                   <div key={child.id} className="flex flex-col gap-4">
+            {activeId === category.id &&
+              category.children &&
+              category.children.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 w-[720px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-black/5 p-10 z-50 grid grid-cols-3 gap-10 rounded-sm"
+                >
+                  {category.children.map((child) => (
+                    <div key={child.id} className="group/item flex flex-col">
                       {child.image && (
-                        <div className="relative w-full h-32 mb-2 rounded-md overflow-hidden bg-gray-50 border border-primary/5">
-                            <img src={child.image} alt={child.name} className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" />
-                        </div>
+                        <Link
+                          href={child.path || `/category/${child.slug}`}
+                          className="relative w-full aspect-[4/5] mb-5 overflow-hidden bg-gray-50 border border-black/[0.03]"
+                        >
+                          <Image
+                            src={child.image}
+                            alt={child.name}
+                            fill
+                            className="object-cover group-hover/item:scale-105 transition-transform duration-700 ease-out"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/5 transition-colors duration-500" />
+                        </Link>
                       )}
-                      <Link 
+
+                      <Link
                         href={child.path || `/category/${child.slug}`}
-                        className="font-serif text-lg text-primary hover:underline decoration-accent-gold underline-offset-4 flex items-center gap-2"
+                        className="font-serif text-xl text-primary hover:text-accent-gold transition-colors duration-300 inline-flex items-center gap-2 mb-3"
                       >
-                        {child.icon && <span>{child.icon}</span>} {/* Simple text icon or render specific component if dynamic */}
                         {child.name}
                       </Link>
-                      
+
                       {/* Sub Children (Level 3) */}
                       {child.children && (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2.5 mt-2 border-l border-black/5 pl-4">
                           {child.children.map((sub) => (
-                            <Link 
-                              key={sub.id} 
+                            <Link
+                              key={sub.id}
                               href={sub.path || `/category/${sub.slug}`}
-                              className="text-xs text-secondary hover:text-primary transition-colors uppercase tracking-wider"
+                              className="text-[10px] text-primary/50 hover:text-accent-gold transition-colors uppercase tracking-[0.15em] font-medium"
                             >
                               {sub.name}
                             </Link>
                           ))}
                         </div>
                       )}
-                   </div>
-                 ))}
-                 
-                 {/* Decorative Image Placeholders or Promo can go here if grid allows */}
-              </motion.div>
-            )}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
           </AnimatePresence>
         </div>
       ))}
 
       {/* Collections - Fixed Menu Item */}
-      <div className="relative">
+      <div className="relative group">
         <Link
           href="/collections"
-          className="text-sm uppercase tracking-[0.1em] text-primary hover:text-accent-gold transition-colors py-4 inline-block font-medium"
+          className={clsx(
+            "text-[11px] uppercase tracking-[0.25em] py-5 inline-block font-semibold transition-all duration-300",
+            activeId === "collections"
+              ? "text-accent-gold"
+              : "text-primary/70 hover:text-primary"
+          )}
           onMouseEnter={() => setActiveId("collections")}
         >
           Collections
+          <motion.div
+            className="absolute bottom-4 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: activeId === "collections" ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          />
         </Link>
         <AnimatePresence>
-           {activeId === "collections" && collections && collections.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-full right-0 w-[800px] bg-white border border-primary/5 shadow-2xl p-8 z-50 grid grid-cols-3 gap-8"
-                style={{ right: '-200px' }} // Center align somewhat relative to parent if needed, or stick to left/right
-              >
-                  {collections.map(collection => (
-                     <div key={collection.id} className="group flex flex-col gap-3">
-                         <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm bg-gray-100">
-                             {collection.image ? (
-                               <img 
-                                 src={collection.image} 
-                                 alt={collection.title} 
-                                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" 
-                               />
-                             ) : (
-                               <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
-                             )}
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-                         </div>
-                         <div>
-                            <Link href={`/collection/${collection.slug}`} className="block">
-                                <h4 className="font-serif text-xl text-primary group-hover:text-accent-gold transition-colors">{collection.title}</h4>
-                            </Link>
-                            <p className="text-xs text-secondary mt-1 line-clamp-2">{collection.description}</p>
-                         </div>
-                     </div>
-                  ))}
-              </motion.div>
-           )}
+          {activeId === "collections" && collections && collections.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              className="absolute top-full right-0 w-[840px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-black/5 p-10 z-50 grid grid-cols-3 gap-10 rounded-sm"
+              style={{ right: "-120px" }}
+            >
+              {collections.map((collection) => (
+                <Link
+                  key={collection.id}
+                  href={`/collection/${collection.slug}`}
+                  className="group/coll flex flex-col gap-4"
+                >
+                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-50 border border-black/[0.03]">
+                    {collection.image ? (
+                      <Image
+                        src={collection.image}
+                        alt={collection.title}
+                        fill
+                        className="object-cover group-hover/coll:scale-105 transition-transform duration-1000 ease-out"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-widest text-primary/20 bg-gray-50">
+                        No Image
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover/coll:bg-black/10 transition-colors duration-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif text-xl text-primary group-hover:text-accent-gold transition-colors duration-300 mb-1">
+                      {collection.title}
+                    </h4>
+                    <p className="text-[11px] text-primary/40 leading-relaxed line-clamp-2 uppercase tracking-wider font-medium">
+                      {collection.description}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </nav>

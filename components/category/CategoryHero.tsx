@@ -14,7 +14,7 @@ export function CategoryHero({ category, productCount }: CategoryHeroProps) {
   const hasImage = category.image && category.image.length > 0;
 
   return (
-    <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
+    <section className="relative h-[55vh] min-h-[400px] overflow-hidden">
       {/* Background */}
       {hasImage ? (
         <motion.div

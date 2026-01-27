@@ -1,5 +1,6 @@
 import { Category, Product } from "@/types";
 import { getApiUrl } from "@/lib/utils";
+import { mapBackendProductToFrontend, BackendProduct } from "@/lib/data";
 
 // Types for Filters
 export interface ProductFilters {
@@ -41,12 +42,13 @@ export async function getCategoryProducts(
 ): Promise<Product[]> {
   try {
     const params = new URLSearchParams();
-    params.set("category", slug);
+    // Match backend key: category_slug
+    params.set("category_slug", slug);
 
-    if (filters?.minPrice) params.set("minPrice", filters.minPrice.toString());
-    if (filters?.maxPrice) params.set("maxPrice", filters.maxPrice.toString());
+    if (filters?.minPrice) params.set("min_price", filters.minPrice.toString());
+    if (filters?.maxPrice) params.set("max_price", filters.maxPrice.toString());
     if (filters?.inStock !== undefined)
-      params.set("inStock", filters.inStock.toString());
+      params.set("in_stock", filters.inStock.toString());
     if (filters?.sort) params.set("sort", filters.sort);
 
     const res = await fetch(getApiUrl(`/products?${params.toString()}`), {
@@ -54,8 +56,10 @@ export async function getCategoryProducts(
     });
 
     if (res.ok) {
-      const data = await res.json();
-      return data.products || [];
+      const json = await res.json();
+      // Backend returns { data: products[], pagination: ... }
+      const products: BackendProduct[] = json.data || [];
+      return products.map(mapBackendProductToFrontend);
     }
     return [];
   } catch (error) {

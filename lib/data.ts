@@ -304,7 +304,7 @@ export const FEATURED_CATEGORIES: FeaturedCategory[] = [
 
 // --- BACKEND API INTEGRATION ---
 
-interface BackendProduct {
+export interface BackendProduct {
   id: string;
   name: string;
   slug: string;
@@ -325,7 +325,7 @@ interface APIResponse<T> {
   pagination?: { total: number; page: number; limit: number };
 }
 
-function mapBackendProductToFrontend(bp: BackendProduct): Product {
+export function mapBackendProductToFrontend(bp: BackendProduct): Product {
   // Handle both media formats: array or object
   let images: string[] = [];
   if (Array.isArray(bp.media)) {

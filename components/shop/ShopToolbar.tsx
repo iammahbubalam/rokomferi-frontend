@@ -12,9 +12,16 @@ import clsx from "clsx";
 interface ShopToolbarProps {
   categories: Category[];
   totalProducts: number;
+  breadcrumbLabel?: string;
+  isCategoryPage?: boolean;
 }
 
-export function ShopToolbar({ categories, totalProducts }: ShopToolbarProps) {
+export function ShopToolbar({
+  categories,
+  totalProducts,
+  breadcrumbLabel = "Shop All",
+  isCategoryPage = false,
+}: ShopToolbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -98,7 +105,7 @@ export function ShopToolbar({ categories, totalProducts }: ShopToolbarProps) {
               Home
             </Link>
             <span className="text-black/20">/</span>
-            <span className="text-primary font-medium">Shop All</span>
+            <span className="text-primary font-medium">{breadcrumbLabel}</span>
           </div>
 
           <div className="flex items-center gap-8 text-xs uppercase tracking-widest text-primary">
