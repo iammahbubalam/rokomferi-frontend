@@ -2,10 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Product } from "@/types";
 import clsx from "clsx";
-import { useCart } from "@/context/CartContext";
 import { WishlistButton } from "@/components/common/WishlistButton";
 
 interface ProductCardProps {
@@ -15,9 +13,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
-  const { addToCart } = useCart();
-  const router = useRouter();
-
   // Discount
   const hasDiscount =
     product.salePrice && product.salePrice < product.basePrice;
