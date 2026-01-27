@@ -317,6 +317,7 @@ interface BackendProduct {
   isFeatured: boolean;
   categories?: { id: string; name: string; slug: string }[];
   media: string[] | { images?: string[] }; // Backend can return either format
+  variants?: any[]; // Allow any for now to avoid circular ref or complex mapping if strict
 }
 
 interface APIResponse<T> {
@@ -348,6 +349,7 @@ function mapBackendProductToFrontend(bp: BackendProduct): Product {
     images: images,
     isFeatured: bp.isFeatured,
     lowStockThreshold: 5,
+    variants: bp.variants || [], // Pass variants through
   };
 }
 
@@ -394,19 +396,6 @@ export async function getProductBySlug(
     return undefined;
   }
 }
-
-// ... Reviews ...
-
-// ... Static ...
-
-// ... Categories ...
-// ... Featured ...
-// ... Philosophy ...
-// ... Editorial ...
-// ... SiteConfig ...
-// ... Footer ...
-
-// ... Collections ...
 
 export async function searchProducts(query: string): Promise<Product[]> {
   const products = await getAllProducts();
@@ -544,9 +533,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       description: globalSettings.branding.tagline,
       logo: globalSettings.branding.logoUrl || "/assets/logo_rokomferi.png",
       favicon: globalSettings.branding.faviconUrl,
-      copyright: `© ${new Date().getFullYear()} ${
-        globalSettings.branding.siteName
-      }. All rights reserved.`,
+      copyright: `© ${new Date().getFullYear()} ${globalSettings.branding.siteName
+        }. All rights reserved.`,
       contact: {
         email: globalSettings.contact.supportEmail,
         phone: globalSettings.contact.phonePrimary,
@@ -720,11 +708,11 @@ export interface Order {
   id: string;
   date: string;
   status:
-    | "pending_payment"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
+  | "pending_payment"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
   total: number;
   items: OrderItem[];
   paymentMethod: "cod" | "sslcommerz";

@@ -203,7 +203,8 @@ export function ProductForm({
     for (const part of parts) {
       const [key, values] = part.split(":");
       if (key && values) {
-        options[key.trim()] = values
+        const k = key.trim();
+        options[k] = values
           .split(",")
           .map((v) => v.trim())
           .filter(Boolean);
@@ -211,6 +212,7 @@ export function ProductForm({
     }
 
     if (Object.keys(options).length === 0) return;
+
 
     // Generate Cartesian Product
     const keys = Object.keys(options);
@@ -231,12 +233,25 @@ export function ProductForm({
           nameParts.push(comboArray[idx]);
         });
 
+        // Generate SKU Prefix from Name (Acronym)
+        const nameAcronym = (formData.name || "PROD")
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 4);
+
+        const sku = `${nameAcronym}-${nameParts
+          .join("-")
+          .toUpperCase()
+          .replace(/[^A-Z0-9-]/g, "")}`;
+
         return {
           id: "", // Empty ID = Backend will CREATE this variant
           productId: "",
           name: nameParts.join(" / "),
           stock: 0,
-          sku: "",
+          sku: sku,
           attributes: attrs,
           images: [],
           lowStockThreshold: 5,
@@ -745,6 +760,8 @@ export function ProductForm({
                 </p>
                 <div className="flex gap-2">
                   <input
+                    value={generatorInput}
+                    onChange={(e) => setGeneratorInput(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-200 rounded text-sm"
                     placeholder="e.g. Color: Red, Blue; Size: S, M"
                   />
@@ -752,7 +769,7 @@ export function ProductForm({
                     type="button"
                     size="sm"
                     variant="secondary"
-                    onClick={() => alert("Generator UI coming in next step!")}
+                    onClick={generateVariants}
                   >
                     Generate
                   </Button>
@@ -800,15 +817,54 @@ export function ProductForm({
                         <label className="text-[10px] uppercase font-bold text-gray-400">
                           SKU & Stock
                         </label>
-                        <input
-                          type="text"
-                          placeholder="Auto-generated if empty"
-                          value={variant.sku}
-                          onChange={(e) =>
-                            updateVariant(idx, "sku", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border border-black/10 rounded text-sm font-mono mb-2"
-                        />
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            placeholder="SKU (e.g. SHIRT-RED-XL)"
+                            value={variant.sku}
+                            onChange={(e) =>
+                              updateVariant(idx, "sku", e.target.value)
+                            }
+                            className="w-full px-3 py-2 border border-black/10 rounded text-sm font-mono"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3"
+                            title="Auto-Generate SKU"
+                            onClick={() => {
+                              if (
+                                variant.sku &&
+                                !confirm("Overwrite existing SKU?")
+                              ) {
+                                return;
+                              }
+
+                              const values = Object.values(
+                                variant.attributes || {},
+                              );
+                              const suffix =
+                                values.length > 0
+                                  ? values.join("-")
+                                  : variant.name.replace(" / ", "-");
+
+                              const nameAcronym = (formData.name || "PROD")
+                                .split(" ")
+                                .map((w) => w[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 4);
+
+                              const autoSku = `${nameAcronym}-${suffix}`
+                                .toUpperCase()
+                                .replace(/[^A-Z0-9-]/g, "");
+                              updateVariant(idx, "sku", autoSku);
+                            }}
+                          >
+                            <Settings className="w-3 h-3" />
+                          </Button>
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Stock:</span>
                           <input
@@ -937,6 +993,94 @@ export function ProductForm({
                             Select
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Attributes Editor Section */}
+                    <div className="bg-gray-50 p-4 border-t border-gray-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase font-bold text-gray-500">
+                          Attributes (Dynamic Specs)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newAttrs = {
+                              ...(variant.attributes || {}),
+                              "": "", // New empty key
+                            };
+                            updateVariant(idx, "attributes", newAttrs);
+                          }}
+                          className="text-[10px] bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-primary font-bold"
+                        >
+                          + Add Attribute
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {Object.entries(variant.attributes || {}).map(
+                          ([key, val], attrIdx) => (
+                            <div
+                              key={attrIdx}
+                              className="flex items-center gap-2"
+                            >
+                              <input
+                                type="text"
+                                placeholder="Key (e.g. Color)"
+                                value={key}
+                                onChange={(e) => {
+                                  const newKey = e.target.value;
+                                  // Reconstruct object with new key order
+                                  const newAttrs: Record<string, string> = {};
+                                  Object.entries(variant.attributes).forEach(
+                                    ([k, v], i) => {
+                                      if (i === attrIdx) {
+                                        newAttrs[newKey] = v;
+                                      } else {
+                                        newAttrs[k] = v;
+                                      }
+                                    },
+                                  );
+                                  updateVariant(idx, "attributes", newAttrs);
+                                }}
+                                className="w-1/3 px-2 py-1 text-xs border border-gray-200 rounded"
+                              />
+                              <span className="text-gray-400">:</span>
+                              <input
+                                type="text"
+                                placeholder="Value (e.g. Red)"
+                                value={val}
+                                onChange={(e) => {
+                                  const newAttrs = { ...variant.attributes };
+                                  // Must find the key that corresponds to this index in iteration
+                                  // This is slightly brittle if keys are duplicates, but for simple UI it works.
+                                  // Better: use key directly if we assume keys are unique.
+                                  // Since we just changed the key above, this might be tricky if key is empty.
+                                  // Let's assume stability:
+                                  newAttrs[key] = e.target.value;
+                                  updateVariant(idx, "attributes", newAttrs);
+                                }}
+                                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newAttrs = { ...variant.attributes };
+                                  delete newAttrs[key];
+                                  updateVariant(idx, "attributes", newAttrs);
+                                }}
+                                className="text-gray-400 hover:text-red-500"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ),
+                        )}
+                        {Object.keys(variant.attributes || {}).length === 0 && (
+                          <div className="text-xs text-gray-400 italic">
+                            No attributes defined. Use "Generate" or add manually.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
