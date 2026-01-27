@@ -43,8 +43,6 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
   const { isIntroComplete, isLoading } = useIntro();
   const pathname = usePathname();
 
-  // Hide Navbar on Admin pages
-  if (pathname?.startsWith("/admin")) return null;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
