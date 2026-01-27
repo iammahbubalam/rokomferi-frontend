@@ -77,7 +77,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col fixed inset-y-0 text-primary">
+      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col fixed top-[57px] bottom-0 left-0 text-primary z-40">
         <div className="p-6 border-b border-gray-100">
           <Link
             href="/"
@@ -133,7 +133,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen pt-[57px]">
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-40">
           <span className="font-serif text-lg font-bold">Admin</span>

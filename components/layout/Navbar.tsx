@@ -42,6 +42,7 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
   const { user } = useAuth();
   const { isIntroComplete, isLoading } = useIntro();
   const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
 
 
   useEffect(() => {
@@ -54,10 +55,14 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
     <>
       <header
         className={clsx(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out border-b border-transparent",
-          isScrolled
-            ? "bg-white/95 backdrop-blur-md py-2 shadow-sm border-primary/5"
-            : "bg-transparent py-4 border-transparent",
+          isAdmin
+            ? "fixed top-0 left-0 right-0 z-50 bg-white py-2 border-b border-primary/10"
+            : clsx(
+              "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out border-b border-transparent",
+              isScrolled
+                ? "bg-white/95 backdrop-blur-md py-2 shadow-sm border-primary/5"
+                : "bg-transparent py-4 border-transparent",
+            ),
         )}
       >
         <Container className="flex items-center justify-between gap-8">
