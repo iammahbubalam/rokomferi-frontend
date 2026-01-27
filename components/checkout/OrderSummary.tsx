@@ -1,32 +1,26 @@
 "use client";
-
 import { Button } from "@/components/ui/Button";
 import { CartItem } from "@/context/CartContext";
 import { Minus, Plus, ShieldCheck, Truck } from "lucide-react";
 import Image from "next/image";
-import { CouponInput } from "@/components/cart/CouponInput";
 
 interface OrderSummaryProps {
   items: CartItem[];
   subtotal: number;
-  discountAmount: number;
-  couponCode: string | null;
-  grandTotal: number;
   deliveryLocation: string;
+  deliveryLabel: string;
   shippingCost: number;
   onCheckout?: () => void;
   isSubmitting?: boolean;
   isFormValid?: boolean;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onUpdateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
 }
 
 export function OrderSummary({
   items,
   subtotal,
-  discountAmount,
-  couponCode,
-  grandTotal,
   deliveryLocation,
+  deliveryLabel,
   shippingCost,
   onCheckout,
   isSubmitting = false,
@@ -34,7 +28,7 @@ export function OrderSummary({
   onUpdateQuantity,
 }: OrderSummaryProps) {
   // L9: Final total includes shipping
-  const finalTotal = grandTotal + shippingCost;
+  const finalTotal = subtotal + shippingCost;
 
   return (
     <div className="bg-white p-8 lg:p-10 shadow-xl border border-primary/5 transition-all hover:shadow-2xl">
@@ -44,8 +38,8 @@ export function OrderSummary({
 
       {/* ITEMS LIST */}
       <div className="space-y-6 mb-8 max-h-[40vh] overflow-y-auto scrollbar-hide pr-2">
-        {items.map((item) => (
-          <div key={item.id} className="flex gap-4 group">
+        {items.map((item, index) => (
+          <div key={item.cartItemId || `${item.id}-${item.variantId || index}`} className="flex gap-4 group">
             <div className="relative w-20 h-24 bg-bg-secondary flex-shrink-0 overflow-hidden rounded-md border border-primary/5">
               {item.images?.[0] && (
                 <Image
@@ -61,12 +55,17 @@ export function OrderSummary({
                 <h4 className="font-serif text-base leading-tight">
                   {item.name}
                 </h4>
+                {item.variantName && (
+                  <p className="text-xs text-secondary mt-1">
+                    {item.variantName}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-between items-end mt-2">
                 <div className="flex items-center border border-primary/20 rounded-md">
                   <button
-                    onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => onUpdateQuantity(item.id, item.variantId, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                     className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 disabled:hover:text-secondary transition-colors"
                   >
@@ -76,7 +75,7 @@ export function OrderSummary({
                     {item.quantity}
                   </span>
                   <button
-                    onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                    onClick={() => onUpdateQuantity(item.id, item.variantId, item.quantity + 1)}
                     disabled={item.stock <= item.quantity}
                     className="p-1.5 text-secondary hover:text-primary disabled:opacity-30 disabled:hover:text-secondary transition-colors"
                   >
@@ -87,7 +86,7 @@ export function OrderSummary({
                 <p className="font-medium text-sm">
                   ৳
                   {(
-                    (item.salePrice || item.basePrice || 0) * item.quantity
+                    (item.salePrice || item.price || item.basePrice || 0) * item.quantity
                   ).toLocaleString()}
                 </p>
               </div>
@@ -96,10 +95,6 @@ export function OrderSummary({
         ))}
       </div>
 
-      {/* L9: COUPON INPUT */}
-      <div className="mb-6 pb-6 border-b border-primary/10">
-        <CouponInput />
-      </div>
 
       {/* PRICE BREAKDOWN */}
       <div className="space-y-4 py-6 border-t border-primary/10 text-sm">
@@ -108,20 +103,11 @@ export function OrderSummary({
           <span>৳{subtotal.toLocaleString()}</span>
         </div>
 
-        {/* L9: Discount line (conditional) */}
-        {discountAmount > 0 && (
-          <div className="flex justify-between text-green-700 font-medium">
-            <span>Discount {couponCode && `(${couponCode})`}</span>
-            <span>-৳{discountAmount.toLocaleString()}</span>
-          </div>
-        )}
 
         <div className="flex justify-between text-secondary items-center">
           <span>Shipping</span>
           <span className="text-xs text-secondary/60">
-            {deliveryLocation === "outside_dhaka"
-              ? "(Outside Dhaka)"
-              : "(Inside Dhaka)"}
+            ({deliveryLabel})
           </span>
           <span>৳{shippingCost.toLocaleString()}</span>
         </div>
@@ -140,19 +126,21 @@ export function OrderSummary({
         </div>
       </div>
 
-      {onCheckout && (
-        <Button
-          onClick={onCheckout}
-          disabled={!isFormValid || isSubmitting}
-          className="w-full h-12 text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.99]"
-        >
-          {isSubmitting
-            ? "Processing Order..."
-            : isFormValid
-              ? "Confirm Order"
-              : "Complete Details"}
-        </Button>
-      )}
+      {
+        onCheckout && (
+          <Button
+            onClick={onCheckout}
+            disabled={!isFormValid || isSubmitting}
+            className="w-full h-12 text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.99]"
+          >
+            {isSubmitting
+              ? "Processing Order..."
+              : isFormValid
+                ? "Confirm Order"
+                : "Complete Details"}
+          </Button>
+        )
+      }
 
       {/* TRUST BADGES */}
       <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-primary/10">
@@ -169,6 +157,6 @@ export function OrderSummary({
           </span>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

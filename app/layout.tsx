@@ -97,16 +97,16 @@ export default async function RootLayout({
                   <IntroOverlay />
                   <CartProvider>
                     <WishlistProvider>
-                      <Suspense fallback={<div className="h-[88px] md:h-[104px] w-full" />}>
-                        <Navbar
-                          categories={categories}
-                          collections={collections}
-                          siteConfig={siteConfig}
-                        />
-                      </Suspense>
+                      <Navbar
+                        categories={categories}
+                        collections={collections}
+                        siteConfig={siteConfig}
+                      />
                       <main className="flex-grow pt-[88px] md:pt-[104px]">
                         {/* pt to offset fixed header height approx */}
-                        {children}
+                        <Suspense fallback={null}>
+                          {children}
+                        </Suspense>
                       </main>
                       <Footer
                         siteConfig={siteConfig}

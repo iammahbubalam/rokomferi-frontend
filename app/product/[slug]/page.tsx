@@ -8,11 +8,13 @@ import { ArrowLeft, ShoppingBag, Ruler, Info } from "lucide-react";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { WishlistButton } from "@/components/common/WishlistButton";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductDescription } from "@/components/product/ProductDescription";
 import ReviewList from "@/components/reviews/ReviewList";
 import ReviewForm from "@/components/reviews/ReviewForm";
 import { ProductSchema } from "@/components/seo/ProductSchema";
 import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
 import { ProductInfo } from "@/components/product/ProductInfo";
+import { BackButton } from "@/components/common/BackButton";
 
 export async function generateMetadata({
   params,
@@ -75,29 +77,31 @@ export default async function ProductPage({
   });
 
   return (
-    <div className="min-h-screen bg-bg-primary text-primary pt-20">
+    <div className="min-h-screen bg-white text-gray-900 pt-20">
       <ProductSchema
         product={product}
         rating={{ value: avgRating, count: reviews.length }}
       />
       <BreadcrumbSchema items={breadcrumbs} />
       {/* Top Navigation / Breadcrumb */}
-      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-8 pb-4">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors text-sm uppercase tracking-widest"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Collection
-        </Link>
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-4 pb-2">
+        <BackButton />
       </div>
 
-      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20">
-        <ProductInfo product={product} />
+      <div className="max-w-[1440px] mx-auto px-0 md:px-12 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
+        <div className="col-span-1">
+          <ProductGallery images={product.images || []} />
+        </div>
+        <div className="col-span-1 px-6 lg:px-0 pb-24 lg:pb-0">
+          <ProductInfo product={product} />
+        </div>
       </div>
+
+      <ProductDescription product={product} />
 
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 py-20 border-t border-gray-100">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-serif text-3xl mb-12 text-center">
+          <h2 className="font-serif text-2xl lg:text-3xl mb-10 text-center text-gray-900">
             Customer Reviews
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">

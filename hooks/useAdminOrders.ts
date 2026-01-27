@@ -20,7 +20,7 @@ export interface Order {
     paymentStatus: string;
     paidAmount: number;
     refundedAmount?: number;
-    shippingCost?: number;
+    shippingFee?: number;
     discount?: number;
     paymentDetails: any;
     isPreOrder: boolean;

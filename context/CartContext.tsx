@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { Product } from "@/types";
@@ -15,25 +16,35 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CartItem extends Product {
   quantity: number;
+  // L9: Capture unique IDs for rendering & logic
+  cartItemId?: string;
+  variantId?: string;
+  variantName?: string;
+  variantImage?: string;
+  price?: number;
+  salePrice?: number;
 }
+
+// L9: Centralized Error Constants
+export const CART_ERRORS = {
+  ALREADY_IN_CART: "ALREADY_IN_CART",
+  OUT_OF_STOCK: "OUT_OF_STOCK",
+  VARIANT_REQUIRED: "VARIANT_REQUIRED",
+} as const;
 
 // L9: Extended interface for coupon support
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
   addToCart: (product: Product, variantId?: string) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, variantId: string) => void;
+  updateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
-  // Pricing
   subtotal: number;
-  discountAmount: number;
-  couponCode: string | null;
   grandTotal: number;
+  // Pricing
   // Coupon actions
-  applyCoupon: (code: string) => Promise<boolean>;
-  removeCoupon: () => void;
   isCouponLoading: boolean;
 }
 
@@ -45,10 +56,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
-  // L9: Coupon state management
-  const [couponCode, setCouponCode] = useState<string | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [isCouponLoading, setIsCouponLoading] = useState(false);
+  // L9: Debounce timeouts
+  const updateTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+  const activeMutations = useRef(0);
 
   // 1. QUERY: Fetch Cart (Guest from LS, User from API)
   const { data: items = [] } = useQuery({
@@ -78,6 +88,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return data.items.map((i: any) => ({
           ...i.product,
           quantity: i.quantity,
+          cartItemId: i.id,
+          variantId: i.variantId || i.variant_id || undefined,
+          variantName: i.variantName,
+          variantImage: i.variantImage,
+          price: i.price,
+          salePrice: i.salePrice,
         })) as CartItem[];
       }
       return [];
@@ -94,26 +110,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
       product: Product;
       variantId?: string;
     }) => {
-      // Resolve variant ID (default to first if not provided)
-      const finalVariantId = variantId || product.variants?.[0]?.id;
-      if (!finalVariantId) throw new Error("Product variant is required");
+      // L9: Strict Variant Enforcement
+      // If product has variants, variantId MUST be provided. No auto-selection.
+      const hasVariants = product.variants && product.variants.length > 0;
+      if (hasVariants && !variantId) {
+        throw new Error("VARIANT_REQUIRED"); // Frontend should catch this before calling, but double safety
+      }
 
+      // If no variants, variantId stays undefined
+      const finalVariantId = hasVariants ? variantId : undefined;
+
+      // L9: Stock Constraint (Double Check)
+      // Only Pre-Order or In-Stock allowed
+      const isPreOrder = product.stockStatus === "pre_order";
+      // Find variant stock if applicable
+      const variantStock = hasVariants && variantId
+        ? product.variants?.find(v => v.id === variantId)?.stock || 0
+        : product.stock || 0;
+
+      if (!isPreOrder && variantStock <= 0 && product.stockStatus !== "pre_order") {
+        throw new Error("OUT_OF_STOCK");
+      }
+
+      // Guest Mode
       if (!user) {
-        const current =
-          queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
-        const existing = current.find((i) => i.id === product.id);
-        const newItem = existing
-          ? { ...existing, quantity: existing.quantity + 1 }
-          : { ...product, quantity: 1 };
+        const key = ["cart", "guest"];
+        const current = queryClient.getQueryData<CartItem[]>(key) || [];
 
-        const newItems = existing
-          ? current.map((i) => (i.id === product.id ? newItem : i))
-          : [...current, newItem];
+        // L9: Check for exact variant match
+        const existing = current.find(
+          (i) => i.id === product.id && i.variantId === finalVariantId
+        );
+
+        if (existing) {
+          throw new Error(CART_ERRORS.ALREADY_IN_CART);
+        }
+
+        const newItem = { ...product, quantity: 1, variantId: finalVariantId, cartItemId: `${product.id}-${finalVariantId}` };
+        const newItems = [...current, newItem];
 
         localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
+        // Update cache manually since onMutate is skipped
+        queryClient.setQueryData(key, newItems);
         return newItems;
       }
 
+      // L9: User Mode - API handles data (Check moved to onMutate to avoid race condition)
       const token = localStorage.getItem("token");
       const res = await fetch(getApiUrl("/cart"), {
         method: "POST",
@@ -127,35 +169,61 @@ export function CartProvider({ children }: { children: ReactNode }) {
           quantity: 1,
         }),
       });
-      if (!res.ok) throw new Error("Failed to add");
-      return null;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to add");
+      }
     },
-    onMutate: async ({ product }) => {
-      const key = ["cart", user?.id || "guest"];
+    onMutate: async ({ product, variantId }) => {
+      activeMutations.current++;
+      // Skip for Guest (logic handled in mutationFn to avoid cache pollution race)
+      if (!user) return { previous: [] };
+
+      const key = ["cart", user.id];
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<CartItem[]>(key) || [];
 
-      const existing = previous.find((i) => i.id === product.id);
-      const optimistic = existing
-        ? previous.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
-        )
-        : [...previous, { ...product, quantity: 1 }];
+      // Check if exact variant exists (Blocking per user request)
+      const existing = previous.find((i) => i.id === product.id && i.variantId === variantId);
+      if (existing) {
+        // Find existing to check if we should block
+        // We throw here to stop the mutation
+        throw new Error("ALREADY_IN_CART");
+      }
+      // Note: React Query's onError will catch this throw. 
+      // But onError needs to know if it's a "real" error or logic block.
+      // Actually throwing in onMutate might not trigger onError in the same way?
+      // Docs: "If onMutate throws, the mutation will not proceed."
 
+      const optimistic = [...previous, { ...product, quantity: 1, variantId }];
       queryClient.setQueryData(key, optimistic);
       return { previous };
     },
-    onError: (err, newTodo, context) => {
+
+    onError: (err: any, newTodo, context) => {
       queryClient.setQueryData(
         ["cart", user?.id || "guest"],
         context?.previous,
       );
-      dialog.toast({ message: "Failed to add to cart", variant: "danger" });
+      if (err.message === "ALREADY_IN_CART") {
+        dialog.toast({ message: "This variant is already in your bag.", variant: "info" });
+      } else if (err.message === "VARIANT_REQUIRED") {
+        dialog.toast({ message: "Please select a style/size first.", variant: "danger" });
+      } else if (err.message === "OUT_OF_STOCK") {
+        dialog.toast({ message: "Seelect variant is out of stock.", variant: "danger" });
+      } else if (err.message) {
+        // Show actual backend error if available
+        dialog.toast({ message: err.message, variant: "danger" });
+      } else {
+        dialog.toast({ message: "Failed to add to cart", variant: "danger" });
+      }
     },
     onSettled: () => {
-      if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
-      else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
-      dialog.toast({ message: "Added to cart!", variant: "success" });
+      activeMutations.current--;
+      if (activeMutations.current === 0) {
+        if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+        else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+      }
     },
   });
 
@@ -165,32 +233,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // 3. MUTATION: Remove
   const removeMutation = useMutation({
-    mutationFn: async (productId: string) => {
+    mutationFn: async ({ productId, variantId }: { productId: string; variantId: string }) => {
       if (!user) {
         const current =
           queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
-        const newItems = current.filter((i) => i.id !== productId);
+        const newItems = current.filter((i) => !(i.id === productId && i.variantId === variantId));
         localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
         return;
       }
 
       const token = localStorage.getItem("token");
-      await fetch(getApiUrl(`/cart/${productId}`), {
+      await fetch(getApiUrl(`/cart/${productId}?variantId=${variantId}`), {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
     },
-    onMutate: async (productId) => {
+    onMutate: async ({ productId, variantId }) => {
+      activeMutations.current++;
       const key = ["cart", user?.id || "guest"];
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<CartItem[]>(key) || [];
       queryClient.setQueryData(
         key,
-        previous.filter((i) => i.id !== productId),
+        previous.filter((i) => !(i.id === productId && i.variantId === variantId)),
       );
       return { previous };
     },
-    onError: (err, productId, context) => {
+    onError: (err, vars, context) => {
       queryClient.setQueryData(
         ["cart", user?.id || "guest"],
         context?.previous,
@@ -198,22 +267,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
       dialog.toast({ message: "Failed to remove item", variant: "danger" });
     },
     onSettled: () => {
-      if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
-      else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+      activeMutations.current--;
+      if (activeMutations.current === 0) {
+        if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+        else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+      }
     },
   });
 
-  const removeFromCart = (productId: string) =>
-    removeMutation.mutate(productId);
+  const removeFromCart = (productId: string, variantId: string) =>
+    removeMutation.mutate({ productId, variantId });
 
   // 4. MUTATION: Update Quantity
   const updateMutation = useMutation({
-    mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
+    mutationFn: async ({ productId, variantId, quantity }: { productId: string; variantId?: string; quantity: number }) => {
       if (!user) {
         const current =
           queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
         const newItems = current.map((i) =>
-          i.id === id ? { ...i, quantity } : i,
+          i.id === productId && i.variantId === variantId ? { ...i, quantity } : i,
         );
         localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
         return;
@@ -226,44 +298,78 @@ export function CartProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ productId: id, quantity }),
+        body: JSON.stringify({ productId, variantId, quantity }),
       });
     },
-    onMutate: async ({ id, quantity }) => {
-      const key = ["cart", user?.id || "guest"];
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<CartItem[]>(key) || [];
-      queryClient.setQueryData(
-        key,
-        previous.map((i) => (i.id === id ? { ...i, quantity } : i)),
-      );
-      return { previous };
+    onMutate: () => {
+      activeMutations.current++;
     },
-    onError: (err, vars, context) => {
-      queryClient.setQueryData(
-        ["cart", user?.id || "guest"],
-        context?.previous,
-      );
-      dialog.toast({ message: "Failed to update quantity", variant: "danger" });
-    },
-    onSettled: () => {
+    onError: (err: any) => {
+      // On error, we invalidate to refetch true state
+      // Note: We don't check activeMutations here because an error 
+      // is a critical state change that likely needs a reset/refetch
       if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+
+      const msg = err.message || "Failed to update quantity";
+      dialog.toast({ message: msg, variant: "danger" });
+    },
+    onSettled: () => {
+      activeMutations.current--;
+      if (activeMutations.current === 0) {
+        if (user) queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+        else queryClient.invalidateQueries({ queryKey: ["cart", "guest"] });
+      }
     },
   });
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
     if (quantity < 1) {
-      removeFromCart(productId);
+      if (variantId) {
+        removeFromCart(productId, variantId);
+      }
       return;
     }
-    updateMutation.mutate({ id: productId, quantity });
+
+    // 1. Immediate Optimistic Update (No flicker)
+    const key = ["cart", user?.id || "guest"];
+    const current = queryClient.getQueryData<CartItem[]>(key) || [];
+
+    // Validation: Check Stock
+    const targetItem = current.find((i) => i.id === productId && i.variantId === variantId);
+    if (targetItem && targetItem.stockStatus !== "pre_order") {
+      // Assuming item.stock is available (from updated backend)
+      // If stock is missing, fallback to safe high number or 0? 
+      // Backend guarantees stock int now.
+      if (quantity > targetItem.stock) {
+        dialog.toast({ message: `Only ${targetItem.stock} items available.`, variant: "danger" });
+        return;
+      }
+    }
+
+    const newItems = current.map((i) =>
+      i.id === productId && i.variantId === variantId ? { ...i, quantity } : i
+    );
+    queryClient.setQueryData(key, newItems);
+
+    // 2. Guest Mode: Sync immediately (Local Storage)
+    if (!user) {
+      localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
+      return;
+    }
+
+    // 3. User Mode: Debounce API Call
+    const timeoutKey = `${productId}-${variantId || "novar"}`;
+    if (updateTimeouts.current[timeoutKey]) {
+      clearTimeout(updateTimeouts.current[timeoutKey]);
+    }
+
+    updateTimeouts.current[timeoutKey] = setTimeout(() => {
+      updateMutation.mutate({ productId, variantId, quantity });
+    }, 500);
   };
 
   const clearCart = () => {
-    // L9: Reset coupon state on cart clear
-    setCouponCode(null);
-    setDiscountAmount(0);
     if (!user) {
       localStorage.removeItem("rokomferi-cart");
       queryClient.setQueryData(["cart", "guest"], []);
@@ -276,78 +382,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // L9: Calculate subtotal
   const subtotal = items.reduce((sum, item) => {
-    const price = item.salePrice || item.basePrice;
+    // Priority: Item level SalePrice > Item level Price (these are resolved by backend)
+    const price = item.salePrice || item.price || item.basePrice || 0;
     return sum + price * item.quantity;
   }, 0);
 
-  // L9: Calculate grandTotal with discount capping
-  let grandTotal = subtotal - discountAmount;
-  if (grandTotal < 0) grandTotal = 0;
+  // L9: Calculate grandTotal
+  const grandTotal = subtotal;
 
-  // L9: Coupon application with backend validation
-  const applyCoupon = async (code: string): Promise<boolean> => {
-    if (!user) {
-      dialog.toast({ message: "Please login to use coupons", variant: "info" });
-      return false;
-    }
-
-    if (!code.trim()) {
-      dialog.toast({
-        message: "Please enter a coupon code",
-        variant: "danger",
-      });
-      return false;
-    }
-
-    setIsCouponLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl("/cart/coupon"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ couponCode: code }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.valid) {
-        dialog.toast({
-          message: data.message || "Invalid coupon",
-          variant: "danger",
-        });
-        setCouponCode(null);
-        setDiscountAmount(0);
-        return false;
-      }
-
-      setCouponCode(code);
-      setDiscountAmount(data.discountAmount);
-      dialog.toast({ message: "Coupon applied!", variant: "success" });
-      return true;
-    } catch (error) {
-      console.error("Coupon apply error:", error);
-      dialog.toast({ message: "Failed to apply coupon", variant: "danger" });
-      return false;
-    } finally {
-      setIsCouponLoading(false);
-    }
-  };
-
-  const removeCoupon = () => {
-    setCouponCode(null);
-    setDiscountAmount(0);
-    dialog.toast({ message: "Coupon removed", variant: "info" });
-  };
-
-  // L9: Cap discount if subtotal decreases below discount amount
-  useEffect(() => {
-    if (discountAmount > subtotal && discountAmount > 0) {
-      setDiscountAmount(subtotal);
-    }
-  }, [subtotal, discountAmount]);
 
   // 5. MERGE LOGIC (Effect)
   useEffect(() => {
@@ -397,12 +439,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         toggleCart,
         subtotal,
-        discountAmount,
-        couponCode,
         grandTotal,
-        applyCoupon,
-        removeCoupon,
-        isCouponLoading,
+        isCouponLoading: false
       }}
     >
       {children}

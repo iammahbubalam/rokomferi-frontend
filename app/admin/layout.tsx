@@ -20,6 +20,7 @@ import {
   ExternalLink,
   TicketPercent,
   BarChart3,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -66,10 +67,10 @@ export default function AdminLayout({
     { label: "Inventory", icon: ClipboardList, href: "/admin/inventory" },
     { label: "Categories", icon: FolderTree, href: "/admin/categories" },
     { label: "Collections", icon: Layers, href: "/admin/collections" },
-    { label: "Coupons", icon: TicketPercent, href: "/admin/coupons" },
     { label: "Orders", icon: ShoppingBag, href: "/admin/orders" },
     { label: "Customers", icon: Users, href: "/admin/customers" },
     { label: "Content", icon: FileText, href: "/admin/content" },
+    { label: "Shipping", icon: Truck, href: "/admin/settings/shipping" },
     { label: "Settings", icon: Settings, href: "/admin/settings" },
   ];
 

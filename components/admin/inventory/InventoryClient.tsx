@@ -199,42 +199,30 @@ export default function InventoryClient({
                   const isExpanded = expandedProducts[group.productId];
                   return (
                     <Fragment key={group.productId}>
-                      {/* Parent Row */}
                       <tr
                         className="bg-gray-50/50 hover:bg-gray-100/50 transition-colors cursor-pointer border-b border-gray-100"
                         onClick={() => toggleProduct(group.productId)}
-                      >
-                        <td className="px-6 py-4 text-center">
+                      ><td className="px-6 py-4 text-center">
                           {isExpanded ? (
                             <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
                           ) : (
                             <ChevronRight className="w-4 h-4 text-gray-400 mx-auto" />
                           )}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-gray-900">
+                        </td><td className="px-6 py-4 font-bold text-gray-900">
                           {group.productName}
                           <span className="ml-2 text-[10px] uppercase bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
                             {group.variants.length} Variants
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold text-gray-700">
+                        </td><td className="px-6 py-4 text-center font-bold text-gray-700">
                           {group.totalStock}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {/* Aggregate Status could be complex, omitting for clean parent row */}
-                        </td>
-                        <td className="px-6 py-4 text-right"></td>
-                      </tr>
-
-                      {/* Child Rows (Variants) */}
+                        </td><td className="px-6 py-4 text-center">
+                        </td><td className="px-6 py-4 text-right"></td></tr>
                       {isExpanded &&
                         group.variants.map((row) => (
                           <tr
                             key={row.id}
                             className="hover:bg-gray-50 transition-colors bg-white animate-in slide-in-from-top-1 duration-200"
-                          >
-                            <td className="px-6 py-4"></td> {/* Indent */}
-                            <td className="px-6 py-4 pl-10 border-l-2 border-primary/10">
+                          ><td className="px-6 py-4"></td><td className="px-6 py-4 pl-10 border-l-2 border-primary/10">
                               <div className="flex flex-col">
                                 <span className="font-medium text-gray-700">
                                   {row.name === "Default"
@@ -245,8 +233,7 @@ export default function InventoryClient({
                                   SKU: {row.sku || "-"}
                                 </span>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
+                            </td><td className="px-6 py-4 text-center">
                               <span
                                 className={`text-sm font-bold ${row.stock <= row.lowStockThreshold ? "text-red-600" : "text-gray-700"}`}
                               >
@@ -255,8 +242,7 @@ export default function InventoryClient({
                               <div className="text-[10px] text-gray-400">
                                 Min: {row.lowStockThreshold}
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
+                            </td><td className="px-6 py-4 text-center">
                               {row.stock <= 0 ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   Out of Stock
@@ -270,8 +256,7 @@ export default function InventoryClient({
                                   In Stock
                                 </span>
                               )}
-                            </td>
-                            <td className="px-6 py-4 text-right flex justify-end gap-2">
+                            </td><td className="px-6 py-4 text-right flex justify-end gap-2">
                               <Button
                                 size="sm"
                                 variant="outline-white"
@@ -304,8 +289,7 @@ export default function InventoryClient({
                               >
                                 Adjust
                               </Button>
-                            </td>
-                          </tr>
+                            </td></tr>
                         ))}
                     </Fragment>
                   );

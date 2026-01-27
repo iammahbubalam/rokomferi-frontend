@@ -147,6 +147,11 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                             Process Order
                         </button>
                     )}
+                    {order.status === 'pending_verification' && (
+                        <button onClick={handleVerify} className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-all shadow-sm active:scale-95 shadow-amber-200">
+                            Verify Payment
+                        </button>
+                    )}
                     {order.status === 'processing' && (
                         <button onClick={() => initiateStatusChange("shipped")} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-all shadow-sm active:scale-95">
                             Ship Order
@@ -229,11 +234,11 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                         <div className="p-6 bg-gray-50/50 space-y-3">
                             <div className="flex justify-between text-sm text-secondary">
                                 <span>Subtotal</span>
-                                <span>৳{order.totalAmount.toLocaleString()}</span>
+                                <span>৳{(order.totalAmount - (order.shippingFee || 0)).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-sm text-secondary">
                                 <span>Shipping</span>
-                                <span>৳0</span>
+                                <span>৳{(order.shippingFee || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-base font-bold text-primary pt-3 border-t border-gray-200">
                                 <span>Grand Total</span>

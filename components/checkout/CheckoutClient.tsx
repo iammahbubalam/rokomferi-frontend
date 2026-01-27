@@ -13,28 +13,20 @@ import { useRouter } from "next/navigation";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
 import { AddressManager, Address } from "@/components/checkout/AddressManager";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Product } from "@/types";
 
-interface CheckoutClientProps {
-  initialProduct?: Product | null;
-  initialQuantity?: number;
-}
-
-export function CheckoutClient({
-  initialProduct,
-  initialQuantity = 1,
-}: CheckoutClientProps) {
+export function CheckoutClient() {
   const { user, isLoading: isAuthLoading } = useAuth();
-  // L9: Get coupon data from cart context
-  const { subtotal, discountAmount, couponCode, grandTotal } = useCart();
+  // L9: Get subtotal from cart context
+  const { subtotal } = useCart();
   const router = useRouter();
 
   // 1. DATA FLOW (State Machine)
-  const { state, updateQuantity, clearCart } = useCheckoutFlow(
-    initialProduct,
-    initialQuantity,
-  );
-  const { status, items, total, error, isDirectLoading } = state;
+  const { state, updateQuantity, clearCart } = useCheckoutFlow();
+  const { status, items, total, error } = state;
+  const { data: config } = useSystemConfig();
+  const shippingZones = config?.shippingZones || [];
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,12 +40,19 @@ export function CheckoutClient({
   }, [user, isAuthLoading, router]);
 
   // Form State
-  const [deliveryLocation, setDeliveryLocation] = useState("inside_dhaka");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
   const [email, setEmail] = useState("");
 
   // Address State managed by AddressManager
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+
+  // Sync deliveryLocation with first available zone
+  useEffect(() => {
+    if (shippingZones.length > 0 && !deliveryLocation) {
+      setDeliveryLocation(shippingZones[0].key);
+    }
+  }, [shippingZones, deliveryLocation]);
 
   // Pre-fill Email
   useEffect(() => {
@@ -173,10 +172,8 @@ export function CheckoutClient({
         }
       }
 
-      // 2. Place Order
       const payload: any = {
         paymentMethod: "cod",
-        couponCode: couponCode || undefined, // L9: Include coupon in order
         address: {
           firstName: selectedAddress.firstName,
           lastName: selectedAddress.lastName,
@@ -228,7 +225,9 @@ export function CheckoutClient({
     }
   };
 
-  const shippingCost = deliveryLocation === "outside_dhaka" ? 150 : 80;
+  const currentZone = shippingZones.find(z => z.key === deliveryLocation);
+  const shippingCost = currentZone?.cost || 0;
+  const deliveryLabel = currentZone?.label || "Shipping";
 
   // Validation
   const isFormValid =
@@ -242,8 +241,8 @@ export function CheckoutClient({
 
   // --- RENDER LOGIC (FAIL FAST) ---
 
-  // 1. Initializing (Loading Direct Item)
-  if (status === "initializing" || isDirectLoading) {
+  // 1. Initializing
+  if (status === "initializing") {
     return (
       <div className="min-h-screen pt-40 pb-20 bg-bg-primary flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -383,8 +382,11 @@ export function CheckoutClient({
                   onChange={(e) => setDeliveryLocation(e.target.value)}
                   className="peer w-full bg-transparent border-b border-primary/20 py-4 text-base focus:outline-none focus:border-primary transition-colors text-primary appearance-none cursor-pointer"
                 >
-                  <option value="inside_dhaka">Inside Dhaka (80 BDT)</option>
-                  <option value="outside_dhaka">Outside Dhaka (150 BDT)</option>
+                  {shippingZones.map(zone => (
+                    <option key={zone.id} value={zone.key}>
+                      {zone.label} ({zone.cost} BDT)
+                    </option>
+                  ))}
                 </select>
                 <label className="absolute left-0 -top-2 text-xs text-accent-gold">
                   Delivery Zone <span className="text-red-400">*</span>
@@ -478,10 +480,8 @@ export function CheckoutClient({
             <OrderSummary
               items={items}
               subtotal={subtotal}
-              discountAmount={discountAmount}
-              couponCode={couponCode}
-              grandTotal={grandTotal}
               deliveryLocation={deliveryLocation}
+              deliveryLabel={deliveryLabel}
               shippingCost={shippingCost}
               onCheckout={handleCheckout}
               isSubmitting={isSubmitting}

@@ -9,7 +9,6 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
-import { CouponInput } from "./CouponInput";
 
 export function CartDrawer() {
   const {
@@ -19,9 +18,6 @@ export function CartDrawer() {
     removeFromCart,
     updateQuantity,
     subtotal,
-    discountAmount,
-    grandTotal,
-    couponCode,
   } = useCart();
   const [shippingThreshold] = useState(15000); // Free shipping threshold
 
@@ -116,24 +112,27 @@ export function CartDrawer() {
                   </Button>
                 </div>
               ) : (
-                items.map((item) => {
+                items.map((item, index) => {
                   const isOutOfStock =
                     item.stock <= 0 || item.stockStatus === "out_of_stock";
-                  const isMaxStock = item.quantity >= item.stock;
+
+                  // L9: Resolve Variant Details
+                  const selectedVariant = item.variants?.find(v => v.id === item.variantId);
+                  const isMaxStock = item.quantity >= (selectedVariant?.stock ?? item.stock);
+                  const variantImage = selectedVariant?.images?.[0];
 
                   return (
                     <motion.div
                       layout
-                      key={item.id}
+                      key={item.cartItemId || `${item.id}-${item.variantId || index}`}
                       className={clsx(
                         "flex gap-4 group",
                         isOutOfStock && "opacity-75 grayscale-[0.5]",
                       )}
                     >
-                      {/* Image */}
                       <div className="relative w-24 h-32 bg-gray-100 flex-shrink-0 overflow-hidden rounded-sm">
                         <Image
-                          src={item.images?.[0] || ""}
+                          src={item.variantImage || variantImage || item.images?.[0] || "/placeholder.png"}
                           alt={item.name}
                           fill
                           className="object-cover"
@@ -158,6 +157,11 @@ export function CartDrawer() {
                               <h4 className="font-serif text-base text-primary leading-tight hover:text-accent-gold transition-colors">
                                 {item.name}
                               </h4>
+                              {item.variantName && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {item.variantName}
+                                </p>
+                              )}
                             </Link>
                             <span className="text-sm font-medium text-primary whitespace-nowrap">
                               ৳
@@ -171,6 +175,21 @@ export function CartDrawer() {
                           <p className="text-xs text-secondary uppercase tracking-wide mt-1">
                             {item.categories?.[0]?.name}
                           </p>
+
+                          {/* L9: Exact Variant Info */}
+                          {selectedVariant && (
+                            <div className="mt-1 flex flex-col gap-0.5">
+                              <p className="text-[10px] text-gray-500 font-medium bg-gray-50 inline-block px-1.5 py-0.5 rounded w-fit">
+                                SKU: {selectedVariant.sku || item.id.slice(0, 8).toUpperCase()}
+                              </p>
+                              {selectedVariant.attributes && Object.entries(selectedVariant.attributes).map(([key, val]) => (
+                                <p key={key} className="text-[10px] text-gray-500">
+                                  {key}: <span className="text-gray-900 font-medium">{val}</span>
+                                </p>
+                              ))}
+                            </div>
+                          )}
+
                           {isMaxStock && !isOutOfStock && (
                             <p className="text-[10px] text-orange-500 mt-1">
                               Max available stock reached
@@ -184,7 +203,7 @@ export function CartDrawer() {
                           <div className="flex items-center border border-gray-200 rounded-sm">
                             <button
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity - 1)
+                                updateQuantity(item.id, item.variantId, item.quantity - 1)
                               }
                               className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30"
                               disabled={item.quantity <= 1}
@@ -196,7 +215,7 @@ export function CartDrawer() {
                             </span>
                             <button
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
+                                updateQuantity(item.id, item.variantId, item.quantity + 1)
                               }
                               className="p-2 hover:bg-gray-100 active:bg-gray-200 active:scale-90 text-secondary hover:text-primary transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                               disabled={isMaxStock || isOutOfStock}
@@ -207,7 +226,7 @@ export function CartDrawer() {
 
                           {/* Remove */}
                           <button
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.id, item.variantId || "")}
                             className="px-2 py-1 text-xs text-secondary hover:text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-95 rounded transition-all duration-150"
                           >
                             Remove
@@ -223,22 +242,12 @@ export function CartDrawer() {
             {/* Footer */}
             {items.length > 0 && (
               <div className="p-6 border-t border-gray-100 bg-gray-50/50 space-y-4">
-                {/* Coupon Input */}
-                <div className="mb-4">
-                  <CouponInput />
-                </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm text-secondary">
                     <span>Subtotal</span>
                     <span>৳{subtotal.toLocaleString()}</span>
                   </div>
-                  {discountAmount > 0 && (
-                    <div className="flex items-center justify-between text-sm text-green-700 font-medium">
-                      <span>Discount ({couponCode})</span>
-                      <span>-৳{discountAmount.toLocaleString()}</span>
-                    </div>
-                  )}
                   <div className="flex items-center justify-between text-sm text-secondary">
                     <span>Shipping</span>
                     <span className="text-primary">
@@ -249,7 +258,7 @@ export function CartDrawer() {
 
                 <div className="flex items-center justify-between text-lg font-serif text-primary pt-4 border-t border-gray-200">
                   <span>Total</span>
-                  <span>৳{grandTotal.toLocaleString()}</span>
+                  <span>৳{subtotal.toLocaleString()}</span>
                 </div>
 
                 {/* Checkout Button with Logic */}

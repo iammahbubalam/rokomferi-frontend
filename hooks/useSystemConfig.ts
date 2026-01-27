@@ -1,10 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { getApiUrl } from "@/lib/utils";
 
+export interface ShippingZone {
+    id: number;
+    key: string;
+    label: string;
+    cost: number;
+    isActive: boolean;
+}
+
 export interface SystemEnums {
     orderStatuses: string[];
     paymentStatuses: string[];
     paymentMethods: string[];
+    shippingZones: ShippingZone[];
 }
 
 async function fetchEnums(): Promise<SystemEnums> {

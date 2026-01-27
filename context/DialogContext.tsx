@@ -144,7 +144,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
 
   // Toast Notification
   const toast = useCallback((options: ToastOptions) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setToasts((prev) => [
       ...prev,
       { id, message: options.message, variant: options.variant || "info" },
