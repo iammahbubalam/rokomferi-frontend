@@ -140,7 +140,7 @@ export interface HeroSlide {
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: 1,
-    image: "",
+    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c",
     title: "Moonlit Silence",
     subtitle: "The Eid 2026 Edit",
     description:
@@ -148,7 +148,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 2,
-    image: "",
+    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b",
     title: "Legacy of Loom",
     subtitle: "The Eid Heritage Edit",
     description:
@@ -156,7 +156,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 3,
-    image: "",
+    image: "https://images.unsplash.com/photo-1544441893-675973e31985",
     title: "Royal Weaves",
     subtitle: "Katan Collection",
     description: "The sheen of pure silk, the weight of gold zari.",
@@ -282,7 +282,7 @@ export const FEATURED_CATEGORIES: FeaturedCategory[] = [
     id: "fc1",
     name: "Katan Sarees",
     slug: "sarees-katan",
-    image: "",
+    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c",
     description: "The queen of silks. Woven for grandeur.",
     size: "large",
   },
@@ -290,14 +290,14 @@ export const FEATURED_CATEGORIES: FeaturedCategory[] = [
     id: "fc2",
     name: "Salwar Kameez",
     slug: "salwar-kameez",
-    image: "",
+    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b",
     size: "small",
   },
   {
     id: "fc3",
     name: "Designer Kurtis",
     slug: "kurtis",
-    image: "",
+    image: "https://images.unsplash.com/photo-1544441893-675973e31985",
     size: "small",
   },
 ];
@@ -428,19 +428,23 @@ export async function getProductReviews(productId: string): Promise<Review[]> {
 // --- CONTENT API FUNCTIONS ---
 
 export async function getHeroSlides(): Promise<HeroSlide[]> {
+  const url = getApiUrl("/content/home_hero");
   try {
-    const res = await fetch(getApiUrl("/content/home_hero"), {
+    const res = await fetch(url, {
       next: { revalidate: 300 }, // 5 mins
-    }); // Use no-store for dynamic content
+    });
     if (res.ok) {
       const data = await res.json();
-      // Expecting structure: { content: { slides: [...] } } or just the slides array in content
-      if (data.content && data.content.slides) {
+      if (data.content && data.content.slides && data.content.slides.length > 0) {
+        console.log(`[DATA] Fetched ${data.content.slides.length} hero slides`);
         return data.content.slides;
       }
+      console.log(`[DATA] Hero slides API returned empty, using fallback`);
+    } else {
+      console.warn(`[DATA] Hero slides fetch failed with status ${res.status}`);
     }
   } catch (e) {
-    console.error("Failed to fetch hero slides", e);
+    console.error(`[DATA] Failed to fetch hero slides from ${url}`, e);
   }
   return HERO_SLIDES;
 }
@@ -501,15 +505,17 @@ export async function getAllActiveCategories(): Promise<CategoryNode[]> {
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
+  const url = getApiUrl("/products?is_featured=true&limit=6");
   try {
-    const res = await fetch(getApiUrl("/products?is_featured=true&limit=6"), {
+    const res = await fetch(url, {
       next: { revalidate: 300 },
     });
-    if (!res.ok) throw new Error("Failed to fetch featured products");
+    if (!res.ok) throw new Error(`Status ${res.status}`);
     const json: APIResponse<BackendProduct[]> = await res.json();
+    console.log(`[DATA] Fetched ${json.data?.length || 0} featured products`);
     return json.data.map(mapBackendProductToFrontend);
   } catch (error) {
-    console.error("Featured fetch error:", error);
+    console.error(`[DATA] Featured products fetch error from ${url}:`, error);
     return [];
   }
 }
@@ -590,15 +596,20 @@ export async function getCollectionInfo(
 }
 
 export async function getCollections(): Promise<Collection[]> {
+  const url = getApiUrl("/collections");
   try {
-    const res = await fetch(getApiUrl("/collections"), {
+    const res = await fetch(url, {
       next: { revalidate: 300 },
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`[DATA] Collections fetch failed with status ${res.status}`);
+      return [];
+    }
     const collections: Collection[] = await res.json();
+    console.log(`[DATA] Fetched ${collections?.length || 0} collections`);
     return collections;
   } catch (error) {
-    console.error("Failed to fetch collections", error);
+    console.error(`[DATA] Failed to fetch collections from ${url}:`, error);
     return [];
   }
 }
@@ -631,8 +642,9 @@ function flattenCategories(nodes: any[]): any[] {
 }
 
 export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
+  const url = getApiUrl("/categories");
   try {
-    const res = await fetch(getApiUrl("/categories"), {
+    const res = await fetch(url, {
       next: { revalidate: 300 },
     });
     if (res.ok) {
@@ -643,6 +655,7 @@ export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
       const featured = allCategories.filter((c: any) => c.isFeatured === true);
 
       if (featured.length > 0) {
+        console.log(`[DATA] Found ${featured.length} featured categories`);
         // Map to FeaturedCategory
         return featured.map((c: any, index: number) => ({
           id: c.id,
@@ -655,9 +668,12 @@ export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
           size: index === 0 ? "large" : "small",
         }));
       }
+      console.log("[DATA] No categories marked as featured, using fallback");
+    } else {
+      console.warn(`[DATA] Featured categories fetch failed with status ${res.status}`);
     }
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
+    console.error(`[DATA] Failed to fetch categories from ${url}:`, error);
   }
   // Fallback if no featured categories found
   return FEATURED_CATEGORIES;
