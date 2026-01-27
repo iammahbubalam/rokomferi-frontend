@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { getApiUrl } from "@/lib/utils";
+import Image from "next/image";
 import { User as UserIcon, Mail, Calendar, Shield } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +8,9 @@ export const dynamic = "force-dynamic";
 interface Customer {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
   role: string;
   createdAt: string;
 }
@@ -87,54 +90,70 @@ export default async function CustomersPage() {
                     </td>
                   </tr>
                 ) : (
-                  customers.map((customer) => (
-                    <tr
-                      key={customer.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <UserIcon className="w-5 h-5 text-primary" />
+                  customers.map((customer) => {
+                    const fullName = [customer.firstName, customer.lastName]
+                      .filter(Boolean)
+                      .join(" ") || customer.email.split("@")[0];
+
+                    return (
+                      <tr
+                        key={customer.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            {customer.avatar ? (
+                              <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                                <Image
+                                  src={customer.avatar}
+                                  alt={fullName}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <UserIcon className="w-5 h-5 text-primary" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-primary">
+                                {fullName}
+                              </p>
+                              <p className="text-xs text-secondary">
+                                ID: {customer.id.slice(0, 8)}...
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-primary">
-                              {customer.name || "N/A"}
-                            </p>
-                            <p className="text-xs text-secondary">
-                              ID: {customer.id.slice(0, 8)}...
-                            </p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-secondary">
+                            <Mail className="w-4 h-4" />
+                            {customer.email}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-secondary">
-                          <Mail className="w-4 h-4" />
-                          {customer.email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4 text-secondary" />
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              customer.role === "admin"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-blue-100 text-blue-800"
-                            }`}
-                          >
-                            {customer.role}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-secondary text-sm">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(customer.createdAt).toLocaleDateString()}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-secondary" />
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${customer.role === "admin"
+                                  ? "bg-purple-100 text-purple-800"
+                                  : "bg-blue-100 text-blue-800"
+                                }`}
+                            >
+                              {customer.role}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-secondary text-sm">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(customer.createdAt).toLocaleDateString()}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -144,3 +163,4 @@ export default async function CustomersPage() {
     </div>
   );
 }
+
