@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { getApiUrl } from "@/lib/utils";
 import Image from "next/image";
-import { User as UserIcon, Mail, Calendar, Shield } from "lucide-react";
+import Link from "next/link";
+import { User as UserIcon, Mail, Calendar, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,14 +16,36 @@ interface Customer {
   createdAt: string;
 }
 
-export default async function CustomersPage() {
+interface Meta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface UsersResponse {
+  users: Customer[];
+  meta: Meta;
+}
+
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
+
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page) || 1;
+  const limit = Number(resolvedSearchParams.limit) || 10;
+
   let customers: Customer[] = [];
+  let meta: Meta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let error = null;
 
   try {
-    const res = await fetch(getApiUrl("/admin/users"), {
+    const res = await fetch(getApiUrl(`/admin/users?page=${page}&limit=${limit}`), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -31,7 +54,15 @@ export default async function CustomersPage() {
 
     if (res.ok) {
       const data = await res.json();
-      customers = data.users || data || [];
+      // Handle both old format (array/object with users) and new format (including meta) support
+      if (data.users && data.meta) {
+        customers = data.users;
+        meta = data.meta;
+      } else if (data.users) {
+        customers = data.users;
+      } else if (Array.isArray(data)) {
+        customers = data;
+      }
     } else {
       error = "Failed to fetch customers";
     }
@@ -51,7 +82,7 @@ export default async function CustomersPage() {
         </div>
         <div className="text-sm text-secondary">
           Total:{" "}
-          <span className="font-semibold text-primary">{customers.length}</span>
+          <span className="font-semibold text-primary">{meta.total || customers.length}</span>
         </div>
       </div>
 
@@ -137,8 +168,8 @@ export default async function CustomersPage() {
                             <Shield className="w-4 h-4 text-secondary" />
                             <span
                               className={`px-2 py-1 text-xs font-medium rounded-full ${customer.role === "admin"
-                                  ? "bg-purple-100 text-purple-800"
-                                  : "bg-blue-100 text-blue-800"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-blue-100 text-blue-800"
                                 }`}
                             >
                               {customer.role}
@@ -158,6 +189,36 @@ export default async function CustomersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {meta.totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-secondary">
+                Showing <span className="font-medium">{Math.min((page - 1) * limit + 1, meta.total)}</span> to{" "}
+                <span className="font-medium">{Math.min(page * limit, meta.total)}</span> of{" "}
+                <span className="font-medium">{meta.total}</span> results
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  href={`?page=${page - 1}&limit=${limit}`}
+                  className={`p-2 rounded hover:bg-gray-100 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+                  aria-disabled={page <= 1}
+                >
+                  <ChevronLeft className="w-5 h-5 text-secondary" />
+                </Link>
+                <div className="flex items-center px-2 text-sm text-secondary">
+                  Page {page} of {meta.totalPages}
+                </div>
+                <Link
+                  href={`?page=${page + 1}&limit=${limit}`}
+                  className={`p-2 rounded hover:bg-gray-100 ${page >= meta.totalPages ? "pointer-events-none opacity-50" : ""}`}
+                  aria-disabled={page >= meta.totalPages}
+                >
+                  <ChevronRight className="w-5 h-5 text-secondary" />
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
