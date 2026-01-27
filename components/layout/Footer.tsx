@@ -1,3 +1,5 @@
+"use client";
+
 import { Facebook, Instagram, Youtube } from "lucide-react";
 
 import { Container } from "@/components/ui/Container";
@@ -5,6 +7,7 @@ import Image from "next/image";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { FooterSection, SiteConfig } from "@/lib/data";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const TikTok = ({ className }: { className?: string }) => (
   <svg
@@ -51,6 +54,10 @@ interface FooterProps {
 }
 
 export function Footer({ siteConfig, footerSections }: FooterProps) {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <footer className="bg-[#f9f8f6] pt-20 pb-0 text-primary border-t border-primary/5 overflow-hidden relative">
       <Container>

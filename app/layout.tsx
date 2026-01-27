@@ -66,6 +66,7 @@ import { AuthContextProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { DialogProvider } from "@/context/DialogContext";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { MainWrapper } from "@/components/layout/MainWrapper";
 
 import { OrganizationSchema } from "@/components/seo/OrganizationSchema";
 
@@ -84,9 +85,10 @@ export default async function RootLayout({
     ]);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
+        suppressHydrationWarning
       >
         <OrganizationSchema siteConfig={siteConfig} />
         <QueryProvider>
@@ -102,12 +104,11 @@ export default async function RootLayout({
                         collections={collections}
                         siteConfig={siteConfig}
                       />
-                      <main className="flex-grow pt-[88px] md:pt-[104px]">
-                        {/* pt to offset fixed header height approx */}
+                      <MainWrapper>
                         <Suspense fallback={null}>
                           {children}
                         </Suspense>
-                      </main>
+                      </MainWrapper>
                       <Footer
                         siteConfig={siteConfig}
                         footerSections={footerSections}

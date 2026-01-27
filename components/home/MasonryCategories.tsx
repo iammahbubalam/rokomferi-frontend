@@ -103,6 +103,17 @@ export function MasonryCategories({ categories }: MasonryCategoriesProps) {
             );
           })}
         </div>
+
+        {/* View All Categories Link */}
+        <div className="mt-16 flex justify-center">
+          <Link
+            href="/category"
+            className="group flex items-center gap-3 text-sm uppercase tracking-[0.3em] font-medium text-primary hover:text-accent-gold transition-colors duration-300"
+          >
+            <span>View All Categories</span>
+            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-2" />
+          </Link>
+        </div>
       </div>
     </section>
   );

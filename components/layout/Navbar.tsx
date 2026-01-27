@@ -11,6 +11,7 @@ import {
   Shield,
   Heart,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
@@ -40,6 +41,10 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
   const { items: wishlistItems } = useWishlist();
   const { user } = useAuth();
   const { isIntroComplete, isLoading } = useIntro();
+  const pathname = usePathname();
+
+  // Hide Navbar on Admin pages
+  if (pathname?.startsWith("/admin")) return null;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

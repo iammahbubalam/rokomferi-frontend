@@ -21,23 +21,31 @@ export default function LoginPage() {
           transition={{ duration: 10, ease: "linear" }}
           className="absolute inset-0 w-full h-full"
         >
-          {/* Fallback to solid color since static asset is removed */}
-          <div className="absolute inset-0 bg-[#1a1a1a]" />
+          <Image
+            src="/assets/login_backdrop_image.png"
+            alt="Authentic Lifestyle"
+            fill
+            className="object-cover opacity-60"
+            priority
+          />
+          <div className="absolute inset-0 bg-[#3d0a0a]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2a0505] via-transparent to-[#2a0505]" />
         </motion.div>
 
-        <div className="absolute bottom-20 left-20 z-10 max-w-md text-white">
+        <div className="absolute inset-0 flex items-center justify-center p-20 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            className="text-center max-w-2xl text-white"
           >
-            <div className="h-[1px] w-12 bg-accent-gold mb-6" />
-            <h2 className="font-serif text-5xl leading-tight mb-4">
-              The Circle of <br /> Heritage
+            <div className="h-[1px] w-24 bg-accent-gold mx-auto mb-10" />
+            <h2 className="font-serif text-[72px] leading-[1] mb-8 tracking-tight">
+              Honoring the <br /> Art of Living
             </h2>
-            <p className="text-white/80 font-light text-lg">
-              Join our community to access exclusive collections, early drops,
-              and personalized curation.
+            <div className="h-[1px] w-12 bg-white/20 mx-auto mb-8" />
+            <p className="text-white/90 font-light text-2xl tracking-wide max-w-md mx-auto leading-relaxed">
+              Curating heritage, craftsmanship, and <br /> a slower pace of life.
             </p>
           </motion.div>
         </div>
