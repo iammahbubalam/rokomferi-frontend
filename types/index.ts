@@ -201,22 +201,49 @@ export interface Order {
   id: string;
   status:
   | "pending"
+  | "pending_verification" // Add missing status
   | "processing"
   | "shipped"
   | "delivered"
   | "cancelled"
   | "returned";
   totalAmount: number;
+  paidAmount: number;
+  refundedAmount?: number;
+  shippingCost?: number;
+  discount?: number;
   paymentStatus: string;
+  paymentMethod: string;
+  paymentDetails?: any;
   createdAt: string;
+  updatedAt?: string;
   user: {
     firstName: string;
     lastName: string;
     email: string;
+    avatar?: string;
+  };
+  shippingAddress?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    address: string;
+    thana?: string;
+    district?: string;
+    division?: string;
+    zip?: string;
+    deliveryLocation?: string;
+    avatar?: string;
   };
   items: {
     productName: string;
     quantity: number;
     price: number;
+    variant?: string;
+    product?: {
+      name: string;
+      images: string[];
+    };
   }[];
 }

@@ -4,16 +4,33 @@ import { Product } from "@/types";
 import { AddToCartButton } from "./AddToCartButton";
 // import { VariantSelector } from "./VariantSelector"; // Variants removed for now
 import { ProductDetailsAccordion } from "./ProductDetailsAccordion";
-import { Ruler, Info, ShieldCheck, Truck, Lock } from "lucide-react";
+import { Ruler, Info, ShieldCheck, Truck, Lock, CreditCard } from "lucide-react";
 import clsx from "clsx";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function ProductInfo({ product }: { product: Product }) {
+   const router = useRouter();
+   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>();
+
+   // Auto-select if only one variant exists (e.g. One Size)
+   useEffect(() => {
+      if (product.variants && product.variants.length === 1) {
+         setSelectedVariantId(product.variants[0].id);
+      }
+   }, [product.variants]);
+
    // Determine effective price and stock
    const currentPrice = product.salePrice || product.basePrice;
    const originalPrice = product.salePrice ? product.basePrice : undefined;
 
    const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
    const isPurchasable = product.stockStatus === 'in_stock' && totalStock > 0;
+
+   const handleBuyNow = () => {
+      const variantParam = selectedVariantId ? `&variantId=${selectedVariantId}` : '';
+      router.push(`/checkout?type=direct&productId=${product.id}&quantity=1${variantParam}`);
+   };
 
    return (
       <div className="flex flex-col gap-8 md:gap-12">
@@ -64,10 +81,27 @@ export function ProductInfo({ product }: { product: Product }) {
 
          {/* Actions */}
          <div className="space-y-6 pt-4">
-            <AddToCartButton
-               product={product}
-               disabled={!isPurchasable}
-            />
+            <div className="grid grid-cols-2 gap-4">
+               <AddToCartButton
+                  product={product}
+                  disabled={!isPurchasable}
+                  selectedVariantId={selectedVariantId}
+                  onSuccess={() => router.back()}
+               />
+
+               <button
+                  onClick={handleBuyNow}
+                  disabled={!isPurchasable}
+                  className={clsx(
+                     "w-full py-6 uppercase tracking-[0.2em] text-xs font-bold transition-all duration-300 flex items-center justify-center gap-3",
+                     "bg-[#D4AF37] text-white hover:bg-[#c9a432] border border-transparent",
+                     "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+               >
+                  <CreditCard className="w-4 h-4" />
+                  Buy Now
+               </button>
+            </div>
 
             <div className="flex justify-center gap-8 text-xs uppercase tracking-widest text-secondary underline-offset-4 decoration-primary/30">
                <button className="hover:underline flex items-center gap-2"><Ruler className="w-3 h-3" /> Size Guide</button>

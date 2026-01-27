@@ -20,6 +20,8 @@ export interface Order {
     paymentStatus: string;
     paidAmount: number;
     refundedAmount?: number;
+    shippingCost?: number;
+    discount?: number;
     paymentDetails: any;
     isPreOrder: boolean;
     items: any[];
@@ -29,6 +31,7 @@ export interface Order {
         email: string;
         firstName?: string;
         lastName?: string;
+        avatar?: string;
     };
 }
 

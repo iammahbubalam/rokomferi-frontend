@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { RefundModal } from "./RefundModal";
 import { OrderTimeline } from "./OrderTimeline";
-import { OrderProgress } from "./OrderProgress"; // Import Stepper
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { StatusChangeModal } from "./StatusChangeModal";
 import { useOrderDetail, useUpdateOrderStatus, useVerifyPayment, useOrderHistory, useUpdatePaymentStatus } from "@/hooks/useAdminOrderDetail";
@@ -180,9 +179,6 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                         </div>
                     </div>
 
-                    <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-secondary">
-                        <Printer className="w-5 h-5" />
-                    </button>
                     {(order.paymentStatus === 'paid' || order.paymentStatus === 'partial_paid' || order.paymentStatus === 'partial_refund') && (order.paidAmount - (order.refundedAmount || 0)) > 0.01 && (
                         <button
                             onClick={() => setIsRefundOpen(true)}
@@ -193,9 +189,6 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                     )}
                 </div>
             </div>
-
-            {/* Stepper */}
-            <OrderProgress status={order.status} paymentStatus={order.paymentStatus} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content */}
@@ -260,7 +253,7 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-6">
+                <div className="print-hide space-y-6">
                     {/* Payment Info */}
                     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
@@ -274,50 +267,27 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                             </span>
                         </div>
 
-                        <div className="space-y-4 text-sm">
-                            <div className="p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
-                                <div className="flex justify-between">
-                                    <span className="text-secondary">Method</span>
-                                    <span className="font-medium capitalize">{order.paymentMethod}</span>
-                                </div>
-                                {Object.keys(order.paymentDetails || {}).length > 0 && (
-                                    <div className="pt-2 border-t border-gray-200 mt-2 space-y-1">
-                                        {Object.entries(order.paymentDetails).map(([key, value]) => (
-                                            <div key={key} className="flex justify-between items-center text-xs">
-                                                <span className="text-secondary capitalize">{key.replace("_", " ")}:</span>
-                                                <span className="font-mono text-gray-700 truncate max-w-[120px]" title={String(value)}>{String(value)}</span>
-                                            </div>
-                                        ))}
+                        {/* Payment Details */}
+                        {order.paymentDetails && Object.keys(order.paymentDetails).length > 0 && (
+                            <div className="space-y-2 pt-4 border-t border-gray-100">
+                                {Object.entries(order.paymentDetails).map(([key, value]) => (
+                                    <div key={key} className="flex justify-between items-center text-xs">
+                                        <span className="text-secondary capitalize">{key.replace("_", " ")}:</span>
+                                        <span className="font-mono text-gray-700 truncate max-w-[150px]" title={String(value)}>{String(value)}</span>
                                     </div>
-                                )}
+                                ))}
                             </div>
-
-                            {order.paymentStatus !== 'paid' && order.status !== 'paid' && (
-                                <button
-                                    onClick={() => handlePaymentUpdate("paid")}
-                                    className="w-full py-2 border border-green-200 text-green-700 rounded-lg text-xs font-medium hover:bg-green-50 uppercase tracking-wide transition-colors"
-                                >
-                                    Mark Payment Received (Manual)
-                                </button>
-                            )}
-
-                            {/* Verification Panel */}
-                            {order.isPreOrder && order.status === 'pending_verification' && (
-                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg text-center space-y-3">
-                                    <AlertTriangle className="w-6 h-6 text-orange-500 mx-auto" />
-                                    <div className="text-xs text-orange-800">
-                                        Customer claims partial payment. Verify transaction details above.
-                                    </div>
-                                    <button
-                                        onClick={handleVerify}
-                                        className="w-full py-2 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 shadow-sm"
-                                    >
-                                        Verify & Accept
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        )}
                     </div>
+
+                    {order.paymentStatus !== 'paid' && order.status !== 'paid' && (
+                        <button
+                            onClick={() => handlePaymentUpdate("paid")}
+                            className="w-full py-2 border border-green-200 text-green-700 rounded-lg text-xs font-medium hover:bg-green-50 uppercase tracking-wide transition-colors"
+                        >
+                            Mark Payment Received (Manual)
+                        </button>
+                    )}
 
                     {/* Customer Info */}
                     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -325,39 +295,72 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                             <User className="w-4 h-4 text-primary" />
                             Customer
                         </h3>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-md">
-                                {order.user?.firstName?.[0] || "G"}
-                            </div>
-                            <div>
-                                <p className="font-medium text-sm text-primary">{order.user?.firstName} {order.user?.lastName}</p>
-                                <p className="text-xs text-secondary">{order.user?.email}</p>
+
+                        {/* Customer Profile */}
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                            {(order.user?.avatar || order.shippingAddress?.avatar) ? (
+                                <img
+                                    src={order.user?.avatar || order.shippingAddress?.avatar}
+                                    alt="Customer avatar"
+                                    className="w-12 h-12 rounded-full object-cover shadow-md border-2 border-white"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-bold shadow-md text-lg">
+                                    {(order.user?.firstName?.[0] || order.shippingAddress?.firstName?.[0] || "G").toUpperCase()}
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <p className="font-medium text-base text-primary">
+                                    {order.user?.firstName || order.shippingAddress?.firstName || 'Guest'} {order.user?.lastName || order.shippingAddress?.lastName || ''}
+                                </p>
+                                {(order.user?.email || order.shippingAddress?.email) && (
+                                    <p className="text-sm text-secondary mt-0.5">
+                                        {order.user?.email || order.shippingAddress?.email}
+                                    </p>
+                                )}
+                                {order.shippingAddress?.phone && (
+                                    <p className="text-sm text-secondary mt-0.5 font-mono">
+                                        {order.shippingAddress.phone}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Shipping Address */}
+                        <div className="space-y-3">
                             <div className="flex gap-3 items-start">
-                                <MapPin className="w-4 h-4 text-secondary mt-0.5" />
-                                <div className="text-sm text-gray-600">
-                                    <p className="font-medium text-primary mb-1">Delivery Address</p>
-                                    <p>{order.shippingAddress?.address}</p>
-                                    <p>
-                                        {order.shippingAddress?.thana && `${order.shippingAddress.thana}, `}
-                                        {order.shippingAddress?.district && `${order.shippingAddress.district}`}
-                                        {order.shippingAddress?.zip && ` - ${order.shippingAddress.zip}`}
-                                    </p>
-                                    <p className="text-secondary text-xs mt-0.5">
-                                        {order.shippingAddress?.division && `${order.shippingAddress.division}`}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex gap-3 items-center">
-                                <div className="w-4 flex justify-center"><div className="w-1 h-1 bg-secondary rounded-full" /></div>
-                                <div className="text-sm text-gray-600 flex items-center gap-2">
-                                    <span className="font-mono">{order.shippingAddress?.phone}</span>
-                                    <button onClick={() => copyToClipboard(order.shippingAddress?.phone, "Phone")} className="text-gray-300 hover:text-primary">
-                                        <Copy className="w-3 h-3" />
-                                    </button>
+                                <MapPin className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
+                                <div className="text-sm text-gray-600 flex-1">
+                                    <p className="font-medium text-primary mb-2">Delivery Address</p>
+
+                                    {/* Street Address */}
+                                    {order.shippingAddress?.address && (
+                                        <p className="mb-1">{order.shippingAddress.address}</p>
+                                    )}
+
+                                    {/* Thana, District, Zip */}
+                                    {(order.shippingAddress?.thana || order.shippingAddress?.district || order.shippingAddress?.zip) && (
+                                        <p className="mb-1">
+                                            {[
+                                                order.shippingAddress?.thana,
+                                                order.shippingAddress?.district
+                                            ].filter(Boolean).join(', ')}
+                                            {order.shippingAddress?.zip && ` - ${order.shippingAddress.zip}`}
+                                        </p>
+                                    )}
+
+                                    {/* Division */}
+                                    {order.shippingAddress?.division && (
+                                        <p className="text-secondary text-xs">{order.shippingAddress.division}</p>
+                                    )}
+
+                                    {/* Delivery Location Badge */}
+                                    {order.shippingAddress?.deliveryLocation && (
+                                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/10 rounded text-xs text-primary font-medium">
+                                            <div className="w-2 h-2 rounded-full bg-primary/40 mr-1.5"></div>
+                                            {order.shippingAddress.deliveryLocation.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

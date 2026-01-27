@@ -10,17 +10,30 @@ import clsx from "clsx";
 interface AddToCartButtonProps {
   product: Product;
   disabled?: boolean;
+  selectedVariantId?: string;
+  onSuccess?: () => void;
 }
 
-export function AddToCartButton({ product, disabled }: AddToCartButtonProps) {
+export function AddToCartButton({ product, disabled, selectedVariantId, onSuccess }: AddToCartButtonProps) {
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
+  const [errorShake, setErrorShake] = useState(false);
+
+  // ... (hasVariants check)
+  const hasVariants = product.variants && product.variants.length > 0;
+  const isSelectionRequired = hasVariants && !selectedVariantId;
 
   const handleAddToCart = async () => {
+    if (isSelectionRequired) {
+      setErrorShake(true);
+      setTimeout(() => setErrorShake(false), 600);
+      return;
+    }
+
     setIsAdding(true);
     try {
-      // Auto-select first/default variant if no selector logic here (Quick Add)
-      await addToCart(product, product.variants?.[0]?.id);
+      await addToCart(product, selectedVariantId);
+      if (onSuccess) onSuccess();
     } finally {
       setTimeout(() => setIsAdding(false), 500);
     }

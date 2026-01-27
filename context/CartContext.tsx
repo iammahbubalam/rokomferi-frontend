@@ -138,8 +138,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existing = previous.find((i) => i.id === product.id);
       const optimistic = existing
         ? previous.map((i) =>
-            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
-          )
+          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i,
+        )
         : [...previous, { ...product, quantity: 1 }];
 
       queryClient.setQueryData(key, optimistic);

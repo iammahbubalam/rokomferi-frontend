@@ -31,11 +31,7 @@ export function ProductSchema({ product, rating }: ProductSchemaProps) {
       url: `${env.NEXT_PUBLIC_APP_URL}/shop/product/${product.slug}`,
       priceCurrency: "BDT",
       price: price,
-      priceValidUntil: new Date(
-        new Date().setFullYear(new Date().getFullYear() + 1),
-      )
-        .toISOString()
-        .split("T")[0],
+      priceValidUntil: "2030-12-31", // Static far-future date to avoid hydration mismatch
       itemCondition: "https://schema.org/NewCondition",
       availability: isInstock
         ? "https://schema.org/InStock"
