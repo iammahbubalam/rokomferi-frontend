@@ -5,14 +5,15 @@ import Link from "next/link";
 import { Product } from "@/types";
 import clsx from "clsx";
 import { WishlistButton } from "@/components/common/WishlistButton";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
-  index?: number;
+  index: number;
   priority?: boolean;
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({ product, index, priority = false }: ProductCardProps) {
   // Discount
   const hasDiscount =
     product.salePrice && product.salePrice < product.basePrice;
@@ -27,9 +28,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     product.stock <= 0 || product.stockStatus === "out_of_stock";
 
   return (
-    <div className="group relative block w-full">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.8, delay: (index % 4) * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      className="group relative block w-full"
+    >
       {/* Image Container - Taller Aspect Ratio [3/4] for Fashion */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-main">
         <Link href={`/product/${product.slug}`} className="block h-full w-full">
           <Image
             src={product.images?.[0] || "/placeholder.jpg"}
@@ -38,19 +45,26 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             priority={priority}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={clsx(
-              "object-cover transition-transform duration-700 ease-in-out group-hover:scale-105",
+              "object-cover transition-transform duration-1000 ease-out group-hover:scale-110",
               isOutOfStock && "opacity-60 grayscale",
             )}
           />
-          {/* Hover Image */}
+          {/* Hover Image Reveal */}
           {!isOutOfStock && product.images?.[1] && (
-            <Image
-              src={product.images[1]}
-              alt={product.name}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100 hidden md:block"
-            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0 h-full w-full hidden md:block"
+            >
+              <Image
+                src={product.images[1]}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover"
+              />
+            </motion.div>
           )}
         </Link>
 
@@ -116,6 +130,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

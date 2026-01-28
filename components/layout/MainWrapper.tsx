@@ -3,7 +3,11 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-export function MainWrapper({ children }: { children: React.ReactNode }) {
+interface MainWrapperProps {
+    children: React.ReactNode;
+}
+
+export const MainWrapper = ({ children }: MainWrapperProps) => {
     const pathname = usePathname();
     const isAdmin = pathname?.startsWith("/admin");
 
@@ -11,10 +15,10 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
         <main
             className={cn(
                 "flex-grow",
-                !isAdmin && "pt-[88px] md:pt-[104px]"
+                !isAdmin && "pt-[64px] md:pt-[48px]"
             )}
         >
             {children}
         </main>
     );
-}
+};

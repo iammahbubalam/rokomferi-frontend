@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import clsx from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductGalleryProps {
@@ -51,7 +52,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         --- MOBILE VIEW (< lg) --- 
         Full-width Swipeable Carousel.
       */}
-      <div className="lg:hidden relative w-full aspect-[3/4] bg-gray-50 mb-4">
+      <div className="lg:hidden relative w-full bg-gray-50 mb-6 overflow-hidden">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -60,7 +61,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           {displayImages.map((url, idx) => (
             <div
               key={idx}
-              className="w-full h-full flex-shrink-0 snap-center relative"
+              className="w-screen aspect-[3/4] flex-shrink-0 snap-center relative"
             >
               <Image
                 src={url}
@@ -73,9 +74,17 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           ))}
         </div>
 
-        {/* Mobile Index Indicator */}
-        <div className="absolute bottom-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md">
-          {activeIndex + 1} / {displayImages.length}
+        {/* Mobile Minimalist Pagination Dots */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+          {displayImages.map((_, idx) => (
+            <div
+              key={idx}
+              className={clsx(
+                "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                activeIndex === idx ? "bg-primary w-4" : "bg-primary/20"
+              )}
+            />
+          ))}
         </div>
       </div>
 
@@ -108,14 +117,25 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         </div>
 
         {/* Main Stage (Right) */}
-        <div className="flex-1 relative aspect-[3/4] bg-gray-50 group overflow-hidden">
-          <Image
-            src={displayImages[activeIndex]}
-            alt="Active Product View"
-            fill
-            className="object-cover transition-opacity duration-300"
-            priority
-          />
+        <div className="flex-1 relative aspect-[3/4] bg-main group overflow-hidden border border-primary/5">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={displayImages[activeIndex]}
+                alt="Active Product View"
+                fill
+                className="object-cover"
+                priority
+              />
+            </motion.div>
+          </AnimatePresence>
 
           {/* Arrows (Visible on Hover) */}
           <button

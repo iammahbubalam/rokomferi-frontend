@@ -59,43 +59,46 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="bg-[#f9f8f6] pt-20 pb-0 text-primary border-t border-primary/5 overflow-hidden relative">
+    <footer className="bg-[#f9f8f6] pt-12 md:pt-20 pb-0 text-primary border-t border-primary/5 overflow-hidden relative">
       <Container>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-20">
-          {/* Brand Column */}
-          <div className="md:col-span-1 flex flex-col items-start gap-6">
-            <div className="flex items-center gap-3">
-              <div className="relative h-8 w-8">
-                <Image
-                  src={siteConfig.logo}
-                  alt={siteConfig.name}
-                  fill
-                  className="object-contain"
-                />
+        <div className="flex flex-col items-start gap-10 md:grid md:grid-cols-4 md:gap-8 mb-20 text-left">
+          {/* Brand Column - Ultra-Refined Left Alignment on Mobile */}
+          <div className="w-full md:col-span-1 flex flex-col items-start gap-5">
+            {/* Branding Block: Single line for Logo+Name, Aligned Description below */}
+            <div className="flex flex-col items-start gap-1.5">
+              <div className="flex items-center gap-3">
+                <div className="relative h-9 w-9 md:h-8 md:w-8">
+                  <Image
+                    src={siteConfig.logo}
+                    alt={siteConfig.name}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <span className="font-serif text-xl md:text-xl font-bold uppercase tracking-[0.15em] text-primary">
+                  {siteConfig.name}
+                </span>
               </div>
-              <span className="font-serif text-2xl font-bold uppercase tracking-widest text-primary">
-                {siteConfig.name}
-              </span>
+              <p className="text-[9px] md:text-xs leading-tight text-secondary/30 font-light italic antialiased ml-0.5">
+                {siteConfig.description}
+              </p>
             </div>
-            <p className="text-sm leading-relaxed text-secondary/80 max-w-xs font-light">
-              {siteConfig.description}
-            </p>
 
-            {/* Social Links */}
+            {/* Social Links - Compact Row */}
             {siteConfig.socials && siteConfig.socials.length > 0 && (
-              <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center justify-start gap-4">
                 {siteConfig.socials.map((social) => (
                   <a
                     key={social.platform}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-white border border-primary/10 text-primary/70 hover:text-primary hover:border-primary/30 transition-all hover:scale-110"
+                    className="p-2 rounded-full bg-white border border-primary/5 text-primary/30 hover:text-primary hover:border-primary/20 transition-all duration-300 hover:scale-110 shadow-sm"
                     aria-label={social.platform}
                   >
                     <SocialIcon
                       platform={social.platform}
-                      className="w-4 h-4"
+                      className="w-3 h-3"
                     />
                   </a>
                 ))}
@@ -103,30 +106,32 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
             )}
           </div>
 
-          {/* Dynamic Links Columns */}
-          {/* Limit to 2 columns for layout balance if needed, or map all */}
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <h4 className="font-serif text-sm uppercase tracking-widest mb-6 text-primary">
-                {section.title}
-              </h4>
-              <ul className="space-y-4 text-sm text-secondary/70 font-light">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Dynamic Links Columns - 3-column horizontal grid below brand on mobile */}
+          <div className="w-full md:col-span-3 grid grid-cols-3 gap-x-4 gap-y-10 md:gap-8 mt-2 md:mt-0 pt-10 md:pt-0 border-t md:border-t-0 border-primary/5">
+            {footerSections.map((section) => (
+              <div key={section.title} className="flex flex-col items-start">
+                <h4 className="font-serif text-[9px] md:text-sm uppercase tracking-wider mb-5 text-primary font-semibold">
+                  {section.title}
+                </h4>
+                <ul className="space-y-3.5 text-[10px] md:text-sm text-secondary/70 font-light flex flex-col items-start">
+                  {section.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="hover:text-primary transition-colors text-left relative group inline-block"
+                      >
+                        {link.label}
+                        <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent-gold transition-all duration-300 group-hover:w-full" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Giant Footer Branding - Animated Vector */}
+        {/* Giant Footer Branding */}
         <div className="w-full flex justify-center border-t border-primary/5 pt-12 pb-6 overflow-hidden relative">
           <BrandLogo
             className="w-[90vw] h-auto text-primary"

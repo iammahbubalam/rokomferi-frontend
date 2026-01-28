@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Category, Collection } from "@/types";
 import { clsx } from "clsx";
@@ -15,10 +16,35 @@ export function NavMenu({
   collections: Collection[];
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const navCategories = categories
     .filter((c) => c.showInNav !== false)
     .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+  // Helper to check if a category or any of its children are active
+  const isCategorySelected = useMemo(() => {
+    return (category: Category) => {
+      const categoryPath = category.path || `/category/${category.slug}`;
+      if (pathname === categoryPath) return true;
+
+      // Check sub-categories
+      return category.children?.some((child) => {
+        const childPath = child.path || `/category/${child.slug}`;
+        if (pathname === childPath) return true;
+
+        // Check L3 sub-categories
+        return child.children?.some((sub) => {
+          const subPath = sub.path || `/category/${sub.slug}`;
+          return pathname === subPath;
+        });
+      });
+    };
+  }, [pathname]);
+
+  const isCollectionsSelected = useMemo(() => {
+    return pathname === "/collections" || pathname.startsWith("/collection/");
+  }, [pathname]);
 
   return (
     <nav
@@ -31,8 +57,8 @@ export function NavMenu({
           <Link
             href={category.path || `/category/${category.slug}`}
             className={clsx(
-              "text-[11px] uppercase tracking-[0.25em] py-5 inline-block font-semibold transition-all duration-300",
-              activeId === category.id
+              "text-[11px] uppercase tracking-[0.25em] py-2 inline-block font-bold transition-all duration-300",
+              (activeId === category.id || isCategorySelected(category))
                 ? "text-accent-gold"
                 : "text-primary/70 hover:text-primary"
             )}
@@ -41,9 +67,9 @@ export function NavMenu({
             {category.name}
             {/* Subtle Animated Underline */}
             <motion.div
-              className="absolute bottom-4 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
+              className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
               initial={{ scaleX: 0 }}
-              animate={{ scaleX: activeId === category.id ? 1 : 0 }}
+              animate={{ scaleX: (activeId === category.id || isCategorySelected(category)) ? 1 : 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             />
           </Link>
@@ -111,8 +137,8 @@ export function NavMenu({
         <Link
           href="/collections"
           className={clsx(
-            "text-[11px] uppercase tracking-[0.25em] py-5 inline-block font-semibold transition-all duration-300",
-            activeId === "collections"
+            "text-[11px] uppercase tracking-[0.25em] py-2 inline-block font-bold transition-all duration-300",
+            (activeId === "collections" || isCollectionsSelected)
               ? "text-accent-gold"
               : "text-primary/70 hover:text-primary"
           )}
@@ -120,9 +146,9 @@ export function NavMenu({
         >
           Collections
           <motion.div
-            className="absolute bottom-4 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
+            className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-accent-gold origin-left"
             initial={{ scaleX: 0 }}
-            animate={{ scaleX: activeId === "collections" ? 1 : 0 }}
+            animate={{ scaleX: (activeId === "collections" || isCollectionsSelected) ? 1 : 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           />
         </Link>

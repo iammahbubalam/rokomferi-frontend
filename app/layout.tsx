@@ -69,6 +69,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { MainWrapper } from "@/components/layout/MainWrapper";
 
 import { OrganizationSchema } from "@/components/seo/OrganizationSchema";
+import { FloatingCart } from "@/components/layout/FloatingCart";
 
 export default async function RootLayout({
   children,
@@ -114,6 +115,7 @@ export default async function RootLayout({
                         footerSections={footerSections}
                       />
                       <CartDrawer />
+                      <FloatingCart />
                     </WishlistProvider>
                   </CartProvider>
                 </IntroProvider>

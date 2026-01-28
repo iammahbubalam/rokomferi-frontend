@@ -39,8 +39,8 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
   if (!slides || slides.length === 0) return null;
 
   return (
-    // L9: Hero fits viewport exactly, accounting for navbar offset in main
-    <section className="relative h-[calc(100dvh-88px)] md:h-[calc(100dvh-104px)] w-full overflow-hidden bg-primary">
+    // Hero fits viewport exactly on desktop, half split on mobile
+    <section className="relative h-[50dvh] md:h-[100dvh] w-full overflow-hidden bg-primary">
       {/* Background Images with Ken Burns Effect */}
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -82,7 +82,7 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
-            className="max-w-[90vw] md:max-w-4xl flex flex-col items-center"
+            className="max-max-w-[90vw] md:max-w-4xl flex flex-col items-center"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20, transition: { duration: 0.5 } }}
@@ -101,17 +101,23 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
             )}
 
             {/* Title - Massive Serif Impact */}
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-[0.9] mb-8 md:mb-10 mix-blend-overlay opacity-90">
+            <h1 className="font-serif text-3xl md:text-7xl lg:text-8xl text-white leading-[0.9] mb-6 md:mb-10 opacity-90">
               {slides[current].title.split(" ").map((word, i) => (
-                <span key={i} className="inline-block px-2">
+                <motion.span
+                  key={i}
+                  className="inline-block px-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 + i * 0.1 }}
+                >
                   {word}
-                </span>
+                </motion.span>
               ))}
             </h1>
 
             {/* Description - Refined width */}
             {slides[current].description && (
-              <p className="text-white/80 text-sm md:text-lg font-light max-w-lg leading-relaxed mb-10 md:mb-14 antialiased">
+              <p className="text-white/80 text-[10px] md:text-lg font-light max-w-lg leading-relaxed mb-8 md:mb-14 antialiased">
                 {slides[current].description}
               </p>
             )}
@@ -119,7 +125,7 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
             {/* CTA - Minimal & Glass */}
             <Link
               href="/shop"
-              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/60 text-white text-xs uppercase tracking-[0.25em] transition-all duration-500 overflow-hidden"
+              className="group relative inline-flex items-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/60 text-white text-[10px] md:text-xs uppercase tracking-[0.25em] transition-all duration-500 overflow-hidden"
             >
               <span className="relative z-10">Discover</span>
               <div className="absolute inset-0 bg-white/10 -translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-out" />
@@ -140,11 +146,10 @@ export function HeroCinematic({ slides }: HeroCinematicProps) {
               aria-label={`Go to slide ${idx + 1}`}
             >
               <span
-                className={`block h-[1px] w-full transition-all duration-500 ${
-                  idx === current
-                    ? "bg-white opacity-100"
-                    : "bg-white/30 group-hover:bg-white/60"
-                }`}
+                className={`block h-[1px] w-full transition-all duration-500 ${idx === current
+                  ? "bg-white opacity-100"
+                  : "bg-white/30 group-hover:bg-white/60"
+                  }`}
               />
             </button>
           ))}

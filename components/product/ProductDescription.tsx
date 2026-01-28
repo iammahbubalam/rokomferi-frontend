@@ -4,7 +4,7 @@ export function ProductDescription({ product }: { product: Product }) {
     if (!product.description) return null;
 
     return (
-        <div className="w-full py-16 lg:py-24 bg-white border-t border-gray-100">
+        <div className="w-full pt-4 pb-12 lg:py-24 bg-white border-t border-gray-100">
             <div className="max-w-[1440px] mx-auto px-6 md:px-12 lg:px-20">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-24">
                     {/* Left: Sticky Header */}

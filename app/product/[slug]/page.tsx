@@ -77,22 +77,31 @@ export default async function ProductPage({
   });
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 pt-20">
+    <div className="min-h-screen bg-white text-gray-900 pt-16 md:pt-24 pb-20 md:pb-0">
       <ProductSchema
         product={product}
         rating={{ value: avgRating, count: reviews.length }}
       />
       <BreadcrumbSchema items={breadcrumbs} />
-      {/* Top Navigation / Breadcrumb */}
-      <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-4 pb-2">
+      <div className="hidden md:block max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20 pt-4 pb-2">
         <BackButton />
       </div>
 
-      <div className="max-w-[1440px] mx-auto px-0 md:px-12 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
+      {/* Mobile Back Button - Floating Top Left */}
+      <div className="lg:hidden fixed top-20 left-6 z-[90]">
+        <Link
+          href="/shop"
+          className="h-10 w-10 bg-white/60 backdrop-blur-md border border-gray-100 flex items-center justify-center rounded-none shadow-sm active:scale-90 transition-all"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={1.5} />
+        </Link>
+      </div>
+
+      <div className="max-w-[1440px] mx-auto px-0 md:px-12 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-24">
         <div className="col-span-1">
           <ProductGallery images={product.images || []} />
         </div>
-        <div className="col-span-1 px-6 lg:px-0 pb-24 lg:pb-0">
+        <div className="col-span-1 px-6 md:px-0 pb-4 lg:pb-0">
           <ProductInfo product={product} />
         </div>
       </div>

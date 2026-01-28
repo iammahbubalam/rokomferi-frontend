@@ -1,6 +1,7 @@
 "use client";
 
 import { Product, Variant } from "@/types";
+import Link from "next/link";
 import { AddToCartButton } from "./AddToCartButton";
 import { VariantSelector } from "./VariantSelector";
 import { ProductDetailsAccordion } from "./ProductDetailsAccordion";
@@ -37,68 +38,77 @@ export function ProductInfo({ product }: { product: Product }) {
          <div className="lg:sticky lg:top-24 space-y-8">
 
             {/* 1. Header & SKU */}
-            <div className="space-y-2">
-               <h1 className="font-sans text-3xl font-medium text-gray-900 leading-tight">
+            <div className="space-y-3 px-6 lg:px-0">
+               <h1 className="font-serif text-3xl lg:text-5xl font-medium text-gray-900 leading-[1.2] tracking-tight italic">
                   {product.name}
                </h1>
-               <div className="flex items-center gap-4 text-xs text-gray-500 uppercase tracking-widest">
-                  <span>SKU: {activeSku}</span>
-                  <span>{product.categories?.[0]?.name}</span>
+               <div className="flex items-center gap-4 text-[9px] text-secondary/40 uppercase tracking-[0.25em] font-bold">
+                  <span className="flex items-center gap-1.5">
+                     <span>SKU</span>
+                     <span className="text-primary font-bold">{activeSku}</span>
+                  </span>
+                  <div className="w-[1px] h-3 bg-gray-100" />
+                  <Link
+                     href={`/category/${product.categories?.[0]?.slug}`}
+                     className="hover:text-accent-gold transition-colors text-secondary/60"
+                  >
+                     {product.categories?.[0]?.name}
+                  </Link>
                </div>
             </div>
 
             {/* 2. Price */}
-            <div className="flex items-baseline gap-4 border-b border-gray-100 pb-6">
-               <span className="text-xl font-bold text-gray-900">
+            <div className="flex items-baseline gap-4 border-b border-gray-100 pb-8 px-6 lg:px-0">
+               <span className="text-2xl font-bold text-primary">
                   Tk {currentPrice.toLocaleString()}
                </span>
                {originalPrice && (
-                  <span className="text-sm line-through text-gray-400">
+                  <span className="text-sm line-through text-secondary/30 font-light">
                      Tk {originalPrice.toLocaleString()}
                   </span>
                )}
             </div>
 
             {/* 2.5 Stock Status & Notices */}
-            <div className="space-y-3">
+            <div className="space-y-4 px-6 lg:px-0">
                {/* Status Badge */}
                <div className="flex items-center justify-between text-sm font-medium">
                   <div className="flex items-center gap-2">
                      {product.stockStatus === 'out_of_stock' || (!isPurchasable && product.stockStatus !== 'pre_order') ? (
-                        <span className="text-red-600 flex items-center gap-2">
-                           <span className="w-2 h-2 bg-red-600 rounded-full" /> Out of Stock
+                        <span className="text-red-500/80 flex items-center gap-2.5 text-[11px] uppercase tracking-wider font-bold">
+                           <span className="w-1.5 h-1.5 bg-red-500 rounded-full" /> Out of Stock
                         </span>
                      ) : product.stockStatus === 'pre_order' ? (
-                        <span className="text-amber-600 flex items-center gap-2">
-                           <span className="w-2 h-2 bg-amber-600 rounded-full animate-pulse" /> Pre-Order Available
+                        <span className="text-amber-600 flex items-center gap-2.5 text-[11px] uppercase tracking-wider font-bold">
+                           <span className="w-1.5 h-1.5 bg-amber-600 rounded-full animate-pulse" /> Pre-Order Available
                         </span>
                      ) : (
-                        <span className="text-green-700 flex items-center gap-2">
-                           <span className="w-2 h-2 bg-green-600 rounded-full" /> In Stock
+                        <span className="text-green-600 flex items-center gap-2.5 text-[11px] uppercase tracking-wider font-bold">
+                           <span className="w-1.5 h-1.5 bg-green-600 rounded-full" /> In Stock
                         </span>
                      )}
                   </div>
 
                   {/* Stock Quantity Display */}
                   {totalStock > 0 && product.stockStatus !== 'out_of_stock' && (
-                     <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded">
-                        Available: <span className="text-gray-900 font-bold">{totalStock}</span>
+                     <span className="text-[10px] text-secondary/40 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100 uppercase tracking-widest font-bold">
+                        {totalStock} Available
                      </span>
                   )}
                </div>
 
                {/* Pre-Order Notice */}
                {product.stockStatus === 'pre_order' && (
-                  <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-md flex gap-2 items-start">
-                     <span className="mt-0.5">⚠️</span>
-                     <span>You need to pay 50% advance for pre-orders. Delivery may take slightly longer than usual.</span>
+                  <div className="bg-amber-50/50 border border-amber-100 text-amber-900/70 text-[10px] p-4 rounded-xl flex gap-3 items-start leading-relaxed shadow-sm">
+                     <span className="text-sm">✨</span>
+                     <span>Exclusive Pre-order: 50% advance secures your piece. Our artisans require extra time for perfection.</span>
                   </div>
                )}
             </div>
 
             {/* 3. Variants */}
             {product.variants && product.variants.length > 0 && (
-               <div className="pb-2">
+               <div className="pb-4 px-6 lg:px-0">
                   <VariantSelector
                      variants={product.variants}
                      selectedVariantId={selectedVariant?.id}
@@ -127,29 +137,29 @@ export function ProductInfo({ product }: { product: Product }) {
             </div>
 
             {/* 5. Benefits / Meta */}
-            <div className="flex flex-col gap-3 py-4 text-xs text-gray-600">
+            <div className="flex flex-col gap-3 pt-4 pb-0 text-xs text-gray-600 px-6 lg:px-0">
 
                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-4 h-4 text-gray-400" />
+                  <ShieldCheck className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
                   <span>Authentic products guaranteed</span>
                </div>
             </div>
-
-            {/* 6. Accordions (Size Guide, Description, etc) */}
-            <div className="border-t border-gray-100 pt-2">
-
-            </div>
          </div>
 
-         {/* Mobile Sticky Actions */}
-         <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex gap-3">
-            <div className="flex-1">
-               <AddToCartButton
-                  product={product}
-                  disabled={!isPurchasable}
-                  selectedVariantId={selectedVariant?.id}
-                  onSuccess={() => { }}
-               />
+         {/* Mobile Sticky Action - Floating Left Capsule */}
+         <div className="fixed bottom-8 left-6 right-[100px] z-[80] lg:hidden">
+            <div className="flex gap-2 items-center">
+               <div className="h-14 w-14 bg-white border border-gray-100 flex items-center justify-center shadow-xl shadow-black/5 active:scale-95 transition-transform">
+                  <WishlistButton product={product} className="w-full h-full rounded-none hover:bg-transparent" />
+               </div>
+               <div className="flex-1 shadow-xl shadow-black/5">
+                  <AddToCartButton
+                     product={product}
+                     disabled={!isPurchasable}
+                     selectedVariantId={selectedVariant?.id}
+                     onSuccess={() => { }}
+                  />
+               </div>
             </div>
          </div>
       </div>

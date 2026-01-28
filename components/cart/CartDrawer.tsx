@@ -19,10 +19,7 @@ export function CartDrawer() {
     updateQuantity,
     subtotal,
   } = useCart();
-  const [shippingThreshold] = useState(15000); // Free shipping threshold
 
-  const progress = Math.min((subtotal / shippingThreshold) * 100, 100);
-  const remaining = shippingThreshold - subtotal;
 
   return (
     <AnimatePresence>
@@ -58,37 +55,7 @@ export function CartDrawer() {
               </button>
             </div>
 
-            {/* Free Shipping Progress */}
-            {items.length > 0 && (
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-                <p className="text-sm text-primary mb-2">
-                  {remaining > 0 ? (
-                    <span>
-                      Spend{" "}
-                      <span className="font-bold">
-                        ৳{remaining.toLocaleString()}
-                      </span>{" "}
-                      more for{" "}
-                      <span className="text-accent-gold font-medium">
-                        Free Shipping
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-green-700 font-medium">
-                      ✨ You've unlocked Free Shipping!
-                    </span>
-                  )}
-                </p>
-                <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-accent-gold"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-              </div>
-            )}
+
 
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -250,9 +217,7 @@ export function CartDrawer() {
                   </div>
                   <div className="flex items-center justify-between text-sm text-secondary">
                     <span>Shipping</span>
-                    <span className="text-primary">
-                      {remaining <= 0 ? "Free" : "Calculated at checkout"}
-                    </span>
+                    <span className="text-primary italic">Calculated at checkout</span>
                   </div>
                 </div>
 

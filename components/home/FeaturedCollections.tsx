@@ -69,7 +69,7 @@ export function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
         </div>
 
         {/* Horizontal Gallery */}
-        <div className="flex gap-8 overflow-x-auto pb-12 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto pb-12 px-4 md:px-8 snap-x snap-mandatory no-scrollbar -mx-4 md:mx-0">
           {collections.map((collection, idx) => (
             <CollectionCard
               key={collection.id}
@@ -106,7 +106,7 @@ function CollectionCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.8, delay: index * 0.1 }}
-      className="min-w-[85vw] md:min-w-[500px] lg:min-w-[600px] snap-center group cursor-pointer"
+      className="min-w-[80vw] md:min-w-[500px] lg:min-w-[600px] snap-start group cursor-pointer"
     >
       <Link href={`/collection/${collection.slug}`} className="block">
         {/* Image Container with Overflow Hidden for Zoom Effect */}
@@ -129,13 +129,23 @@ function CollectionCard({
 
         {/* Text Content */}
         <div className="pr-8 group-hover:pl-4 transition-all duration-500">
-          <h3 className="font-serif text-3xl md:text-5xl text-primary leading-none mb-3 group-hover:text-accent-gold transition-colors">
+          <motion.h3
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: index * 0.1 + 0.3 }}
+            className="font-serif text-3xl md:text-5xl text-primary leading-none mb-3 group-hover:text-accent-gold transition-colors"
+          >
             {collection.title}
-          </h3>
-          <p className="text-primary/60 text-sm md:text-base max-w-sm line-clamp-2">
+          </motion.h3>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: index * 0.1 + 0.5 }}
+            className="text-primary/60 text-sm md:text-base max-w-sm line-clamp-2"
+          >
             {collection.description ||
               "Explore the timeless elegance of this exclusive collection."}
-          </p>
+          </motion.p>
         </div>
       </Link>
     </motion.div>

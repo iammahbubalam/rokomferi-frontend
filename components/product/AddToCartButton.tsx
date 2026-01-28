@@ -42,16 +42,16 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
   };
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-1 w-full">
       <AnimatePresence>
         {showError && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="text-red-600 text-[10px] font-bold uppercase tracking-wider text-center"
+            exit={{ opacity: 0, y: 5 }}
+            className="text-red-500 text-[9px] font-bold uppercase tracking-[0.2em] text-center mb-1"
           >
-            ⚠️ Please select a variant first
+            Please select your size
           </motion.div>
         )}
       </AnimatePresence>
@@ -61,22 +61,22 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
         disabled={disabled || isAdding}
         variant="primary"
         className={twMerge(
-          "w-full py-6 uppercase tracking-[0.2em] text-xs font-bold transition-all duration-300",
-          "bg-primary text-white hover:bg-black hover:text-white border border-transparent",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary",
-          showError && "border-red-500 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700",
+          "w-full h-14 md:h-16 uppercase tracking-[0.3em] text-[10px] font-bold transition-all duration-500 rounded-none",
+          "bg-primary text-white hover:bg-black border-none",
+          "disabled:opacity-40 disabled:cursor-not-allowed",
+          showError && "bg-red-50 text-red-500",
           className
         )}
       >
         {isAdding ? (
-          <span className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
-            Adding...
+          <span className="flex items-center gap-3">
+            <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+            Adding
           </span>
         ) : (
-          <span className="flex items-center gap-3">
-            <ShoppingBag className="w-4 h-4" />
-            {disabled ? "Out of Stock" : showError ? "Select Variant" : "Add to Bag"}
+          <span className="flex items-center gap-4">
+            <ShoppingBag className="w-4 h-4" strokeWidth={1} />
+            {disabled ? "Sold Out" : showError ? "Select Size" : "Add to Bag"}
           </span>
         )}
       </Button>

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
@@ -326,9 +326,18 @@ export function CheckoutClient() {
   return (
     <div className="min-h-screen pt-24 pb-20 bg-bg-primary text-primary">
       <Container className="max-w-[1920px] px-6 md:px-12 lg:px-24">
-        <h1 className="font-serif text-4xl md:text-5xl mb-12 text-center lg:text-left">
-          Checkout
-        </h1>
+        <div className="flex flex-col items-center lg:items-start mb-12">
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-2 text-secondary/50 hover:text-primary transition-colors text-[10px] uppercase tracking-[0.2em] font-bold mb-4 group"
+          >
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+            Continue Shopping
+          </Link>
+          <h1 className="font-serif text-4xl md:text-5xl text-center lg:text-left">
+            Checkout
+          </h1>
+        </div>
 
         {submitError && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-8">

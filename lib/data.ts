@@ -505,7 +505,7 @@ export async function getAllActiveCategories(): Promise<CategoryNode[]> {
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const url = getApiUrl("/products?is_featured=true&limit=6");
+  const url = getApiUrl("/products?is_featured=true&limit=50");
   try {
     const res = await fetch(url, {
       next: { revalidate: 300 },
