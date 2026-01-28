@@ -32,7 +32,7 @@ export function MasonryGrid({ products }: MasonryGridProps) {
             transition={{ duration: 0.6, delay: (i % 3) * 0.1 }}
             className="break-inside-avoid mb-8 md:mb-12"
           >
-            <ProductCard product={product} />
+            <ProductCard product={product} index={i} />
           </motion.div>
         );
       })}

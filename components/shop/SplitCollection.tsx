@@ -99,7 +99,7 @@ export function SplitCollection({
                   transition={{ duration: 0.8, delay: i % 2 === 0 ? 0 : 0.2 }}
                   className={isWide ? "md:col-span-2" : ""}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={product} index={i} />
                 </motion.div>
               );
             })}
