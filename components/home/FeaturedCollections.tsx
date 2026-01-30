@@ -19,6 +19,12 @@ interface FeaturedCollectionsProps {
 }
 
 export function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
+  if (!collections || collections.length === 0) return null;
+
+  return <FeaturedCollectionsContent collections={collections} />;
+}
+
+function FeaturedCollectionsContent({ collections }: FeaturedCollectionsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -27,8 +33,6 @@ export function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
 
   // Parallax for Background Text
   const textX = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
-
-  if (!collections || collections.length === 0) return null;
 
   return (
     <section

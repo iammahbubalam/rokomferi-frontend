@@ -8,6 +8,15 @@ export default async function AdminDashboard() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
+  // Calculate date range for KPIs (Last 30 Days)
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  const start = formatDate(thirtyDaysAgo);
+  const end = formatDate(today);
+
   // Parallel data fetching
   const stats = {
     products: 0,
@@ -16,11 +25,11 @@ export default async function AdminDashboard() {
   };
 
   try {
-    const [prodRes, orderRes] = await Promise.all([
+    const [prodRes, kpiRes] = await Promise.all([
       fetch(getApiUrl("/products?limit=1"), {
         cache: "no-store",
       }),
-      fetch(getApiUrl("/admin/orders?limit=1"), {
+      fetch(getApiUrl(`/admin/stats/kpis?start=${start}&end=${end}`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -33,24 +42,14 @@ export default async function AdminDashboard() {
       stats.products = data.pagination?.total || data.meta?.total || 0;
     }
 
-    if (orderRes.ok) {
-      const data = await orderRes.json();
-      // Try to get real count from metadata if available, else fallback
-      // Assuming generic list response might have pagination/meta
-      stats.orders = data.pagination?.total || data.meta?.total || 12;
-      // Revenue calculation would need a real aggregation endpoint.
-      // For now we keep the placeholder logic or simplistic approach.
-      stats.revenue = 150000;
-    } else {
-      // Fallback if admin orders fail
-      stats.orders = 12;
-      stats.revenue = 150000;
+    if (kpiRes.ok) {
+      const data = await kpiRes.json();
+      stats.orders = Number(data.total_orders) || 0;
+      stats.revenue = Number(data.total_revenue) || 0;
     }
   } catch (e) {
     console.error("Dashboard fetch error:", e);
-    // Keep defaults
-    stats.orders = 12;
-    stats.revenue = 150000;
+    // Defaults are already 0
   }
 
   return (
@@ -65,26 +64,20 @@ export default async function AdminDashboard() {
             <span className="text-6xl font-serif">O</span>
           </div>
           <h3 className="text-sm uppercase tracking-wide text-secondary mb-2">
-            Total Orders
+            Total Orders (30d)
           </h3>
           <p className="text-3xl font-bold">{stats.orders}</p>
-          <span className="text-xs text-green-600 font-medium">
-            +12% from last month
-          </span>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <span className="text-6xl font-serif">R</span>
           </div>
           <h3 className="text-sm uppercase tracking-wide text-secondary mb-2">
-            Total Revenue
+            Total Revenue (30d)
           </h3>
           <p className="text-3xl font-bold">
             BDT {stats.revenue.toLocaleString()}
           </p>
-          <span className="text-xs text-green-600 font-medium">
-            +8% from last month
-          </span>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">

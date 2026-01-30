@@ -55,7 +55,8 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
             setData({
               ...defaultAnnouncement,
               ...result.content,
-              isActive: result.isActive ?? true,
+              // Use isActive from content first (saved JSON), fallback to column value
+              isActive: result.content.isActive ?? result.isActive ?? true,
             });
           }
         }
@@ -247,12 +248,11 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
                 <button
                   key={preset.label}
                   onClick={() => applyPreset(preset)}
-                  className={`px-3 py-2.5 rounded-lg border-2 transition-all text-sm font-medium ${
-                    data.backgroundColor === preset.bg &&
-                    data.textColor === preset.text
+                  className={`px-3 py-2.5 rounded-lg border-2 transition-all text-sm font-medium ${data.backgroundColor === preset.bg &&
+                      data.textColor === preset.text
                       ? "border-primary ring-2 ring-primary/20"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                   style={{
                     backgroundColor: preset.bg,
                     color: preset.text,

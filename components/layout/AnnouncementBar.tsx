@@ -26,7 +26,12 @@ export function AnnouncementTicker() {
         const res = await fetch(getApiUrl("/content/announcement_bar"));
         if (res.ok) {
           const data = await res.json();
-          if (data.isActive && data.content?.message) {
+          // Check isActive from content first, fallback to root isActive, then default to true
+          // The backend Generic Content handler persists isActive inside the JSON content, 
+          // but the separate is_active column might not be updated.
+          const isActive = data.content?.isActive ?? data.isActive ?? true;
+
+          if (isActive && data.content?.message) {
             setAnnouncement({
               message: data.content.message,
               linkText: data.content.linkText,
@@ -48,7 +53,7 @@ export function AnnouncementTicker() {
 
   // Create repeated text for seamless scrolling
   const tickerContent = `${announcement.message} ${announcement.linkText ? `— ${announcement.linkText}` : ""} ★ `;
-  
+
   return (
     <div
       className="relative overflow-hidden py-2.5"
