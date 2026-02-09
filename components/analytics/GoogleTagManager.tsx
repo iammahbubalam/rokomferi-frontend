@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import Script from "next/script";
 import { analytics } from "@/lib/gtm";
 
 interface GoogleTagManagerProps {
@@ -82,8 +83,10 @@ export default function GoogleTagManager({ gtmId }: GoogleTagManagerProps) {
                     style={{ display: "none", visibility: "hidden" }}
                 />
             </noscript>
-            <script
+            {/* L9: Use Next.js Script component for reliable hydration execution */}
+            <Script
                 id="gtm-script"
+                strategy="afterInteractive"
                 dangerouslySetInnerHTML={{
                     __html: `
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
