@@ -79,7 +79,7 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
                   {siteConfig.name}
                 </span>
               </div>
-              <p className="text-[9px] md:text-xs leading-tight text-secondary/30 font-light italic antialiased ml-0.5">
+              <p className="text-sm md:text-base leading-tight text-secondary/60 font-medium italic antialiased ml-0.5">
                 {siteConfig.description}
               </p>
             </div>

@@ -96,6 +96,7 @@ export function CategoryFormDrawer({
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     setIsUploading(true);
+    setError(null);
     try {
       const fd = new FormData();
       fd.append("file", e.target.files[0]);
@@ -107,7 +108,14 @@ export function CategoryFormDrawer({
       if (res.ok) {
         const data = await res.json();
         setFormData((prev) => ({ ...prev, image: data.url }));
+      } else {
+        const errorText = await res.text();
+        console.error("Upload failed:", res.status, errorText);
+        setError(`Image upload failed: ${errorText || res.statusText}`);
       }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(`Image upload error: ${err.message || "Network error"}`);
     } finally {
       setIsUploading(false);
     }
