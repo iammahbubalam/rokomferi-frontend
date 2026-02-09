@@ -7,6 +7,7 @@ import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { motion, AnimatePresence } from "framer-motion";
+import { analytics } from "@/lib/gtm";
 
 interface AddToCartButtonProps {
   product: Product;
@@ -24,6 +25,8 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
   const hasVariants = product.variants && product.variants.length > 0;
   const isSelectionRequired = hasVariants && !selectedVariantId;
 
+
+
   const handleAddToCart = async () => {
     if (isSelectionRequired) {
       setShowError(true);
@@ -35,6 +38,19 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
     setShowError(false);
     try {
       await addToCart(product, selectedVariantId);
+
+      // Analytics Tracking
+      const price = product.salePrice || product.basePrice;
+      const variant = product.variants?.find(v => v.id === selectedVariantId);
+
+      analytics.addToCart({
+        item_id: product.id,
+        item_name: product.name,
+        price: price,
+        item_variant: variant?.name || selectedVariantId,
+        quantity: 1
+      });
+
       if (onSuccess) onSuccess();
     } finally {
       setTimeout(() => setIsAdding(false), 500);

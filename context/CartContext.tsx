@@ -13,6 +13,7 @@ import { getApiUrl } from "@/lib/utils";
 import { useAuth } from "./AuthContext";
 import { useDialog } from "./DialogContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { analytics } from "@/lib/gtm";
 
 interface CartItem extends Product {
   quantity: number;
@@ -275,8 +276,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const removeFromCart = (productId: string, variantId: string) =>
+  const removeFromCart = (productId: string, variantId: string) => {
+    // Analytics: Find item before it's removed
+    const item = items.find(i => i.id === productId && i.variantId === variantId);
+    if (item) {
+      analytics.removeFromCart({
+        item_id: item.id,
+        item_name: item.name,
+        price: item.salePrice || item.price || item.basePrice,
+        item_variant: item.variantName || item.variantId,
+        quantity: item.quantity,
+        item_category: item.categories?.[0]?.name,
+      });
+    }
     removeMutation.mutate({ productId, variantId });
+  };
 
   // 4. MUTATION: Update Quantity
   const updateMutation = useMutation({

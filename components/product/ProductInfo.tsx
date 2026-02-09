@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { WishlistButton } from "../common/WishlistButton";
+import { analytics } from "@/lib/gtm";
 import clsx from "clsx";
 
 export function ProductInfo({ product }: { product: Product }) {
@@ -31,7 +32,15 @@ export function ProductInfo({ product }: { product: Product }) {
       if (product.variants && product.variants.length === 1) {
          setSelectedVariant(product.variants[0]);
       }
-   }, [product.variants]);
+
+      // Track view_item to GA4/GTM
+      analytics.viewItem({
+         item_id: product.id,
+         item_name: product.name,
+         price: product.salePrice || product.basePrice,
+         item_category: product.categories?.[0]?.name,
+      });
+   }, [product.variants, product.id, product.name, product.salePrice, product.basePrice, product.categories]);
 
    return (
       <div className="relative h-full flex flex-col">

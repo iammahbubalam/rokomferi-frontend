@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
 import { AddressManager, Address } from "@/components/checkout/AddressManager";
+import { analytics, GA4Item } from "@/lib/gtm";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Product } from "@/types";
@@ -105,6 +106,34 @@ export function CheckoutClient() {
 
   const handleCheckout = async () => {
     if (!selectedAddress) return;
+
+    // Analytics: Add Shipping Info
+    analytics.addShippingInfo(
+      items.map((item) => ({
+        item_id: item.id,
+        item_name: item.name,
+        price: item.salePrice || item.basePrice,
+        item_variant: item.variantName || item.variantId,
+        quantity: item.quantity,
+        item_category: item.categories?.[0]?.name,
+      })),
+      subtotal,
+      deliveryLocation
+    );
+
+    // Analytics: Add Payment Info
+    analytics.addPaymentInfo(
+      items.map((item) => ({
+        item_id: item.id,
+        item_name: item.name,
+        price: item.salePrice || item.basePrice,
+        item_variant: item.variantName || item.variantId,
+        quantity: item.quantity,
+        item_category: item.categories?.[0]?.name,
+      })),
+      subtotal,
+      depositRequired > 0 ? paymentProvider : "cod"
+    );
 
     // Validate Pre-Order Payment
     if (depositRequired > 0) {
@@ -214,6 +243,24 @@ export function CheckoutClient() {
 
       // Success! Clear cart on frontend
       clearCart(); // Clear state and localStorage
+
+      // Analytics: Purchase
+      const orderData = await res.json();
+      analytics.purchase({
+        transaction_id: orderData.id || orderData.orderId,
+        value: subtotal + shippingCost,
+        tax: 0,
+        shipping: shippingCost,
+        items: items.map((item) => ({
+          item_id: item.id,
+          item_name: item.name,
+          price: item.salePrice || item.basePrice,
+          item_variant: item.variantName || item.variantId,
+          quantity: item.quantity,
+          item_category: item.categories?.[0]?.name,
+        })),
+      });
+
       setIsSuccess(true);
     } catch (error: any) {
       console.error(error);

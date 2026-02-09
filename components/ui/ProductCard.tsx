@@ -7,13 +7,17 @@ import clsx from "clsx";
 import { WishlistButton } from "@/components/common/WishlistButton";
 import { motion } from "framer-motion";
 
+import { analytics } from "@/lib/gtm";
+
 interface ProductCardProps {
   product: Product;
   index: number;
   priority?: boolean;
+  listName?: string;
+  listId?: string;
 }
 
-export function ProductCard({ product, index, priority = false }: ProductCardProps) {
+export function ProductCard({ product, index, priority = false, listName, listId }: ProductCardProps) {
   // Discount
   const hasDiscount =
     product.salePrice && product.salePrice < product.basePrice;
@@ -23,6 +27,18 @@ export function ProductCard({ product, index, priority = false }: ProductCardPro
         ((product.basePrice - product.salePrice!) / product.basePrice) * 100,
       )
       : 0; // End Discount Logic
+
+  const handleSelect = () => {
+    analytics.selectItem({
+      item_id: product.id,
+      item_name: product.name,
+      price: product.salePrice || product.basePrice,
+      item_category: product.categories?.[0]?.name,
+      index: index + 1,
+      item_list_id: listId,
+      item_list_name: listName,
+    }, listId, listName);
+  };
 
   const isOutOfStock =
     product.stock <= 0 || product.stockStatus === "out_of_stock";
@@ -37,7 +53,7 @@ export function ProductCard({ product, index, priority = false }: ProductCardPro
     >
       {/* Image Container - Taller Aspect Ratio [3/4] for Fashion */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-main">
-        <Link href={`/product/${product.slug}`} className="block h-full w-full">
+        <Link href={`/product/${product.slug}`} className="block h-full w-full" onClick={handleSelect}>
           <Image
             src={product.images?.[0] || "/placeholder.jpg"}
             alt={product.name}
@@ -106,7 +122,7 @@ export function ProductCard({ product, index, priority = false }: ProductCardPro
         </p>
 
         {/* Title */}
-        <Link href={`/product/${product.slug}`}>
+        <Link href={`/product/${product.slug}`} onClick={handleSelect}>
           <h3 className="text-base font-serif font-medium text-gray-900 group-hover:text-[#D4AF37] transition-colors line-clamp-1 mb-1 px-2">
             {product.name}
           </h3>

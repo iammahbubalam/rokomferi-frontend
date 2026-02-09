@@ -48,6 +48,12 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       images: [config.logo], // Fallback/Default OG
     },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+      other: {
+        "msvalidate.01": [process.env.NEXT_PUBLIC_BING_VERIFICATION || ""],
+      },
+    },
   };
 }
 
@@ -70,6 +76,8 @@ import { MainWrapper } from "@/components/layout/MainWrapper";
 
 import { OrganizationSchema } from "@/components/seo/OrganizationSchema";
 import { FloatingCart } from "@/components/layout/FloatingCart";
+import GoogleTagManager from "@/components/analytics/GoogleTagManager";
+import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 
 export default async function RootLayout({
   children,
@@ -91,9 +99,11 @@ export default async function RootLayout({
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
         suppressHydrationWarning
       >
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ""} />
         <OrganizationSchema siteConfig={siteConfig} />
         <QueryProvider>
           <AuthContextProvider>
+            <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_ID || ""} />
             <GoogleAuthProvider>
               <DialogProvider>
                 <IntroProvider>

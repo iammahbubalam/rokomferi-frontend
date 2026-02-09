@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
+import { analytics, GA4Item } from "@/lib/gtm";
 
 
 export function CartDrawer() {
@@ -20,7 +21,36 @@ export function CartDrawer() {
     subtotal,
   } = useCart();
 
+  useEffect(() => {
+    if (isOpen && items.length > 0) {
+      analytics.viewCart(
+        items.map((item) => ({
+          item_id: item.id,
+          item_name: item.name,
+          price: item.salePrice || item.price || item.basePrice,
+          item_variant: item.variantName || item.variantId,
+          quantity: item.quantity,
+          item_category: item.categories?.[0]?.name,
+        })),
+        subtotal
+      );
+    }
+  }, [isOpen, items, subtotal]);
 
+  const handleCheckout = () => {
+    analytics.beginCheckout(
+      items.map((item) => ({
+        item_id: item.id,
+        item_name: item.name,
+        price: item.salePrice || item.price || item.basePrice,
+        item_variant: item.variantName || item.variantId,
+        quantity: item.quantity,
+        item_category: item.categories?.[0]?.name,
+      })),
+      subtotal
+    );
+    toggleCart();
+  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -244,7 +274,7 @@ export function CartDrawer() {
                 ) : (
                   <Link
                     href="/checkout"
-                    onClick={toggleCart}
+                    onClick={handleCheckout}
                     className="block w-full"
                   >
                     <Button className="w-full py-4 text-xs font-bold tracking-[0.15em] uppercase">
