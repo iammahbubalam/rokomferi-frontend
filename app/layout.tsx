@@ -99,11 +99,15 @@ export default async function RootLayout({
         className={`${cormorant.variable} ${manrope.variable} ${pinyon.variable} antialiased bg-main text-primary flex flex-col min-h-screen`}
         suppressHydrationWarning
       >
-        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ""} />
+        <Suspense fallback={null}>
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ""} />
+        </Suspense>
         <OrganizationSchema siteConfig={siteConfig} />
         <QueryProvider>
           <AuthContextProvider>
-            <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_ID || ""} />
+            <Suspense fallback={null}>
+              <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_ID || ""} />
+            </Suspense>
             <GoogleAuthProvider>
               <DialogProvider>
                 <IntroProvider>
