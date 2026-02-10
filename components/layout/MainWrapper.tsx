@@ -10,12 +10,13 @@ interface MainWrapperProps {
 export const MainWrapper = ({ children }: MainWrapperProps) => {
     const pathname = usePathname();
     const isAdmin = pathname?.startsWith("/admin");
+    const isHome = pathname === "/";
 
     return (
         <main
             className={cn(
                 "flex-grow",
-                !isAdmin && "pt-[64px] md:pt-[48px]"
+                !isAdmin && !isHome && "pt-[64px] md:pt-[48px]"
             )}
         >
             {children}

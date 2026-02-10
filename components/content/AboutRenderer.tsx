@@ -2,86 +2,134 @@
 
 import { AboutBlock, AboutPage } from "@/lib/content-types";
 import Image from "next/image";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+import { cn } from "@/lib/utils";
 
 export function AboutRenderer({ data }: { data: AboutPage | null }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
   if (!data) return null;
 
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <div className="relative h-[60vh] min-h-[400px] flex items-center justify-center">
-        {/* Fallback pattern or image */}
-        <div className="absolute inset-0 bg-gray-900">
-          {data.hero.imageUrl && (
+    <div className="bg-white" ref={ref}>
+      {/* Hero Section - Parallax & Cinematic */}
+      <div className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          {data.hero.imageUrl ? (
             <Image
               src={data.hero.imageUrl}
               alt={data.hero.title}
               fill
-              className="object-cover opacity-60"
+              className="object-cover"
+              priority
             />
+          ) : (
+            <div className="w-full h-full bg-neutral-900" />
           )}
-        </div>
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-serif text-white mb-6">
-            {data.hero.title}
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-200 font-light tracking-wide max-w-2xl mx-auto">
+          <div className="absolute inset-0 bg-black/40" />
+        </motion.div>
+
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-block text-accent-gold text-xs md:text-sm font-semibold uppercase tracking-[0.3em] mb-4"
+          >
             {data.hero.subtitle}
-          </p>
+          </motion.span>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-7xl lg:text-8xl font-serif text-white mb-6 leading-tight"
+          >
+            {data.hero.title}
+          </motion.h1>
         </div>
       </div>
 
-      {/* Blocks */}
-      <div className="py-20">
+      {/* Content Blocks */}
+      <div className="py-20 md:py-32 space-y-20 md:space-y-32">
         {data.blocks.map((block, idx) => (
-          <Block key={idx} block={block} />
+          <Block key={idx} block={block} index={idx} />
         ))}
       </div>
     </div>
   );
 }
 
-function Block({ block }: { block: AboutBlock }) {
+function Block({ block, index }: { block: AboutBlock; index: number }) {
   switch (block.type) {
     case "text":
       return (
-        <section className="max-w-3xl mx-auto px-6 py-12 text-center">
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-3xl mx-auto px-6 text-center"
+        >
           {block.heading && (
-            <h2 className="text-3xl font-serif text-gray-900 mb-6">
+            <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 mb-8">
               {block.heading}
             </h2>
           )}
           {block.body && (
-            <p className="text-lg text-gray-600 leading-relaxed font-light">
-              {block.body}
-            </p>
+            <div
+              className="text-lg md:text-xl text-neutral-600 leading-relaxed font-light whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: block.body }} // Allow basic HTML if needed from admin
+            />
           )}
-        </section>
+        </motion.section>
       );
 
     case "stats":
       return (
-        <section className="bg-primary/5 py-20 my-12">
+        <section className="bg-neutral-50 py-24 border-y border-neutral-100">
           <div className="container mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
               {block.items?.map((item, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-4xl md:text-5xl font-serif text-primary mb-2">
-                    {item.value}
-                  </div>
-                  <div className="text-sm uppercase tracking-widest text-gray-500 font-medium">
-                    {item.label}
-                  </div>
-                </div>
+                <StatsItem key={i} item={item} index={i} />
               ))}
             </div>
           </div>
         </section>
       );
 
-    // Add 'image_split' implementation if needed later, seeded data currently just has 'text' and 'stats'
-    // But adding a basic fallback
     default:
       return null;
   }
+}
+
+function StatsItem({
+  item,
+  index,
+}: {
+  item: { label: string; value: string };
+  index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="text-center group"
+    >
+      <div className="text-4xl md:text-6xl font-serif text-neutral-900 mb-3 group-hover:text-primary transition-colors duration-300">
+        {item.value}
+      </div>
+      <div className="h-px w-8 bg-accent-gold mx-auto mb-4 opacity-50 group-hover:w-16 transition-all duration-300" />
+      <div className="text-xs md:text-sm uppercase tracking-[0.2em] text-neutral-500 font-medium">
+        {item.label}
+      </div>
+    </motion.div>
+  );
 }
