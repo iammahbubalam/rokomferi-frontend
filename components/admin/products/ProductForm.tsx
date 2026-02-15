@@ -273,6 +273,19 @@ export function ProductForm({
   // --- Submission ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    const base = Number(formData.basePrice);
+    const sale = formData.salePrice ? Number(formData.salePrice) : 0;
+
+    if (sale > 0 && sale >= base) {
+      dialog.toast({
+        message: "Sale Price must be less than Base Price",
+        variant: "danger",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
