@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: ['/admin', '/api', '/profile', '/checkout'],
         },
-        sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'https://valancis.com'}/sitemap.xml`,
+        sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/sitemap.xml`,
     }
 }

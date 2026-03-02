@@ -219,7 +219,7 @@ export const SITE_CONFIG: SiteConfig = {
   logo: "/assets/logo_valancis.png",
   copyright: "© 2026 Valancis. All rights reserved.",
   contact: {
-    email: "concierge@valancis.com",
+    email: "support@valancis.com",
     phone: "+1 (555) 000-0000",
     address: "123 Fashion Ave, New York, NY 10001",
   },
@@ -375,7 +375,7 @@ export async function getAllProducts(): Promise<Product[]> {
     console.error("Values fetch error:", error);
     console.error(
       "Attempted URL:",
-      `${process.env.NEXT_PUBLIC_API_URL}/products?limit=100`,
+      getApiUrl("/products?limit=100"),
     );
     return [];
   }

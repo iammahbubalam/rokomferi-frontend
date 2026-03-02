@@ -20,7 +20,7 @@ export function SERPPreview({
   metaTitle,
   metaDescription,
   slug,
-  baseUrl = "https://valancis.com",
+  baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 }: SERPPreviewProps) {
   const [titleLength, setTitleLength] = useState(0);
   const [descLength, setDescLength] = useState(0);
