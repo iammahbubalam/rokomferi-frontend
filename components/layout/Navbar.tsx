@@ -80,10 +80,10 @@ export function Navbar({ categories, collections, siteConfig }: NavbarProps) {
           {/* 2. Logo Section - Absolutely Centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
             <Link href="/" className="cursor-pointer block">
-              <div className="relative h-7 w-24 md:h-10 md:w-36 lg:w-40 transition-all duration-300">
+              <div className="relative h-8 w-40 md:h-10 md:w-48 lg:w-56 transition-all duration-300">
                 <Image
-                  src="/assets/logo_valancis.png"
-                  alt="Valancis"
+                  src={isMenuOpen ? siteConfig.logoWhite : siteConfig.logo}
+                  alt={siteConfig.name}
                   fill
                   className="object-contain object-center"
                   priority

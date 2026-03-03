@@ -66,18 +66,15 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
           <div className="w-full md:col-span-1 flex flex-col items-start gap-5">
             {/* Branding Block: Single line for Logo+Name, Aligned Description below */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex items-center gap-3">
-                <div className="relative h-9 w-9 md:h-8 md:w-8">
+              <div className="flex items-center">
+                <div className="relative h-10 w-40">
                   <Image
                     src={siteConfig.logo}
                     alt={siteConfig.name}
                     fill
-                    className="object-contain"
+                    className="object-contain object-left"
                   />
                 </div>
-                <span className="font-serif text-xl md:text-xl font-bold uppercase tracking-[0.15em] text-primary">
-                  {siteConfig.name}
-                </span>
               </div>
               <p className="text-sm md:text-base leading-tight text-primary/60 font-medium italic antialiased ml-0.5">
                 {siteConfig.description}
@@ -131,10 +128,10 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
           </div>
         </div>
 
-        {/* Giant Footer Branding */}
+        {/* Footer Branding */}
         <div className="w-full flex justify-center border-t border-accent-subtle pt-12 pb-6 overflow-hidden relative">
           <BrandLogo
-            className="w-[90vw] h-auto text-primary"
+            className="w-[70vw] md:w-[45vw] lg:w-[35vw] h-auto text-primary"
             animated={true}
             variant="draw"
             duration={2.5}

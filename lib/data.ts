@@ -206,6 +206,7 @@ export interface SiteConfig {
   name: string;
   description: string;
   logo: string;
+  logoWhite: string;
   copyright: string;
   contact: { email: string; phone: string; address: string };
   socials: { platform: string; url: string }[];
@@ -216,7 +217,8 @@ export const SITE_CONFIG: SiteConfig = {
   name: "Valancis",
   description:
     "Defining quiet luxury through texture, form, and timeless restraint.",
-  logo: "/assets/logo_valancis.png",
+  logo: "/logo/logo-color.svg",
+  logoWhite: "/logo/logo-white.svg",
   copyright: "© 2026 Valancis. All rights reserved.",
   contact: {
     email: "support@valancis.com",
@@ -245,7 +247,6 @@ export const FOOTER_SECTIONS: FooterSection[] = [
     links: [
       { label: "Ready to Wear", href: "/category/ready-to-wear" },
       { label: "Accessories", href: "/category/women-accessories" },
-      { label: "Editorial", href: "/editorial" },
     ],
   },
   {
@@ -537,8 +538,9 @@ export async function getSiteConfig(): Promise<SiteConfig> {
     return {
       name: globalSettings.branding.siteName,
       description: globalSettings.branding.tagline,
-      logo: globalSettings.branding.logoUrl || "/assets/logo_valancis.png",
-      favicon: globalSettings.branding.faviconUrl,
+      logo: globalSettings.branding.logoUrl || "/logo/logo-color.svg",
+      logoWhite: "/logo/logo-white.svg",
+      favicon: globalSettings.branding.faviconUrl || "/logo/logo-color.svg",
       copyright: `© ${new Date().getFullYear()} ${globalSettings.branding.siteName
         }. All rights reserved.`,
       contact: {

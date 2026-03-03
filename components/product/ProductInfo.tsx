@@ -5,34 +5,46 @@ import Link from "next/link";
 import { AddToCartButton } from "./AddToCartButton";
 import { VariantSelector } from "./VariantSelector";
 import { ProductDetailsAccordion } from "./ProductDetailsAccordion";
-import { Heart, Truck, ShieldCheck } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Heart, ShieldCheck } from "lucide-react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { WishlistButton } from "../common/WishlistButton";
 import { analytics } from "@/lib/gtm";
 import clsx from "clsx";
 
-export function ProductInfo({ product }: { product: Product }) {
+interface ProductInfoProps {
+   product: Product;
+   /** Fully matched variant (for purchase). */
+   selectedVariant: Variant | undefined;
+   /** Best matching variant for current attributes (for display). */
+   activeVariant?: Variant | undefined;
+   /** Callback to notify parent of variant changes (full match). */
+   onVariantChange: (variant: Variant | undefined) => void;
+   /** Callback for ANY attribute change (partial or full) — drives image sync. */
+   onAttributeChange?: (selections: Record<string, string>) => void;
+   /** Callback to reset all selections. */
+   onReset: () => void;
+}
+
+export function ProductInfo({ product, selectedVariant, activeVariant, onVariantChange, onAttributeChange, onReset }: ProductInfoProps) {
    const router = useRouter();
-   const [selectedVariant, setSelectedVariant] = useState<Variant | undefined>();
 
-   const currentPrice = selectedVariant?.salePrice || selectedVariant?.price || product.salePrice || product.basePrice;
-   const originalPrice = (selectedVariant?.salePrice && selectedVariant.price) || (product.salePrice && product.basePrice) || undefined;
+   const currentPrice = activeVariant?.salePrice || activeVariant?.price || product.salePrice || product.basePrice;
+   const originalPrice = (activeVariant?.salePrice && activeVariant.price) || (product.salePrice && product.basePrice) || undefined;
 
-   // SKU display
-   const activeSku = selectedVariant?.sku || product.id.substring(0, 8).toUpperCase();
+   // SKU display (follows the preview variant)
+   const activeSku = activeVariant?.sku || product.id.substring(0, 8).toUpperCase();
 
-   const totalStock = selectedVariant ? selectedVariant.stock : (product.variants?.reduce((sum, v) => sum + v.stock, 0) || product.stock || 0);
+   // Stock display (follows the preview variant)
+   const totalStock = activeVariant
+      ? activeVariant.stock
+      : (product.variants?.reduce((sum, v) => sum + v.stock, 0) || product.stock || 0);
    const isPurchasable = (product.stockStatus === 'pre_order') || (totalStock > 0 && product.stockStatus !== 'out_of_stock');
 
    const { addToCart } = useCart();
 
    useEffect(() => {
-      if (product.variants && product.variants.length === 1) {
-         setSelectedVariant(product.variants[0]);
-      }
-
       // Track view_item to GA4/GTM
       analytics.viewItem({
          item_id: product.id,
@@ -40,7 +52,7 @@ export function ProductInfo({ product }: { product: Product }) {
          price: product.salePrice || product.basePrice,
          item_category: product.categories?.[0]?.name,
       });
-   }, [product.variants, product.id, product.name, product.salePrice, product.basePrice, product.categories]);
+   }, [product.id, product.name, product.salePrice, product.basePrice, product.categories]);
 
    return (
       <div className="relative h-full flex flex-col">
@@ -52,17 +64,28 @@ export function ProductInfo({ product }: { product: Product }) {
                   {product.name}
                </h1>
                <div className="flex items-center gap-4 text-[9px] text-secondary/40 uppercase tracking-[0.25em] font-bold">
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 focus-within:text-primary transition-colors">
                      <span>SKU</span>
                      <span className="text-primary font-bold">{activeSku}</span>
                   </span>
-                  <div className="w-[1px] h-3 bg-canvas" />
+                  <div className="w-[1px] h-3 bg-gray-100" />
                   <Link
                      href={`/category/${product.categories?.[0]?.slug}`}
                      className="hover:text-primary transition-colors text-secondary/60"
                   >
                      {product.categories?.[0]?.name}
                   </Link>
+                  {selectedVariant && (
+                     <>
+                        <div className="w-[1px] h-3 bg-gray-100" />
+                        <button
+                           onClick={onReset}
+                           className="text-primary hover:tracking-[0.3em] transition-all duration-300"
+                        >
+                           Clear
+                        </button>
+                     </>
+                  )}
                </div>
             </div>
 
@@ -121,7 +144,9 @@ export function ProductInfo({ product }: { product: Product }) {
                   <VariantSelector
                      variants={product.variants}
                      selectedVariantId={selectedVariant?.id}
-                     onSelect={setSelectedVariant}
+                     onSelect={onVariantChange}
+                     onAttributeChange={onAttributeChange}
+                     isReset={!activeVariant}
                   />
                </div>
             )}
@@ -144,6 +169,7 @@ export function ProductInfo({ product }: { product: Product }) {
                   </div>
                </div>
             </div>
+
 
             {/* 5. Benefits / Meta */}
             <div className="flex flex-col gap-3 pt-4 pb-0 text-xs text-gray-600 px-6 lg:px-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useEffect } from "react";
 import Image from "next/image";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,48 +8,59 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductGalleryProps {
   images: string[];
+  /** Controlled active index (managed by parent). */
+  activeIndex: number;
+  /** Callback when the user selects an image (click, swipe, arrow). */
+  onImageSelect: (index: number) => void;
 }
 
-export function ProductGallery({ images }: ProductGalleryProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export function ProductGallery({
+  images,
+  activeIndex,
+  onImageSelect,
+}: ProductGalleryProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fallback if no images
   const displayImages = images.length > 0 ? images : ["/placeholder.jpg"];
 
-  // --- Mobile Scroll Tracker ---
+  // ── Mobile: sync scroll position when activeIndex changes externally ──
+  useEffect(() => {
+    if (scrollRef.current) {
+      const container = scrollRef.current;
+      const targetLeft = activeIndex * container.clientWidth;
+      // Only scroll if we're not already there (avoid fighting user gesture).
+      const currentIdx = Math.round(container.scrollLeft / container.clientWidth);
+      if (currentIdx !== activeIndex) {
+        container.scrollTo({ left: targetLeft, behavior: "smooth" });
+      }
+    }
+  }, [activeIndex]);
+
+  // ── Mobile: track scroll position → notify parent ──
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const { scrollLeft, clientWidth } = scrollRef.current;
     const newIndex = Math.round(scrollLeft / clientWidth);
-    setActiveIndex(newIndex);
-  };
-
-  const scrollToImage = (index: number) => {
-    setActiveIndex(index);
-    // Mobile scroll
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        left: index * scrollRef.current.clientWidth,
-        behavior: "smooth",
-      });
+    if (newIndex !== activeIndex) {
+      onImageSelect(newIndex);
     }
   };
 
   const nextImage = () => {
     const next = (activeIndex + 1) % displayImages.length;
-    scrollToImage(next);
+    onImageSelect(next);
   };
 
   const prevImage = () => {
-    const prev = (activeIndex - 1 + displayImages.length) % displayImages.length;
-    scrollToImage(prev);
+    const prev =
+      (activeIndex - 1 + displayImages.length) % displayImages.length;
+    onImageSelect(prev);
   };
 
   return (
     <div className="w-full">
-      {/* 
-        --- MOBILE VIEW (< lg) --- 
+      {/*
+        ── MOBILE VIEW (< lg) ──
         Full-width Swipeable Carousel.
       */}
       <div className="lg:hidden relative w-full bg-canvas mb-6 overflow-hidden">
@@ -74,7 +85,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           ))}
         </div>
 
-        {/* Mobile Minimalist Pagination Dots */}
+        {/* Mobile Pagination Dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {displayImages.map((_, idx) => (
             <div
@@ -88,17 +99,17 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         </div>
       </div>
 
-      {/* 
-        --- DESKTOP VIEW (>= lg) ---
-        Thumbnails Left + Main Stage Right (Reference Style).
+      {/*
+        ── DESKTOP VIEW (>= lg) ──
+        Thumbnails Left + Main Stage Right.
       */}
-      <div className="hidden lg:flex gap-4 w-[90%] mx-auto">
-        {/* Thumbnails Column (Left) */}
-        <div className="w-20 flex flex-col gap-3">
+      <div className="hidden lg:flex gap-4 w-full">
+        {/* Thumbnails Column */}
+        <div className="w-20 flex flex-col gap-3 max-h-[800px] overflow-y-auto scrollbar-hide">
           {displayImages.map((url, idx) => (
             <button
               key={idx}
-              onClick={() => scrollToImage(idx)}
+              onClick={() => onImageSelect(idx)}
               className={clsx(
                 "relative w-full aspect-square bg-canvas transition-all duration-200 overflow-hidden",
                 activeIndex === idx
@@ -116,7 +127,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           ))}
         </div>
 
-        {/* Main Stage (Right) */}
+        {/* Main Stage */}
         <div className="flex-1 relative aspect-[3/4] bg-canvas group overflow-hidden border border-accent-subtle">
           <AnimatePresence mode="wait">
             <motion.div
@@ -138,18 +149,22 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           </AnimatePresence>
 
           {/* Arrows (Visible on Hover) */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
-          >
-            <ChevronLeft className="w-5 h-5 text-black" />
-          </button>
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
-          >
-            <ChevronRight className="w-5 h-5 text-black" />
-          </button>
+          {displayImages.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
+              >
+                <ChevronLeft className="w-5 h-5 text-black" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
+              >
+                <ChevronRight className="w-5 h-5 text-black" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeft, ShoppingBag, Ruler, Info } from "lucide-react";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { WishlistButton } from "@/components/common/WishlistButton";
-import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductDetailClient } from "@/components/product/ProductDetailClient";
 import { ProductDescription } from "@/components/product/ProductDescription";
 import ReviewList from "@/components/reviews/ReviewList";
 import ReviewForm from "@/components/reviews/ReviewForm";
 import { ProductSchema } from "@/components/seo/ProductSchema";
 import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
-import { ProductInfo } from "@/components/product/ProductInfo";
 import { BackButton } from "@/components/common/BackButton";
 
 export async function generateMetadata({
@@ -97,14 +96,7 @@ export default async function ProductPage({
         </Link>
       </div>
 
-      <div className="max-w-[1440px] mx-auto px-0 md:px-12 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-24">
-        <div className="col-span-1">
-          <ProductGallery images={product.images || []} />
-        </div>
-        <div className="col-span-1 px-6 md:px-0 pb-4 lg:pb-0">
-          <ProductInfo product={product} />
-        </div>
-      </div>
+      <ProductDetailClient product={product} />
 
       <ProductDescription product={product} />
 

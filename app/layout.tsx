@@ -22,6 +22,7 @@ import { IntroOverlay } from "@/components/layout/IntroOverlay";
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
     title: {
       default: config.name,
       template: `%s | ${config.name}`,

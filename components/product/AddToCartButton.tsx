@@ -67,7 +67,7 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
             exit={{ opacity: 0, y: 5 }}
             className="text-red-500 text-[9px] font-bold uppercase tracking-[0.2em] text-center mb-1"
           >
-            Please select your size
+            Please select one variant
           </motion.div>
         )}
       </AnimatePresence>
@@ -92,7 +92,7 @@ export function AddToCartButton({ product, disabled, selectedVariantId, onSucces
         ) : (
           <span className="flex items-center gap-4">
             <ShoppingBag className="w-4 h-4" strokeWidth={1} />
-            {disabled ? "Sold Out" : showError ? "Select Size" : "Add to Bag"}
+            {disabled ? "Sold Out" : showError ? "Select one variant" : "Add to Bag"}
           </span>
         )}
       </Button>

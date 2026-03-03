@@ -1,156 +1,265 @@
 "use client";
 
 import { Variant } from "@/types";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import clsx from "clsx";
 import Image from "next/image";
 
 interface VariantSelectorProps {
   variants: Variant[];
   selectedVariantId?: string;
+  /**
+   * Fired when a FULL variant is matched (all attributes selected).
+   * Passes `undefined` if no exact match or not all attributes selected yet.
+   */
   onSelect: (variant: Variant | undefined) => void;
+  /**
+   * Fired on EVERY attribute click (even partial selections).
+   * Passes the complete selections map so the parent can compute
+   * the best image to display.
+   */
+  onAttributeChange?: (selections: Record<string, string>) => void;
+  /**
+   * If true, forces a clear of all internal selections.
+   */
+  isReset?: boolean;
 }
 
-export function VariantSelector({ variants, selectedVariantId, onSelect }: VariantSelectorProps) {
-  // 1. Extract all available attribute keys (e.g., ["Color", "Size"])
+export function VariantSelector({
+  variants,
+  selectedVariantId,
+  onSelect,
+  onAttributeChange,
+  isReset,
+}: VariantSelectorProps) {
+  // ─── 1. Attribute Dimensions ─────────────────────────────
   const attributeKeys = useMemo(() => {
     const keys = new Set<string>();
-    variants.forEach((v) => {
+    for (const v of variants) {
       if (v.attributes) {
-        Object.keys(v.attributes).forEach((k) => keys.add(k));
+        for (const k of Object.keys(v.attributes)) keys.add(k);
       }
-    });
+    }
     return Array.from(keys).sort((a, b) => {
-      const aLower = a.toLowerCase();
-      const bLower = b.toLowerCase();
-      // Color first
-      if (aLower.includes("color") || aLower.includes("colour")) return -1;
-      if (bLower.includes("color") || bLower.includes("colour")) return 1;
+      const aIsColor = /colou?r/i.test(a);
+      const bIsColor = /colou?r/i.test(b);
+      if (aIsColor && !bIsColor) return -1;
+      if (!aIsColor && bIsColor) return 1;
       return 0;
     });
   }, [variants]);
 
-  // 2. State for selections
+  // ─── 2. Selection State ──────────────────────────────────
   const [selections, setSelections] = useState<Record<string, string>>(() => {
     if (selectedVariantId) {
-      const found = variants.find(v => v.id === selectedVariantId);
+      const found = variants.find((v) => v.id === selectedVariantId);
       if (found?.attributes) return { ...found.attributes };
     }
     return {};
   });
 
+  // Keep internal state in sync with parent's selectedVariantId
   useEffect(() => {
     if (selectedVariantId) {
-      const found = variants.find(v => v.id === selectedVariantId);
+      const found = variants.find((v) => v.id === selectedVariantId);
       if (found?.attributes) {
-        setSelections(prev => {
-          const isDiff = Object.keys(found.attributes).some(k => found.attributes[k] !== prev[k]);
+        setSelections((prev) => {
+          const isDiff = Object.keys(found.attributes).some(
+            (k) => found.attributes[k] !== prev[k]
+          );
           return isDiff ? { ...found.attributes } : prev;
         });
       }
     }
   }, [selectedVariantId, variants]);
 
-  const handleSelect = (key: string, value: string) => {
-    const newSelections = { ...selections, [key]: value };
-    setSelections(newSelections);
-
-    const allSelected = attributeKeys.every(k => newSelections[k]);
-
-    if (allSelected) {
-      const match = variants.find((v) => {
-        if (!v.attributes) return false;
-        return attributeKeys.every((k) => v.attributes[k] === newSelections[k]);
-      });
-      onSelect(match);
-    } else {
-      onSelect(undefined);
+  // Handle external reset signal
+  useEffect(() => {
+    if (isReset) {
+      setSelections({});
     }
-  };
+  }, [isReset]);
 
-  const isValueAvailable = (key: string, value: string) => {
+  // ─── 3. Smart Pivot & Toggle Logic ───────────────────────
+  const handleSelect = useCallback(
+    (key: string, value: string) => {
+      let next: Record<string, string>;
+
+      // A. Toggle Behavior (Unselect)
+      if (selections[key] === value) {
+        next = { ...selections };
+        delete next[key];
+      } else {
+        // B. Smart Pivot Logic
+        const proposed = { ...selections, [key]: value };
+
+        // Check if ANY variant matches this NEW combination
+        const hasMatch = variants.some((v) =>
+          Object.entries(proposed).every(([k, vVal]) => v.attributes?.[k] === vVal)
+        );
+
+        if (hasMatch) {
+          next = proposed;
+        } else {
+          /**
+           * NO MATCH found for this specific combination.
+           * We pivot: Prioritize the NEWLY clicked attribute, then find
+           * the "closest" matching variant among those with this attribute.
+           */
+          const variantsWithNewAttr = variants.filter(
+            (v) => v.attributes?.[key] === value
+          );
+
+          if (variantsWithNewAttr.length > 0) {
+            // Find variant with maximum overlapping attributes with former selection.
+            let bestVariant = variantsWithNewAttr[0];
+            let maxScore = -1;
+
+            for (const v of variantsWithNewAttr) {
+              let score = 0;
+              for (const k of attributeKeys) {
+                if (k === key) continue; // Skip newly selected
+                if (selections[k] && v.attributes?.[k] === selections[k]) {
+                  score++;
+                }
+              }
+              if (score > maxScore) {
+                maxScore = score;
+                bestVariant = v;
+              }
+            }
+            next = { ...bestVariant.attributes };
+          } else {
+            // Fallback (should not happen if data is consistent)
+            next = proposed;
+          }
+        }
+      }
+
+      setSelections(next);
+      onAttributeChange?.(next);
+
+      // Notify parent of full match result
+      const allSelected = attributeKeys.every((k) => next[k]);
+      if (allSelected) {
+        const match = variants.find((v) =>
+          attributeKeys.every((k) => v.attributes?.[k] === next[k])
+        );
+        onSelect(match);
+      } else {
+        onSelect(undefined);
+      }
+    },
+    [selections, attributeKeys, variants, onSelect, onAttributeChange]
+  );
+
+  // ─── 4. Visual Rendering Helpers ─────────────────────────
+
+  /**
+   * Is this specific value compatible with ALL OTHER current selections?
+   * Used for "dimming" logic (full opacity vs low opacity).
+   */
+  const isValueCompatible = (key: string, value: string): boolean => {
     const otherSelections = { ...selections };
     delete otherSelections[key];
+
     return variants.some((v) => {
-      if (v.stock <= 0) return false;
-      if (!v.attributes) return false;
-      if (v.attributes[key] !== value) return false;
-      return Object.entries(otherSelections).every(([k, val]) => {
-        return !val || v.attributes[k] === val;
-      });
+      if (v.attributes?.[key] !== value) return false;
+      return Object.entries(otherSelections).every(
+        ([k, val]) => !val || v.attributes?.[k] === val
+      );
     });
   };
 
   if (attributeKeys.length === 0) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {attributeKeys.map((key) => {
-        const values = Array.from(new Set(variants.map(v => v.attributes?.[key]).filter(Boolean)));
-        const isColor = key.toLowerCase() === "color" || key.toLowerCase() === "colour";
+        const values = Array.from(
+          new Set(
+            variants
+              .map((v) => v.attributes?.[key])
+              .filter((v): v is string => Boolean(v))
+          )
+        );
+        const isColor = /colou?r/i.test(key);
 
         return (
-          <div key={key} className="space-y-3">
-            <div className="flex justify-between items-center text-xs uppercase tracking-widest text-primary/60 font-medium">
-              <span>{key}: <span className="text-black font-bold ml-1">{selections[key]}</span></span>
+          <div key={key} className="space-y-4">
+            {/* Contextual Label */}
+            <div className="flex justify-between items-baseline text-[10px] uppercase tracking-[0.2em] font-bold text-secondary/40">
+              <span>{key}</span>
+              <span className="text-secondary italic">
+                {selections[key] || "Not Selected"}
+              </span>
             </div>
 
             <div className="flex flex-wrap gap-3">
               {values.map((value) => {
                 const isSelected = selections[key] === value;
-                const isAvailable = isValueAvailable(key, value);
+                const isCompatible = isValueCompatible(key, value);
 
-                // For Color: Try to find a variant image
-                let variantImage = null;
+                // --- Case A: Color Style (Circular Swatch with internal image) ---
                 if (isColor) {
-                  const variantWithColor = variants.find(v => v.attributes?.[key] === value && v.images && v.images.length > 0);
-                  if (variantWithColor) {
-                    variantImage = variantWithColor.images[0];
-                  }
-                }
+                  const variantForImage = variants.find(v => v.attributes?.[key] === value && v.images?.length > 0);
+                  const swatchSrc = variantForImage?.images?.[0];
 
-                if (isColor) {
                   return (
                     <button
                       key={value}
                       onClick={() => handleSelect(key, value)}
-                      title={`${value}${!isAvailable ? ' - Unavailable' : ''}`}
                       className={clsx(
-                        "w-12 h-16 border rounded-sm flex items-center justify-center transition-all relative overflow-hidden",
-                        isSelected
-                          ? "ring-1 ring-black ring-offset-1 border-black"
-                          : "border-gray-200 hover:border-black",
-                        !isAvailable && "opacity-50 cursor-not-allowed"
+                        "group relative w-12 h-16 transition-all duration-300 ease-out flex items-center justify-center",
+                        isSelected ? "scale-105" : "hover:scale-102"
                       )}
-                      style={!variantImage ? { backgroundColor: value?.toLowerCase() } : undefined}
+                      title={value}
                     >
-                      {variantImage ? (
-                        <Image src={variantImage} alt={value} fill className="object-cover" />
-                      ) : (
-                        // Fallback if no image and potentially invalid CSS color
-                        <span className={clsx("text-xs font-bold", !variantImage && "text-transparent")}>{value.charAt(0)}</span>
-                      )}
+                      {/* Border Ring */}
+                      <div className={clsx(
+                        "absolute inset-0 border transition-colors duration-300",
+                        isSelected ? "border-primary" : "border-transparent group-hover:border-primary/20"
+                      )} />
 
-                      {!isAvailable && (
-                        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-                          <div className="w-full h-px bg-gray-400 -rotate-45" />
-                        </div>
+                      {/* Image/Color Container */}
+                      <div className={clsx(
+                        "relative w-[85%] h-[85%] bg-canvas overflow-hidden transition-all duration-300",
+                        !isCompatible && !isSelected && "opacity-40 grayscale-[0.5]"
+                      )}>
+                        {swatchSrc ? (
+                          <Image
+                            src={swatchSrc}
+                            alt={value}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full"
+                            style={{ backgroundColor: value.toLowerCase() }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Context Dot (Only shown if compatible but not selected) */}
+                      {!isSelected && isCompatible && (
+                        <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-primary/20 rounded-full" />
                       )}
                     </button>
                   );
                 }
 
-                // Standard Pill/Circle for Size etc.
+                // --- Case B: Pill Style (Size/Finish etc.) ---
                 return (
                   <button
                     key={value}
                     onClick={() => handleSelect(key, value)}
                     className={clsx(
-                      "min-w-[40px] h-10 px-0 border border-gray-200 rounded-full text-xs font-bold transition-all duration-200 uppercase flex items-center justify-center relative",
+                      "min-w-[64px] h-10 px-5 text-[10px] font-bold tracking-widest uppercase transition-all duration-300 border flex items-center justify-center",
                       isSelected
-                        ? "border-black bg-black text-white"
-                        : "text-gray-900 hover:border-black bg-white",
-                      !isAvailable && "opacity-50 text-gray-300 border-gray-100 bg-canvas cursor-not-allowed decorated-through"
+                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/10"
+                        : "bg-transparent text-primary border-primary/10 hover:border-primary/40",
+                      !isCompatible && !isSelected && "opacity-30"
                     )}
                   >
                     {value}
