@@ -26,14 +26,14 @@ export default async function Home() {
       {/* SECTION 1: Hero Slider (includes announcement ticker) */}
       <HeroCinematic slides={slides} />
 
-      {/* SECTION 2: Shop by Category */}
+      {/* SECTION 2: New Arrivals / Featured Products */}
+      <FeaturedProducts products={products} />
+
+      {/* SECTION 3: Shop by Category */}
       <MasonryCategories categories={categories} />
 
-      {/* SECTION 3: Featured Collections */}
+      {/* SECTION 4: Featured Collections */}
       <FeaturedCollections collections={collections} />
-
-      {/* SECTION 4: New Arrivals / Featured Products */}
-      <FeaturedProducts products={products} />
     </div>
   );
 }
