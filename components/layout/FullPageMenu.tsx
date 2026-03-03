@@ -85,11 +85,11 @@ export function FullPageMenu({
                     {/* Main Content Area */}
                     <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden lg:max-w-[1440px] lg:mx-auto w-full px-8 md:px-16">
                         <div
-                            className="w-full lg:w-1/2 py-12 md:py-20 lg:py-24 grid grid-cols-1 md:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-16"
+                            className="w-full lg:w-1/2 py-12 md:py-20 lg:py-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-16"
                             onMouseLeave={() => setHoveredImage(null)}
                         >
 
-                            {/* Row 1, Col 1: Collections */}
+                            {/* Section 1: Collections */}
                             <div className="flex flex-col gap-6">
                                 <div className="border-b border-black/[0.15] pb-1 w-fit">
                                     <h4 className="text-[10px] uppercase tracking-[0.2em] font-medium text-black/70">
@@ -112,7 +112,7 @@ export function FullPageMenu({
                                 </div>
                             </div>
 
-                            {/* Row 1, Col 2: Categories */}
+                            {/* Section 2: Categories */}
                             <div className="flex flex-col gap-6">
                                 <div className="border-b border-black/[0.15] pb-1 w-fit">
                                     <h4 className="text-[10px] uppercase tracking-[0.2em] font-medium text-black/70">
@@ -131,7 +131,6 @@ export function FullPageMenu({
                                                 <span className="text-[10px] opacity-40 translate-y-[1px]">●</span>
                                                 {cat.name}
                                             </Link>
-                                            {/* Restore Subcategories with dash markers and indentation */}
                                             {cat.children && cat.children.length > 0 && (
                                                 <div className="flex flex-col gap-2 pl-6 ml-1">
                                                     {cat.children.map((child) => (
@@ -153,7 +152,7 @@ export function FullPageMenu({
                                 </div>
                             </div>
 
-                            {/* Row 2, Col 1: Valancis Corporate Links */}
+                            {/* Section 3: World of Valancis (Combined with Shop) */}
                             <div className="flex flex-col gap-6">
                                 <div className="border-b border-black/[0.15] pb-1 w-fit">
                                     <h4 className="text-[10px] uppercase tracking-[0.2em] font-medium text-black/70">
@@ -164,8 +163,8 @@ export function FullPageMenu({
                                     {[
                                         { name: "Our Story", path: "/about" },
                                         { name: "The Campaign", path: "/campaign" },
-                                        { name: "Sustainability", path: "/sustainability" },
-                                        { name: "Store Locator", path: "/stores" },
+                                        { name: "Shop All", path: "/shop" },
+                                        { name: "Wishlist", path: "/wishlist" },
                                     ].map((item) => (
                                         <Link
                                             key={item.name}

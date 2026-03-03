@@ -26,6 +26,6 @@ export function useSystemConfig() {
     return useQuery({
         queryKey: ["system-config"],
         queryFn: fetchEnums,
-        staleTime: 1000 * 60 * 60, // 1 hour (config rarely changes)
+        staleTime: 1000 * 60 * 5, // 5 minutes cache
     });
 }

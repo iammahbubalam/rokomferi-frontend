@@ -254,7 +254,6 @@ export const FOOTER_SECTIONS: FooterSection[] = [
     links: [
       { label: "Contact Us", href: "/contact" },
       { label: "Shipping & Returns", href: "/shipping" },
-      { label: "Size Guide", href: "/size-guide" },
       { label: "FAQ", href: "/faq" },
     ],
   },

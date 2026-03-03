@@ -99,7 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [];
     },
-    staleTime: user ? 1000 * 60 : Infinity,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
   // 2. MUTATION: Add to Cart

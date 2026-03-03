@@ -51,19 +51,12 @@ import {
   getSiteConfig,
   getCollections,
 } from "@/lib/data";
-import { CartProvider } from "@/context/CartContext";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-
-import { GoogleAuthProvider } from "@/components/auth/AuthProvider";
-import { AuthContextProvider } from "@/context/AuthContext";
-
-import { WishlistProvider } from "@/context/WishlistContext";
-import { DialogProvider } from "@/context/DialogContext";
-import { QueryProvider } from "@/components/providers/QueryProvider";
+import { AllProviders } from "@/components/providers/AllProviders";
 import { MainWrapper } from "@/components/layout/MainWrapper";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { FloatingCart } from "@/components/layout/FloatingCart";
 
 import { OrganizationSchema } from "@/components/seo/OrganizationSchema";
-import { FloatingCart } from "@/components/layout/FloatingCart";
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 
@@ -91,40 +84,28 @@ export default async function RootLayout({
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ""} />
         </Suspense>
         <OrganizationSchema siteConfig={siteConfig} />
-        <QueryProvider>
-          <AuthContextProvider>
+        <AllProviders>
+          <Suspense fallback={null}>
+            <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_ID || ""} />
+          </Suspense>
+          <IntroOverlay />
+          <Navbar
+            categories={categories}
+            collections={collections}
+            siteConfig={siteConfig}
+          />
+          <MainWrapper>
             <Suspense fallback={null}>
-              <MicrosoftClarity projectId={process.env.NEXT_PUBLIC_CLARITY_ID || ""} />
+              {children}
             </Suspense>
-            <GoogleAuthProvider>
-              <DialogProvider>
-                <IntroProvider>
-                  <IntroOverlay />
-                  <CartProvider>
-                    <WishlistProvider>
-                      <Navbar
-                        categories={categories}
-                        collections={collections}
-                        siteConfig={siteConfig}
-                      />
-                      <MainWrapper>
-                        <Suspense fallback={null}>
-                          {children}
-                        </Suspense>
-                      </MainWrapper>
-                      <Footer
-                        siteConfig={siteConfig}
-                        footerSections={footerSections}
-                      />
-                      <CartDrawer />
-                      <FloatingCart />
-                    </WishlistProvider>
-                  </CartProvider>
-                </IntroProvider>
-              </DialogProvider>
-            </GoogleAuthProvider>
-          </AuthContextProvider>
-        </QueryProvider>
+          </MainWrapper>
+          <Footer
+            siteConfig={siteConfig}
+            footerSections={footerSections}
+          />
+          <CartDrawer />
+          <FloatingCart />
+        </AllProviders>
       </body>
     </html>
   );
