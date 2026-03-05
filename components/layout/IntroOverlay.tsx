@@ -140,7 +140,7 @@ export function IntroOverlay() {
               className="text-white/80 text-2xl md:text-3xl tracking-[0.35em] uppercase font-light"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
-              Valancis
+              Rokomferi
             </h1>
 
             {/* Progress Bar */}

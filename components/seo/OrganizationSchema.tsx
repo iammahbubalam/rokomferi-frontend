@@ -12,7 +12,7 @@ export function OrganizationSchema({ siteConfig }: OrganizationSchemaProps) {
     "@type": "Organization",
     name: siteConfig.name,
     url: env.NEXT_PUBLIC_APP_URL,
-    logo: `${env.NEXT_PUBLIC_APP_URL}/assets/logo_valancis.png`,
+    logo: `${env.NEXT_PUBLIC_APP_URL}/assets/logo_rokomferi.png`,
     sameAs: siteConfig.socials.map((s) => s.url).filter(Boolean),
     contactPoint: {
       "@type": "ContactPoint",

@@ -180,7 +180,7 @@ export const PHILOSOPHY_CONTENT: PhilosophyContent = {
   },
   paragraphs: [
     "Eid is more than a holiday; it is a return to what matters.",
-    "Valancis weaves that thread back together.",
+    "Rokomferi weaves that thread back together.",
   ],
   ctaText: "Explore the Eid Edit",
   image: "",
@@ -214,12 +214,12 @@ export interface SiteConfig {
 }
 
 export const SITE_CONFIG: SiteConfig = {
-  name: "Valancis",
+  name: "Rokomferi",
   description:
     "Defining quiet luxury through texture, form, and timeless restraint.",
   logo: "/logo/logo-color.svg",
   logoWhite: "/logo/logo-white.svg",
-  copyright: "© 2026 Valancis. All rights reserved.",
+  copyright: "© 2026 Rokomferi. All rights reserved.",
   contact: {
     email: "support@valancis.com",
     phone: "+1 (555) 000-0000",

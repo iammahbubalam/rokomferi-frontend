@@ -66,8 +66,8 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
           <div className="w-full md:col-span-1 flex flex-col items-start gap-5">
             {/* Branding Block: Single line for Logo+Name, Aligned Description below */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex items-center">
-                <div className="relative h-10 w-40">
+              <div className="flex items-center gap-3">
+                <div className="relative h-10 w-10 flex-shrink-0">
                   <Image
                     src={siteConfig.logo}
                     alt={siteConfig.name}
@@ -75,6 +75,9 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
                     className="object-contain object-left"
                   />
                 </div>
+                <span className="font-serif text-xl tracking-[0.2em] uppercase font-semibold text-primary">
+                  {siteConfig.name}
+                </span>
               </div>
               <p className="text-sm md:text-base leading-tight text-primary/60 font-medium italic antialiased ml-0.5">
                 {siteConfig.description}
