@@ -152,11 +152,11 @@ export function FullPageMenu({
                                 </div>
                             </div>
 
-                            {/* Section 3: World of Valancis (Combined with Shop) */}
+                            {/* Section 3: World of Rokomferi (Combined with Shop) */}
                             <div className="flex flex-col gap-6">
                                 <div className="border-b border-black/[0.15] pb-1 w-fit">
                                     <h4 className="text-[10px] uppercase tracking-[0.2em] font-medium text-black/70">
-                                        VALANCIS
+                                        ROKOMFERI
                                     </h4>
                                 </div>
                                 <div className="flex flex-col gap-4">
@@ -202,7 +202,7 @@ export function FullPageMenu({
                                         />
                                     ) : (
                                         <span className="font-serif text-5xl md:text-6xl text-black/[0.03] tracking-[0.2em] font-light">
-                                            Valancis
+                                            Rokomferi
                                         </span>
                                     )}
                                 </motion.div>
@@ -218,7 +218,7 @@ export function FullPageMenu({
                             <a href="#" className="font-sans text-[7px] md:text-[8px] uppercase tracking-[0.3em] font-medium text-black/40 hover:text-black/80 transition-colors">PINTEREST</a>
                         </div>
                         <div className="font-sans text-[7px] md:text-[8px] uppercase tracking-[0.3em] font-medium text-black/40">
-                            VALANCIS © 2026
+                            ROKOMFERI © 2026
                         </div>
                     </div>
                 </motion.div>

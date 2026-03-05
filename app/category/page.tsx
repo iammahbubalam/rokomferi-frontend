@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Category } from "@/types";
 
 export const metadata = {
-  title: "Categories | Valancis",
+  title: "Categories | Rokomferi",
   description: "Explore our curated collections",
 };
 

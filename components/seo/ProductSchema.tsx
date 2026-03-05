@@ -24,7 +24,7 @@ export function ProductSchema({ product, rating }: ProductSchemaProps) {
     mpn: product.sku || product.id, // Manufacturer Part Number
     brand: {
       "@type": "Brand",
-      name: "Valancis", // Or dynamically set if multi-brand
+      name: "Rokomferi", // Or dynamically set if multi-brand
     },
     offers: {
       "@type": "Offer",
@@ -38,7 +38,7 @@ export function ProductSchema({ product, rating }: ProductSchemaProps) {
         : "https://schema.org/OutOfStock",
       seller: {
         "@type": "Organization",
-        name: "Valancis",
+        name: "Rokomferi",
       },
     },
   };

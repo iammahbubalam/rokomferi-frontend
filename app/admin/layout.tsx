@@ -85,7 +85,7 @@ export default function AdminLayout({
             href="/"
             className="font-serif text-2xl font-bold tracking-tight"
           >
-            VALANCIS
+            ROKOMFERI
             <span className="text-xs block font-sans font-normal text-primary/70 tracking-widest mt-1">
               ADMIN PORTAL
             </span>

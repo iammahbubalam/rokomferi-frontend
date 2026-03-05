@@ -69,7 +69,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // GUEST MODE
       if (!user) {
         if (typeof window === "undefined") return [];
-        const saved = localStorage.getItem("valancis-cart");
+        const saved = localStorage.getItem("rokomferi-cart");
         return saved ? (JSON.parse(saved) as CartItem[]) : [];
       }
 
@@ -151,7 +151,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const newItem = { ...product, quantity: 1, variantId: finalVariantId, cartItemId: `${product.id}-${finalVariantId}` };
         const newItems = [...current, newItem];
 
-        localStorage.setItem("valancis-cart", JSON.stringify(newItems));
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
         // Update cache manually since onMutate is skipped
         queryClient.setQueryData(key, newItems);
         return newItems;
@@ -240,7 +240,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const current =
           queryClient.getQueryData<CartItem[]>(["cart", "guest"]) || [];
         const newItems = current.filter((i) => !(i.id === productId && i.variantId === variantId));
-        localStorage.setItem("valancis-cart", JSON.stringify(newItems));
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
         return;
       }
 
@@ -302,7 +302,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const newItems = current.map((i) =>
           i.id === productId && i.variantId === variantId ? { ...i, quantity } : i,
         );
-        localStorage.setItem("valancis-cart", JSON.stringify(newItems));
+        localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
         return;
       }
 
@@ -369,7 +369,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     // 2. Guest Mode: Sync immediately (Local Storage)
     if (!user) {
-      localStorage.setItem("valancis-cart", JSON.stringify(newItems));
+      localStorage.setItem("rokomferi-cart", JSON.stringify(newItems));
       return;
     }
 
@@ -386,7 +386,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     if (!user) {
-      localStorage.removeItem("valancis-cart");
+      localStorage.removeItem("rokomferi-cart");
       queryClient.setQueryData(["cart", "guest"], []);
     } else {
       queryClient.setQueryData(["cart", user.id], []);
@@ -409,7 +409,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // 5. MERGE LOGIC (Effect)
   useEffect(() => {
     if (user) {
-      const guestCartRaw = localStorage.getItem("valancis-cart");
+      const guestCartRaw = localStorage.getItem("rokomferi-cart");
       if (guestCartRaw) {
         const guestItems: CartItem[] = JSON.parse(guestCartRaw);
         if (guestItems.length > 0) {
@@ -430,7 +430,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             ),
           )
             .then(() => {
-              localStorage.removeItem("valancis-cart");
+              localStorage.removeItem("rokomferi-cart");
               queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
               dialog.toast({
                 message: "Cart merged from previous session",

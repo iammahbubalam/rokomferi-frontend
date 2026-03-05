@@ -9,7 +9,7 @@ import { ShopToolbar } from "@/components/shop/ShopToolbar";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Shop All | Valancis",
+  title: "Shop All | Rokomferi",
   description: "Explore our complete collection of heritage craftsmanship.",
 };
 

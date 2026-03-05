@@ -16,7 +16,7 @@ export function IntroProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check session storage on mount
-    const hasSeen = sessionStorage.getItem("valancis_intro_seen_v2");
+    const hasSeen = sessionStorage.getItem("rokomferi_intro_seen_v2");
     if (hasSeen) {
       setIsIntroComplete(true);
     }
@@ -25,7 +25,7 @@ export function IntroProvider({ children }: { children: React.ReactNode }) {
 
   const completeIntro = () => {
     setIsIntroComplete(true);
-    sessionStorage.setItem("valancis_intro_seen_v2", "true");
+    sessionStorage.setItem("rokomferi_intro_seen_v2", "true");
   };
 
   return (

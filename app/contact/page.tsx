@@ -38,7 +38,7 @@ export default function ContactPage() {
     {
       icon: <Mail className="w-5 h-5" />,
       label: "Email",
-      value: "support@valancis.com",
+      value: "support@rokomferi.com",
     },
   ];
 
@@ -55,7 +55,7 @@ export default function ContactPage() {
           >
             <h1 className="font-serif text-4xl md:text-6xl mb-6 tracking-tight">The Concierge</h1>
             <p className="text-primary/60 font-utility font-light text-lg md:text-xl max-w-2xl leading-relaxed">
-              Experience the personalized service of Valancis. Whether you have a bespoke request or need assistance with your order, we are here for you.
+              Experience the personalized service of Rokomferi. Whether you have a bespoke request or need assistance with your order, we are here for you.
             </p>
           </motion.div>
 

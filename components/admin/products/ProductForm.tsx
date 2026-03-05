@@ -1158,7 +1158,7 @@ export function ProductForm({
                     onChange={(e) =>
                       setFormData({ ...formData, metaTitle: e.target.value })
                     }
-                    placeholder="e.g. Luxurious Silk Saree | Valancis"
+                    placeholder="e.g. Luxurious Silk Saree | Rokomferi"
                   />
                   <div className="flex justify-between text-xs text-primary/60">
                     <span>Title tag shown in Google search results.</span>

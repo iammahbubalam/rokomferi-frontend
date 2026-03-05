@@ -32,7 +32,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${productA.name} vs ${productB.name} - Which is Better? | Valancis`,
+    title: `${productA.name} vs ${productB.name} - Which is Better? | Rokomferi`,
     description: `Compare ${productA.name} and ${productB.name} side by side. Check prices, specs, features, and find which product suits you best.`,
     openGraph: {
       title: `${productA.name} vs ${productB.name} Comparison`,

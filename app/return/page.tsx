@@ -3,7 +3,7 @@ import { getPolicyPage } from "@/lib/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Return Policy | Valancis",
+  title: "Return Policy | Rokomferi",
   description:
     "Our commitment to quality, including our return and exchange guidelines.",
 };

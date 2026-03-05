@@ -9,8 +9,8 @@ interface InvoicePrintTemplateProps {
 export function InvoicePrintTemplate({ order, config }: InvoicePrintTemplateProps) {
     if (!order) return null;
 
-    const companyName = config?.siteName || "Valancis";
-    const supportEmail = config?.supportEmail || "support@valancis.com";
+    const companyName = config?.siteName || "Rokomferi";
+    const supportEmail = config?.supportEmail || "support@rokomferi.com";
 
     return (
         <>
@@ -28,13 +28,13 @@ export function InvoicePrintTemplate({ order, config }: InvoicePrintTemplateProp
                 <div className="flex justify-between items-start border-b border-gray-200 pb-8 mb-8">
                     <div>
                         <img
-                            src="/assets/valancis-logo.svg"
+                            src="/assets/rokomferi-logo.svg"
                             alt={companyName}
                             className="h-8 w-auto mb-3"
                         />
                         <div className="text-[10px] text-gray-500 space-y-0.5 tracking-wide">
                             <p className="uppercase tracking-widest text-gray-400 font-medium mb-2">Fine Fashion & Accessories</p>
-                            <p>www.valancis.com</p>
+                            <p>www.rokomferi.com</p>
                             <p>{supportEmail}</p>
                         </div>
                     </div>
@@ -183,7 +183,7 @@ export function InvoicePrintTemplate({ order, config }: InvoicePrintTemplateProp
 
                 {/* Final Regards */}
                 <div className="mt-4 mb-2 text-center">
-                    <p className="text-[10px] text-gray-300 uppercase tracking-widest">Thank you for shopping with Valancis.</p>
+                    <p className="text-[10px] text-gray-300 uppercase tracking-widest">Thank you for shopping with Rokomferi.</p>
                 </div>
 
             </div>

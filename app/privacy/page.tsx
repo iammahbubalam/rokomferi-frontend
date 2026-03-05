@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   const sections = [
     {
       title: "Our Commitment",
-      content: "At Valancis, privacy is not just a policy—it is a cornerstone of our relationship with our clients. As a modern lifestyle brand based in Bangladesh, we are dedicated to protecting the personal information you entrust to us while providing you with an exceptional, curated experience."
+      content: "At Rokomferi, privacy is not just a policy—it is a cornerstone of our relationship with our clients. As a modern lifestyle brand based in Bangladesh, we are dedicated to protecting the personal information you entrust to us while providing you with an exceptional, curated experience."
     },
     {
       title: "Information Collection",
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
     },
     {
       title: "Use of Information",
-      content: "The data we collect is utilized solely to enhance your experience with Valancis. This includes processing transactions, providing dedicated support, and communicating invitations to new collections. We do not sell or trade your personal information to third parties."
+      content: "The data we collect is utilized solely to enhance your experience with Rokomferi. This includes processing transactions, providing dedicated support, and communicating invitations to new collections. We do not sell or trade your personal information to third parties."
     },
     {
       title: "Security & Retention",
@@ -70,7 +70,7 @@ export default function PrivacyPage() {
             className="mt-24 pt-12 border-t border-accent-subtle text-center"
           >
             <p className="text-[10px] uppercase tracking-widest text-primary/30">
-              Last Updated: March 2026 • Valancis Bangladesh
+              Last Updated: March 2026 • Rokomferi Bangladesh
             </p>
           </motion.div>
         </div>

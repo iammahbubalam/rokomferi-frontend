@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import clsx from "clsx";
 
 export const metadata = {
-  title: "Collections | Valancis",
+  title: "Collections | Rokomferi",
   description: "Curated edits of timeless elegance and heritage craftsmanship.",
 };
 

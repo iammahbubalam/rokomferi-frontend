@@ -46,7 +46,7 @@ export function VerdictBlock({
     },
     author: {
       "@type": "Organization",
-      name: "Valancis Editorial Team",
+      name: "Rokomferi Editorial Team",
     },
     reviewBody: verdict.summary,
     positiveNotes: {
@@ -147,7 +147,7 @@ export function VerdictBlock({
         <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
           <p className="text-xs text-primary/60 dark:text-primary/50 italic">
             {" "}
-            By Valancis Editorial Team
+            By Rokomferi Editorial Team
           </p>
         </div>
       </div>

@@ -75,7 +75,7 @@ export default function LoginPage() {
               Welcome Back
             </h1>
             <p className="text-primary/70 text-sm">
-              Sign in to continue your journey with Valancis.
+              Sign in to continue your journey with Rokomferi.
             </p>
           </motion.div>
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
         </div>
 
         <div className="absolute bottom-8 text-[10px] text-gray-300 uppercase tracking-widest">
-          Valancis © {new Date().getFullYear()}
+          Rokomferi © {new Date().getFullYear()}
         </div>
       </div>
     </div>

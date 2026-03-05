@@ -26,8 +26,8 @@ export async function generateMetadata({
   const currentPrice = product.salePrice || product.basePrice;
 
   return {
-    title: `${product.name} Price in Bangladesh - BDT ${currentPrice.toLocaleString()} | Valancis`,
-    description: `Latest ${product.name} price in Bangladesh is BDT ${currentPrice.toLocaleString()}. Check current prices, availability, and buy online at Valancis.`,
+    title: `${product.name} Price in Bangladesh - BDT ${currentPrice.toLocaleString()} | Rokomferi`,
+    description: `Latest ${product.name} price in Bangladesh is BDT ${currentPrice.toLocaleString()}. Check current prices, availability, and buy online at Rokomferi.`,
     openGraph: {
       title: `${product.name} Price in Bangladesh`,
       description: `BDT ${currentPrice.toLocaleString()} - Best price for ${product.name} in BD`,
@@ -64,7 +64,7 @@ export default async function PricePage({ params }: PricePageProps) {
     sku: product.sku,
     offers: {
       "@type": "Offer",
-      url: `https://valancis.com/product/${product.slug}`,
+      url: `https://rokomferi.com/product/${product.slug}`,
       priceCurrency: "BDT",
       price: currentPrice,
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -76,7 +76,7 @@ export default async function PricePage({ params }: PricePageProps) {
           : "https://schema.org/OutOfStock",
       seller: {
         "@type": "Organization",
-        name: "Valancis",
+        name: "Rokomferi",
       },
     },
   };

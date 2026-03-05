@@ -3,7 +3,7 @@ import { getPolicyPage } from "@/lib/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shipping Policy | Valancis",
+  title: "Shipping Policy | Rokomferi",
   description:
     "Learn about our delivery areas, timelines, and shipping partners.",
 };

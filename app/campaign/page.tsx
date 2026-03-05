@@ -4,7 +4,7 @@ import HorizontalScroll from "@/components/brand/HorizontalScroll";
 import { getCollections, getProductsByCollection } from "@/lib/data";
 
 export const metadata = {
-    title: "The Campaign | Valancis",
+    title: "The Campaign | Rokomferi",
     description:
         "Explore the latest collections through our cinematic digital lookbook.",
 };
@@ -48,7 +48,7 @@ export default async function CampaignPage() {
                 <div className="absolute inset-0 bg-black/30" />
                 <div className="relative z-10 text-center space-y-4">
                     <p className="font-utility text-[10px] md:text-xs uppercase tracking-[0.5em] text-white/60 mb-8">
-                        Valancis Digital Editorial
+                        Rokomferi Digital Editorial
                     </p>
                     <h1 className="font-display text-7xl md:text-[10rem] text-white leading-[0.85] tracking-tight drop-shadow-2xl">
                         THE

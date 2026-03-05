@@ -7,7 +7,7 @@ export default function TermsPage() {
   const sections = [
     {
       title: "Introduction",
-      content: "Valancis is a modern lifestyle brand based in Bangladesh. By accessing or using our services, you agree to follow the terms and conditions outlined below, designed to ensure a seamless and premium experience for all our clients."
+      content: "Rokomferi is a modern lifestyle brand based in Bangladesh. By accessing or using our services, you agree to follow the terms and conditions outlined below, designed to ensure a seamless and premium experience for all our clients."
     },
     {
       title: "Payments & Transactions",
@@ -15,7 +15,7 @@ export default function TermsPage() {
     },
     {
       title: "Pre-order Policy",
-      content: "Valancis offers exclusive pre-order opportunities for upcoming collections. To secure your selection from these limited production runs, an early advance payment is required via bKash, Rocket, or Nagad. Pre-order timelines are estimates and will be clearly communicated on the product page."
+      content: "Rokomferi offers exclusive pre-order opportunities for upcoming collections. To secure your selection from these limited production runs, an early advance payment is required via bKash, Rocket, or Nagad. Pre-order timelines are estimates and will be clearly communicated on the product page."
     },
     {
       title: "Shipping & Delivery",
@@ -27,7 +27,7 @@ export default function TermsPage() {
     },
     {
       title: "Intellectual Property",
-      content: "All content, designs, and intellectual property on this site are the exclusive property of Valancis. Unauthorized reproduction or exploitation of our products and brand assets is strictly prohibited."
+      content: "All content, designs, and intellectual property on this site are the exclusive property of Rokomferi. Unauthorized reproduction or exploitation of our products and brand assets is strictly prohibited."
     }
   ];
 
@@ -74,7 +74,7 @@ export default function TermsPage() {
             className="mt-24 pt-12 border-t border-accent-subtle text-center"
           >
             <p className="text-[10px] uppercase tracking-widest text-primary/30">
-              Last Updated: March 2026 • Valancis Bangladesh
+              Last Updated: March 2026 • Rokomferi Bangladesh
             </p>
           </motion.div>
         </div>

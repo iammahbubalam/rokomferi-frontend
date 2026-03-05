@@ -30,7 +30,7 @@ export default function FAQPage() {
         },
         {
           question: "How do pre-orders work?",
-          answer: "Valancis offers pre-order opportunities for upcoming collections. Please note that all pre-orders require an early advance payment via bKash, Nagad, or Rocket to secure your piece from our limited production runs."
+          answer: "Rokomferi offers pre-order opportunities for upcoming collections. Please note that all pre-orders require an early advance payment via bKash, Nagad, or Rocket to secure your piece from our limited production runs."
         }
       ]
     },
@@ -70,7 +70,7 @@ export default function FAQPage() {
           >
             <h1 className="font-serif text-4xl md:text-6xl mb-6 tracking-tight">Frequently Asked Questions</h1>
             <p className="text-primary/60 font-utility font-light text-lg md:text-xl max-w-2xl leading-relaxed">
-              Valancis is a modern lifestyle brand from Bangladesh, dedicated to quiet luxury and timeless craftsmanship.
+              Rokomferi is a modern lifestyle brand from Bangladesh, dedicated to quiet luxury and timeless craftsmanship.
               Find answers to common inquiries below.
             </p>
           </motion.div>
@@ -136,7 +136,7 @@ export default function FAQPage() {
               Contact Support <ArrowRight size={18} />
             </Link>
             <a
-              href="mailto:support@valancis.com"
+              href="mailto:support@rokomferi.com"
               className="px-8 py-4 border border-primary text-primary rounded-full flex items-center gap-2 hover:bg-primary hover:text-canvas transition-all duration-300"
             >
               Email Us <Mail size={18} />

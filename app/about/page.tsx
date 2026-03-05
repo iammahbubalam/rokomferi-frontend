@@ -3,7 +3,7 @@ import { getAboutPage } from "@/lib/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Us | Valancis",
+  title: "About Us | Rokomferi",
   description:
     "Redefining minimalist luxury. Learn about our story and craftsmanship.",
 };

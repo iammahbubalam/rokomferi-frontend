@@ -221,7 +221,7 @@ export const SITE_CONFIG: SiteConfig = {
   logoWhite: "/logo/logo-white.svg",
   copyright: "© 2026 Rokomferi. All rights reserved.",
   contact: {
-    email: "support@valancis.com",
+    email: "support@rokomferi.com",
     phone: "+1 (555) 000-0000",
     address: "123 Fashion Ave, New York, NY 10001",
   },
