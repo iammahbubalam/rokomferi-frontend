@@ -27,6 +27,10 @@ interface Order {
   id: string;
   status: string;
   totalAmount: number;
+  shippingFee: number;
+  shippingAddress?: any;
+  paymentMethod: string;
+  paymentStatus: string;
   createdAt: string;
   items: any[];
 }
@@ -124,11 +128,10 @@ export default function ProfilePage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id as TabType)}
-                    className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
-                      activeTab === item.id
-                        ? "bg-bg-secondary font-medium border-l-2 border-primary"
-                        : "hover:bg-bg-secondary/50 border-l-2 border-transparent"
-                    }`}
+                    className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${activeTab === item.id
+                      ? "bg-bg-secondary font-medium border-l-2 border-primary"
+                      : "hover:bg-bg-secondary/50 border-l-2 border-transparent"
+                      }`}
                   >
                     <item.icon className="w-4 h-4" />
                     {item.label}
@@ -245,6 +248,10 @@ export default function ProfilePage() {
             {/* ORDERS */}
             {activeTab === "orders" && (
               <div className="space-y-6">
+                <div>
+                  <h3 className="font-serif text-2xl mb-1">My Orders</h3>
+                  <p className="text-sm text-primary/60">Review your order history, delivery status, and invoices.</p>
+                </div>
                 {isLoadingData ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>

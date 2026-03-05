@@ -262,14 +262,11 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Left Column: Order Items & Timeline */}
                     <div className="xl:col-span-2 space-y-6">
-
-                        {/* Line Items Card */}
                         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
                                 <h3 className="font-semibold text-gray-900 text-lg">Order Items</h3>
                                 <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-md">{order.items.length} Product(s)</span>
                             </div>
-                            {/* Items List */}
                             <div className="divide-y divide-gray-100">
                                 {order.items.map((item: any) => (
                                     <div key={item.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 hover:bg-gray-50/50 transition-colors">
