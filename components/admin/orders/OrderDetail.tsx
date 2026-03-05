@@ -167,7 +167,11 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                                     order.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
                                         order.status === 'returned' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                                             order.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                                'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                                order.status === 'processing' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                    order.status === 'shipped' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                                        order.status === 'refunded' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                            order.status === 'fake' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                                                                'bg-gray-50 text-gray-700 border-gray-200'}`}>
                             {order.status.replace("_", " ")}
                         </div>
                         <div className={`px-3 py-1 text-sm font-medium rounded-md capitalize border
@@ -179,7 +183,6 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                         </div>
                     </div>
                 </div>
-
                 {/* Actions Bar */}
                 <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-wrap justify-between items-center gap-4">
                     <div className="flex flex-wrap items-center gap-2">
@@ -266,7 +269,6 @@ export default function OrderDetail({ id }: OrderDetailProps) {
                                 <h3 className="font-semibold text-gray-900 text-lg">Order Items</h3>
                                 <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-md">{order.items.length} Product(s)</span>
                             </div>
-
                             {/* Items List */}
                             <div className="divide-y divide-gray-100">
                                 {order.items.map((item: any) => (
