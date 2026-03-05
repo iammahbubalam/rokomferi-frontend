@@ -134,7 +134,7 @@ export function Footer({ siteConfig, footerSections }: FooterProps) {
         {/* Footer Branding */}
         <div className="w-full flex justify-center border-t border-accent-subtle pt-12 pb-6 overflow-hidden relative">
           <BrandLogo
-            className="w-[70vw] md:w-[45vw] lg:w-[35vw] h-auto text-primary"
+            className="w-[90vw] md:w-[85vw] lg:w-[80vw] h-auto text-primary"
             animated={true}
             variant="draw"
             duration={2.5}

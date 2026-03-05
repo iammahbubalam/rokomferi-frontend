@@ -1,176 +1,55 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useIntro } from "@/context/IntroContext";
 import { useEffect } from "react";
 
 export function IntroOverlay() {
   const { isIntroComplete, completeIntro, isLoading } = useIntro();
 
+  // Safety fallback: if BrandLogo's onComplete never fires, dismiss after 5s
   useEffect(() => {
     if (!isIntroComplete && !isLoading) {
       const timer = setTimeout(() => {
         completeIntro();
-      }, 4000);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [isIntroComplete, isLoading, completeIntro]);
 
   if (isLoading) {
-    return <div className="fixed inset-0 z-[99999] bg-[#142934]" />;
+    return <div className="fixed inset-0 z-[99999] bg-[#1a1a1a]" />;
   }
 
   return (
     <AnimatePresence>
       {!isIntroComplete && (
         <motion.div
-          className="fixed inset-0 z-[99999] bg-[#142934] flex items-center justify-center overflow-hidden"
-          initial={{ opacity: 1 }}
+          className="fixed inset-0 z-[99999] bg-[#1a1a1a] flex items-center justify-center overflow-hidden"
+          initial={{ y: 0 }}
           exit={{ y: "-100%" }}
-          transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+          transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
         >
-          {/* Ambient Radial Glow */}
-          <motion.div
-            className="absolute w-[600px] h-[600px] rounded-full"
-            style={{
-              background: "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)",
-            }}
-            animate={{
-              scale: [1, 1.4, 1],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-
-          {/* Outer Orbiting Particles */}
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="absolute w-[2px] h-[2px] bg-white/30 rounded-full"
-              style={{
-                top: "50%",
-                left: "50%",
-              }}
-              animate={{
-                x: [
-                  Math.cos((i * Math.PI) / 3) * 120,
-                  Math.cos((i * Math.PI) / 3 + Math.PI) * 160,
-                  Math.cos((i * Math.PI) / 3) * 120,
-                ],
-                y: [
-                  Math.sin((i * Math.PI) / 3) * 120,
-                  Math.sin((i * Math.PI) / 3 + Math.PI) * 160,
-                  Math.sin((i * Math.PI) / 3) * 120,
-                ],
-                opacity: [0, 0.6, 0],
-              }}
-              transition={{
-                duration: 5 + i * 0.3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.4,
-              }}
-            />
-          ))}
-
-          {/* Golden Ring System */}
-          <div className="relative flex items-center justify-center">
-            {/* Outer Ring – Slow Rotate */}
-            <motion.div
-              className="absolute w-52 h-52 border border-white/[0.06] rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            />
-
-            {/* Middle Ring – Counter Rotate */}
-            <motion.div
-              className="absolute w-36 h-36 border border-white/[0.08] rounded-full"
-              animate={{ rotate: -360 }}
-              transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-            />
-
-            {/* Inner Ring – Fast Rotate */}
-            <motion.div
-              className="absolute w-20 h-20 border border-white/[0.12] rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            />
-
-            {/* Breathing Diamond */}
-            <motion.div
-              className="absolute w-8 h-8 border border-white/20 rotate-45"
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.2, 0.5, 0.2],
-                rotate: [45, 135, 225],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-
-            {/* Center Dot */}
-            <motion.div
-              className="w-1 h-1 bg-white rounded-full"
-              animate={{
-                scale: [1, 1.8, 1],
-                opacity: [0.4, 1, 0.4],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+          {/* Brand Vector Reveal */}
+          <div className="relative z-10 p-8">
+            <BrandLogo
+              className="w-[90vw] md:w-[80vw] max-w-[1200px] h-auto text-white"
+              animated={true}
+              duration={2.0}
+              onComplete={completeIntro}
             />
           </div>
 
-          {/* Brand + Loading Indicator */}
+          {/* Subtle Subtext */}
           <motion.div
-            className="absolute bottom-16 md:bottom-24 flex flex-col items-center gap-5"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute bottom-12 text-white/30 text-xs uppercase tracking-[0.3em]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 1, duration: 0.8 }}
           >
-            <h1
-              className="text-white/80 text-2xl md:text-3xl tracking-[0.35em] uppercase font-light"
-              style={{ fontFamily: "var(--font-display), serif" }}
-            >
-              Rokomferi
-            </h1>
-
-            {/* Progress Bar */}
-            <div className="h-[1px] w-48 md:w-64 bg-white/10 overflow-hidden rounded-full">
-              <motion.div
-                className="h-full bg-white/60 w-full origin-left rounded-full"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{
-                  duration: 3.5,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              />
-            </div>
-
-            {/* Percentage Counter */}
-            <motion.p
-              className="text-[11px] text-white/30 uppercase tracking-[0.3em] font-light tabular-nums"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                Loading...
-              </motion.span>
-            </motion.p>
+            Loading Experience
           </motion.div>
         </motion.div>
       )}

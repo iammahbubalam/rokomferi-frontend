@@ -55,7 +55,7 @@ export function BrandLogo({
       case "fluid":
         return {
           initial: { strokeDasharray: 1000, strokeDashoffset: 1000, fillOpacity: 0, stroke: "#9c846a", strokeWidth: 2 },
-          visible: { strokeDashoffset: 0, fillOpacity: 1, stroke: "#142934", strokeWidth: 0 },
+          visible: { strokeDashoffset: 0, fillOpacity: 1, stroke: "currentColor", strokeWidth: 0 },
           transition: {
             strokeDashoffset: { duration: duration * 1.2, ease: [0.22, 1, 0.36, 1], delay: delay + (i * 0.05) },
             fillOpacity: { duration: duration * 0.8, ease: "easeOut", delay: delay + (duration * 0.5) + (i * 0.05) },
@@ -65,7 +65,7 @@ export function BrandLogo({
         };
       case "stitch":
         return {
-          initial: { strokeDasharray: "4 6", strokeDashoffset: 0, fillOpacity: 0, stroke: "#142934", strokeWidth: 1, opacity: 0 },
+          initial: { strokeDasharray: "4 6", strokeDashoffset: 0, fillOpacity: 0, stroke: "currentColor", strokeWidth: 1, opacity: 0 },
           visible: { strokeDasharray: "0 0", strokeDashoffset: 0, fillOpacity: 1, strokeWidth: 0, opacity: 1 },
           transition: {
             opacity: { duration: 0.5, delay: delay + (i * 0.05) },
@@ -77,7 +77,7 @@ export function BrandLogo({
       case "trace":
         return {
           initial: { strokeDasharray: "0.1 1", strokeDashoffset: 1, fillOpacity: 0, stroke: "#9c846a", strokeWidth: 1.5, pathLength: 1 },
-          visible: { strokeDashoffset: 0, fillOpacity: 1, strokeWidth: 0, stroke: "#142934" },
+          visible: { strokeDashoffset: 0, fillOpacity: 1, strokeWidth: 0, stroke: "currentColor" },
           transition: {
             strokeDashoffset: { duration: 3, ease: "easeInOut", repeat: 0, delay: delay + (i * 0.1) },
             fillOpacity: { duration: 1, delay: delay + 1.5 + (i * 0.1) },
@@ -109,7 +109,7 @@ export function BrandLogo({
       case "draw":
       default:
         return {
-          initial: { strokeDasharray: 1000, strokeDashoffset: 1000, fillOpacity: 0, stroke: "#142934", strokeWidth: 1 },
+          initial: { strokeDasharray: 1000, strokeDashoffset: 1000, fillOpacity: 0, stroke: "currentColor", strokeWidth: 1 },
           visible: { strokeDashoffset: 0, fillOpacity: 1, strokeWidth: 0 },
           transition: {
             strokeDashoffset: { duration: duration * 0.7, ease: "easeInOut", delay: delay + (i * 0.1) },
@@ -141,7 +141,7 @@ export function BrandLogo({
           <motion.path
             key={i}
             d={d}
-            fill="#142934"
+            fill="currentColor"
             initial={initial}
             whileInView={animated ? visible : undefined}
             animate={animated ? undefined : visible}
